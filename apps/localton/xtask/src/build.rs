@@ -15,7 +15,7 @@ pub struct BuildArgs {
     #[arg(long, default_value = ".localton")]
     pub state_dir: PathBuf,
 
-    /// Installation directory. Defaults to STATE_DIR/tools/<tool>/install.
+    /// Installation directory. Defaults to `STATE_DIR/tools/<tool>/install`.
     #[arg(long)]
     pub install_dir: Option<PathBuf>,
 
