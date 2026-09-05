@@ -114,15 +114,11 @@ pub async fn serve(
 
 impl IntoResponse for Error {
     fn into_response(self) -> Response {
-        let (status, code) = match &self {
-            Self::InvalidRequest { code, .. } => (StatusCode::BAD_REQUEST, *code),
-            Self::Conflict { code, .. } => (StatusCode::CONFLICT, *code),
-            Self::NotFound { .. } => (StatusCode::NOT_FOUND, "network_not_found"),
-            Self::Internal { code, .. } => (StatusCode::INTERNAL_SERVER_ERROR, *code),
-        };
+        let status =
+            StatusCode::from_u16(self.status()).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR);
         (
             status,
-            axum::Json(serde_json::json!({"code": code, "message": self.to_string()})),
+            axum::Json(serde_json::json!({"code": self.code(), "message": self.to_string()})),
         )
             .into_response()
     }

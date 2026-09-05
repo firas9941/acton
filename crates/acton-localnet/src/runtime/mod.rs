@@ -4,6 +4,7 @@ mod lifecycle;
 mod nodes;
 mod operations;
 mod progress;
+mod readiness;
 
 use crate::{Error, Network, Operation, OperationStatus, Status};
 use crate::{docker::DockerNetwork, storage};
@@ -60,9 +61,18 @@ impl Runtime {
             // Replaying a snapshot or topology mutation could destroy newer state.
             // Record the interruption and require an explicit retry.
             op.status = OperationStatus::Failed;
+            op.error_code = Some("operation_interrupted".to_owned());
+            op.error_status = Some(409);
             "interrupted".clone_into(&mut op.phase);
             op.error = Some("The service stopped before the operation completed; inspect status and logs before retrying".to_owned());
             storage::write_json(&operations.join(format!("{}.json", op.id)), op).await?;
+        }
+        if record
+            .snapshot_operation
+            .as_ref()
+            .is_some_and(|op| op.status == OperationStatus::Running)
+        {
+            record.snapshot_operation = record.operation.clone();
         }
         if record.status != Status::Deleted {
             record.status = Status::Unknown;

@@ -17,6 +17,8 @@ use fs2::FileExt;
 
 use crate::studio_wallets::ProjectWalletRuntime;
 
+mod shutdown;
+
 pub async fn studio_start_cmd(host: IpAddr, port: u16, open_browser: bool) -> anyhow::Result<()> {
     if !host.is_loopback() {
         anyhow::bail!(
@@ -61,7 +63,7 @@ pub async fn studio_start_cmd(host: IpAddr, port: u16, open_browser: bool) -> an
     let test_run_runtime =
         LocalProcessTestRunRuntime::new(acton_executable, &project_root, &reporter_url);
     let mut server = StudioServer::new(config)
-        .with_environment_runtime(environment_runtime)
+        .with_environment_runtime(environment_runtime.clone())
         .with_contract_registry(contract_registry)
         .with_test_run_runtime(test_run_runtime);
     if let Some((_, wallet_runtime)) = configured_project {
@@ -78,7 +80,12 @@ pub async fn studio_start_cmd(host: IpAddr, port: u16, open_browser: bool) -> an
         eprintln!("Warning: Failed to open Acton Studio at {url}: {error}");
     }
 
-    let result = server.serve(listener, shutdown_signal()).await;
+    let (requested, received) = tokio::sync::oneshot::channel();
+    let serving = server.serve(listener, async move {
+        shutdown_signal().await;
+        let _ = requested.send(());
+    });
+    let result = shutdown::wait(&environment_runtime, serving, received).await;
     drop(daemon_guard);
     result?;
     Ok(())

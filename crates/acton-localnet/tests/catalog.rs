@@ -37,6 +37,48 @@ async fn concurrent_creation_reserves_distinct_ports() {
 }
 
 #[tokio::test]
+async fn explicit_endpoint_ports_do_not_collide_with_automatic_defaults() {
+    let root = tempfile::tempdir().expect("catalog directory");
+    let first = catalog::create(
+        root.path(),
+        CreateNetwork {
+            name: "first".to_owned(),
+            ..Default::default()
+        },
+    )
+    .await
+    .expect("first network");
+    let admin = first.network.config.port_base + 5;
+    let second = catalog::create(
+        root.path(),
+        CreateNetwork {
+            name: "custom admin".to_owned(),
+            ports: acton_localnet::PortOptions {
+                admin: Some(admin),
+                ..Default::default()
+            },
+            ..Default::default()
+        },
+    )
+    .await
+    .expect("automatic ports skip the explicit admin port");
+
+    let ports = second.network.config.ports();
+    let mut unique = ports.all().to_vec();
+    unique.sort_unstable();
+    unique.dedup();
+    expect![["true:5:true"]].assert_eq(&format!(
+        "{}:{}:{}",
+        ports.admin == admin,
+        unique.len(),
+        ports
+            .all()
+            .iter()
+            .all(|port| !first.network.config.ports().all().contains(port))
+    ));
+}
+
+#[tokio::test]
 async fn definitions_validate_genesis_and_reserve_names_and_ports() {
     let root = tempfile::tempdir().expect("catalog directory");
     let network = catalog::create(
@@ -156,6 +198,9 @@ async fn readable_directories_preserve_identity_and_move_only_selected_history()
     selected.path = old_directory.clone();
     let log_path = old_directory.join("startup.log").display().to_string();
     let operation = Operation {
+        snapshot_id: None,
+        snapshot_name: None,
+        startup_timings: None,
         id: "operation-1".to_owned(),
         kind: "start".to_owned(),
         phase: "failed".to_owned(),
@@ -165,6 +210,8 @@ async fn readable_directories_preserve_identity_and_move_only_selected_history()
         progress: None,
         completed_steps: Vec::new(),
         error: Some(format!("Failed\nFull log: {log_path}")),
+        error_code: None,
+        error_status: None,
         log_path,
         result: None,
     };

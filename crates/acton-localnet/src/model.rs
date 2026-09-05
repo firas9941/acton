@@ -1,6 +1,7 @@
 //! Persisted network definitions and the shared CLI/HTTP response contract.
 
 use serde::{Deserialize, Serialize};
+use utoipa::ToSchema;
 
 /// Immutable genesis settings and host ports.
 ///
@@ -11,10 +12,51 @@ use serde::{Deserialize, Serialize};
 pub struct CreateNetwork {
     pub name: String,
     pub port_base: Option<u16>,
+    #[serde(default)]
+    pub ports: PortOptions,
+    #[serde(default)]
+    pub reserved_ports: Vec<u16>,
     pub block_time_ms: Option<u32>,
     pub election_time_seconds: Option<u32>,
     #[serde(default)]
     pub imported_account_bocs: Vec<String>,
+}
+
+/// Optional host bindings for applications with independently configured endpoints.
+/// Unspecified ports use the CLI's five-port range; reservations include stopped networks.
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct PortOptions {
+    pub config: Option<u16>,
+    pub admin: Option<u16>,
+    pub api_v2: Option<u16>,
+    pub api_v3: Option<u16>,
+    pub observability: Option<u16>,
+}
+
+/// Concrete endpoint bindings owned by one network, independent of its caller.
+#[derive(Clone, Copy, Debug, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct NetworkPorts {
+    pub config: u16,
+    pub admin: u16,
+    pub api_v2: u16,
+    pub api_v3: u16,
+    pub observability: u16,
+}
+
+impl NetworkPorts {
+    /// Enumerates bindings for reservation checks, including networks currently stopped.
+    #[must_use]
+    pub const fn all(self) -> [u16; 5] {
+        [
+            self.config,
+            self.admin,
+            self.api_v2,
+            self.api_v3,
+            self.observability,
+        ]
+    }
 }
 
 /// Selected ports and genesis inputs belong to this deployment for its lifetime.
@@ -23,6 +65,7 @@ pub struct CreateNetwork {
 #[serde(rename_all = "camelCase")]
 pub struct NetworkConfig {
     pub port_base: u16,
+    pub ports: Option<NetworkPorts>,
     pub block_time_ms: Option<u32>,
     pub election_time_seconds: Option<u32>,
     pub imported_account_bocs: Vec<String>,
@@ -41,21 +84,33 @@ pub struct Endpoints {
 }
 
 impl NetworkConfig {
+    /// Returns the deployment's actual bindings, including individually selected ports.
+    #[must_use]
+    pub fn ports(&self) -> NetworkPorts {
+        self.ports.unwrap_or(NetworkPorts {
+            config: self.port_base,
+            admin: self.port_base + 1,
+            api_v2: self.port_base + 2,
+            api_v3: self.port_base + 3,
+            observability: self.port_base + 4,
+        })
+    }
+
     pub(crate) fn endpoints(&self) -> Endpoints {
-        let port = self.port_base;
+        let ports = self.ports();
         Endpoints {
-            config: format!("http://127.0.0.1:{port}"),
-            admin: format!("http://127.0.0.1:{}", port + 1),
-            api_v2: format!("http://127.0.0.1:{}/api/v2", port + 2),
-            api_v3: format!("http://127.0.0.1:{}/api/v3", port + 3),
-            observability: format!("http://127.0.0.1:{}", port + 4),
+            config: format!("http://127.0.0.1:{}", ports.config),
+            admin: format!("http://127.0.0.1:{}", ports.admin),
+            api_v2: format!("http://127.0.0.1:{}/api/v2", ports.api_v2),
+            api_v3: format!("http://127.0.0.1:{}/api/v3", ports.api_v3),
+            observability: format!("http://127.0.0.1:{}", ports.observability),
         }
     }
 }
 
 /// An additional host-managed node. The genesis owner is never removable through
 /// this collection. Validator entry and exit follow actual TON election rounds.
-#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct Node {
     pub id: String,
@@ -90,6 +145,10 @@ pub struct Network {
     pub state: Option<NetworkState>,
     pub status: Status,
     pub operation: Option<Operation>,
+    #[serde(default)]
+    pub snapshot_operation: Option<Operation>,
+    #[serde(default)]
+    pub startup_timings: Option<StartupTimings>,
     pub error: Option<String>,
 }
 
@@ -118,7 +177,19 @@ pub struct Operation {
     pub completed_steps: Vec<OperationStep>,
     pub error: Option<String>,
     pub log_path: String,
+    /// Preserve failure classification after the accepting HTTP request has ended.
+    /// Clients can distinguish a rejected mutation from an infrastructure failure.
+    #[serde(default)]
+    pub error_code: Option<String>,
+    #[serde(default)]
+    pub error_status: Option<u16>,
     pub result: Option<serde_json::Value>,
+    #[serde(default)]
+    pub snapshot_id: Option<String>,
+    #[serde(default)]
+    pub snapshot_name: Option<String>,
+    #[serde(default)]
+    pub startup_timings: Option<StartupTimings>,
 }
 
 /// Completed phases remain visible even when they finish between client polls.
@@ -154,7 +225,7 @@ pub enum OperationStatus {
 
 /// Archive metadata returned by Localton's snapshot implementation. Restoring an
 /// archive requires a stopped network and rebuilding the derived indexer data.
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct Snapshot {
     pub format_version: u32,
@@ -166,4 +237,19 @@ pub struct Snapshot {
     pub state_schema_version: u32,
     pub ton_release: String,
     pub masterchain_seqno: Option<u32>,
+}
+
+/// Service-measured readiness milestones, shared by terminal and application views.
+/// Indexer readiness requires a parsed chain height within one block of the TON node.
+#[derive(Clone, Debug, Default, Deserialize, Serialize, ToSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct StartupTimings {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub compose_ms: Option<u64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub ton_ready_ms: Option<u64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub indexer_ready_ms: Option<u64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub api_ready_ms: Option<u64>,
 }

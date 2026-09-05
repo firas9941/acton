@@ -11,6 +11,9 @@ pub(super) async fn start(
     detach: bool,
     json: bool,
 ) -> anyhow::Result<()> {
+    let shutdown = service::shutdown_signal();
+    tokio::pin!(shutdown);
+
     // Read user input before launching a service so an invalid file cannot leave
     // a background process behind.
     let request = create_request(&options).await?;
@@ -44,7 +47,7 @@ pub(super) async fn start(
 
     let (result, interrupted) = tokio::select! {
         result = startup => (result, false),
-        _ = service::shutdown_signal() => (Ok(()), true),
+        _ = &mut shutdown => (Ok(()), true),
     };
 
     if result.is_ok() && detach && !interrupted {
@@ -59,7 +62,7 @@ pub(super) async fn start(
         // network's service. The foreground owner must then exit as well.
         let child = owned.as_mut().expect("foreground service owner");
         tokio::select! {
-            _ = service::shutdown_signal() => {}
+            _ = &mut shutdown => {}
             status = child.wait() => {
                 anyhow::ensure!(status?.success(), "Localnet service exited unsuccessfully; inspect service.log");
                 if !json {
@@ -118,6 +121,8 @@ pub(super) async fn create_request(options: &CreateOptions) -> anyhow::Result<Cr
     };
 
     Ok(CreateNetwork {
+        ports: Default::default(),
+        reserved_ports: Vec::new(),
         name: options
             .name
             .clone()

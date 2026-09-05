@@ -1,5 +1,6 @@
 //! Authenticated client shared by CLI commands and future application integrations.
 
+mod network;
 mod shutdown;
 
 use crate::{Error, ServiceDescriptor, storage};
@@ -99,14 +100,16 @@ impl Client {
 
         if !status.is_success() {
             let error: Value = serde_json::from_slice(&bytes).unwrap_or(Value::Null);
-            return Err(Error::Internal {
-                code: "request_failed",
-                message: format!(
-                    "Localnet API returned {status}: {}",
-                    error["message"]
-                        .as_str()
-                        .unwrap_or("Invalid error response")
-                ),
+            return Err(Error::Api {
+                status: status.as_u16(),
+                code: error["code"]
+                    .as_str()
+                    .unwrap_or("request_failed")
+                    .to_owned(),
+                message: error["message"]
+                    .as_str()
+                    .unwrap_or("Invalid error response")
+                    .to_owned(),
             });
         }
 

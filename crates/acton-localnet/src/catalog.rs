@@ -17,11 +17,17 @@ impl NetworkDirectory {
     /// service that is still using the previous layout.
     pub async fn prepare(mut self, root: &Path) -> Result<Self, Error> {
         let _lock = storage::catalog_lock(root).await?;
+        // CLI and application roots can reach the same directory through /tmp
+        // or another symlink. Compare canonical paths before validating ownership.
+        let root = dunce::canonicalize(root).map_err(|error| Error::storage(root, error))?;
+        self.path =
+            dunce::canonicalize(&self.path).map_err(|error| Error::storage(&self.path, error))?;
         let _network_lock = storage::lock(&self.path)?;
         // Reload under the network lock: discovery may have raced the last
         // operation of a service that has since stopped.
         self.network = storage::read_json(&self.path.join("network.json")).await?;
-        self.path = storage::prepare_network_directory(root, &self.path, &mut self.network).await?;
+        self.path =
+            storage::prepare_network_directory(&root, &self.path, &mut self.network).await?;
         storage::write_json(&self.path.join("network.json"), &self.network).await?;
         Ok(self)
     }
@@ -109,14 +115,41 @@ pub async fn create(root: &Path, request: CreateNetwork) -> Result<NetworkDirect
         });
     }
 
+    let requested = [
+        request.ports.config,
+        request.ports.admin,
+        request.ports.api_v2,
+        request.ports.api_v3,
+        request.ports.observability,
+    ];
+    let available_port = |port: u16| {
+        port > 0
+            && !request.reserved_ports.contains(&port)
+            && existing
+                .iter()
+                .all(|n| !n.network.config.ports().all().contains(&port))
+            && std::net::TcpListener::bind((std::net::Ipv4Addr::LOCALHOST, port)).is_ok()
+    };
+    let mut explicit = Vec::new();
+    for port in requested.into_iter().flatten() {
+        if explicit.contains(&port) || !available_port(port) {
+            return Err(Error::invalid(format!(
+                "Port {port} is unavailable or used by another endpoint"
+            )));
+        }
+        explicit.push(port);
+    }
+
+    // Allocate only unspecified endpoints. An explicit port can occupy a slot
+    // in the first default range, so that range must be skipped, not rejected.
     let available = |base: u16| {
         base > 0
             && base <= 65531
-            && (base..=base + 4).all(|port| {
-                existing.iter().all(|n| {
-                    !(n.network.config.port_base..=n.network.config.port_base + 4).contains(&port)
-                }) && std::net::TcpListener::bind((std::net::Ipv4Addr::LOCALHOST, port)).is_ok()
-            })
+            && (base..=base + 4)
+                .zip(requested)
+                .all(|(port, explicit_port)| {
+                    explicit_port.is_some() || (!explicit.contains(&port) && available_port(port))
+                })
     };
 
     let port_base = match request.port_base {
@@ -132,8 +165,29 @@ pub async fn create(root: &Path, request: CreateNetwork) -> Result<NetworkDirect
             .ok_or_else(|| Error::invalid("No port range is available"))?,
     };
 
+    let defaults = [
+        port_base,
+        port_base + 1,
+        port_base + 2,
+        port_base + 3,
+        port_base + 4,
+    ];
+    let selected: Vec<_> = requested
+        .into_iter()
+        .zip(defaults)
+        .map(|(requested, default)| requested.unwrap_or(default))
+        .collect();
+    let ports = crate::NetworkPorts {
+        config: selected[0],
+        admin: selected[1],
+        api_v2: selected[2],
+        api_v3: selected[3],
+        observability: selected[4],
+    };
+
     let config = NetworkConfig {
         port_base,
+        ports: Some(ports),
         block_time_ms: request.block_time_ms,
         election_time_seconds: request.election_time_seconds,
         imported_account_bocs: request.imported_account_bocs,
@@ -149,6 +203,8 @@ pub async fn create(root: &Path, request: CreateNetwork) -> Result<NetworkDirect
         state: None,
         status: Status::Stopped,
         operation: None,
+        snapshot_operation: None,
+        startup_timings: None,
         error: None,
     };
 

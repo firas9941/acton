@@ -22,6 +22,9 @@ mod offline;
 #[path = "localnet_command/shutdown.rs"]
 mod shutdown;
 
+#[path = "localnet_command/studio.rs"]
+mod studio;
+
 // Independent temporary projects share the host port space. Serialize fixtures
 // until their mock APIs are gone; each scenario can still run several services.
 static FIXTURE_PORTS: tokio::sync::Mutex<()> = tokio::sync::Mutex::const_new(());
@@ -157,8 +160,9 @@ async fn api_listener(port: u16) -> tokio::task::JoinHandle<()> {
     let listener = tokio::net::TcpListener::bind((std::net::Ipv4Addr::LOCALHOST, port))
         .await
         .expect("mock TON API");
-    let app = axum::Router::new()
-        .fallback(|| async { axum::Json(json!({"ok":true, "result":{"last":{"seqno":10}}})) });
+    let app = axum::Router::new().fallback(|| async {
+        axum::Json(json!({"ok":true, "result":{"last":{"seqno":10}}, "last":{"seqno":10}}))
+    });
 
     tokio::spawn(async move {
         axum::serve(listener, app).await.expect("mock API server");
@@ -369,7 +373,8 @@ async fn shutdown_interrupts_startup_and_conflicting_mutations_are_rejected() {
         .request::<Value>(Method::POST, "/v1/network/stop", None)
         .await
         .expect_err("conflict");
-    expect![["true"]].assert_eq(&conflict.to_string().contains("409 Conflict").to_string());
+    expect![["true"]]
+        .assert_eq(&matches!(conflict, acton_localnet::Error::Api { status: 409, .. }).to_string());
     service.stop(&client).await;
 
     let completed: Operation = serde_json::from_slice(

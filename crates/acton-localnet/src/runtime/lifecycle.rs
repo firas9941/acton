@@ -1,13 +1,17 @@
 //! Startup readiness and graceful service shutdown.
 
 use super::{Context, Runtime};
-use crate::{Error, OperationProgress, Status, docker::DockerNetwork};
+use crate::{Error, Status, docker::DockerNetwork};
 use std::time::{Duration, Instant};
 use tokio::process::Child;
 
 impl Context {
     pub(super) async fn start(&mut self, driver: &DockerNetwork) -> Result<(), Error> {
-        self.entry.record.write().await.status = Status::Starting;
+        {
+            let mut record = self.entry.record.write().await;
+            record.status = Status::Starting;
+            record.startup_timings = Some(crate::StartupTimings::default());
+        }
         self.phase("checkingImage").await?;
         let present = self
             .wait_child(
@@ -65,6 +69,23 @@ impl Context {
     }
 
     async fn start_containers(&mut self, driver: &DockerNetwork) -> Result<(), Error> {
+        let started = Instant::now();
+        self.entry.record.write().await.startup_timings = Some(crate::StartupTimings::default());
+        let (readiness, probe) = super::readiness::observe(std::sync::Arc::clone(&self.entry));
+        // The probe runs alongside Compose so UI timings include services that
+        // became usable before Compose finished waiting for all containers.
+        let result = self.finish_startup(driver, started, readiness).await;
+        probe.abort();
+        let _ = probe.await;
+        result
+    }
+
+    async fn finish_startup(
+        &mut self,
+        driver: &DockerNetwork,
+        started: Instant,
+        mut readiness: tokio::sync::watch::Receiver<crate::OperationProgress>,
+    ) -> Result<(), Error> {
         let status = self
             .wait_child(driver, driver.spawn_compose_up()?, Duration::from_secs(660))
             .await?;
@@ -76,65 +97,20 @@ impl Context {
                     .await,
             });
         }
-
+        if let Some(timings) = &mut self.entry.record.write().await.startup_timings {
+            timings.compose_ms = Some(started.elapsed().as_millis() as u64);
+        }
         self.phase("waitingForApis").await?;
-        let endpoints = self.entry.record.read().await.endpoints.clone();
-        let client = reqwest::Client::builder()
-            .timeout(Duration::from_secs(3))
-            .build()
-            .map_err(|e| Error::invalid(e.to_string()))?;
-        let urls = [
-            ("API v2", format!("{}/getMasterchainInfo", endpoints.api_v2)),
-            ("API v3", format!("{}/masterchainInfo", endpoints.api_v3)),
-            (
-                "Indexer",
-                format!(
-                    "{}/healthcheck",
-                    endpoints.api_v3.trim_end_matches("/api/v3")
-                ),
-            ),
-        ];
         let deadline = Instant::now() + Duration::from_secs(180);
         let mut closing = self.runtime.inner.closing.subscribe();
-        let mut ready = [false; 3];
 
         loop {
-            let checks = async {
-                for (index, (_, url)) in urls.iter().enumerate() {
-                    let response = client.get(url).send().await;
-                    ready[index] =
-                        matches!(response, Ok(response) if response.status().is_success());
-                    let waiting = urls
-                        .iter()
-                        .zip(ready)
-                        .filter_map(|((name, _), ready)| (!ready).then_some(*name))
-                        .collect::<Vec<_>>();
-                    self.progress(OperationProgress {
-                        completed: ready.iter().filter(|ready| **ready).count() as u64,
-                        total: Some(urls.len() as u64),
-                        unit: "checks passed".to_owned(),
-                        detail: if waiting.is_empty() {
-                            "TON APIs and indexer ready".to_owned()
-                        } else {
-                            format!("Waiting for {}", waiting.join(", "))
-                        },
-                    })
-                    .await?;
-                }
-
-                Ok::<_, Error>(ready.into_iter().all(|ready| ready))
-            };
-            let ready = tokio::select! {
-                result = checks => result?,
-                _ = async { if !*closing.borrow() { let _ = closing.changed().await; } } => {
-                    return Err(Error::Conflict { code: "service_stopping", message: "Readiness checks interrupted by graceful service shutdown".to_owned() });
-                }
-            };
-
+            let progress = readiness.borrow_and_update().clone();
+            let ready = progress.completed == 3;
+            self.progress(progress).await?;
             if ready {
                 return Ok(());
             }
-
             if Instant::now() >= deadline {
                 return Err(Error::Internal {
                     code: "readiness_timeout",
@@ -142,7 +118,14 @@ impl Context {
                         .to_owned(),
                 });
             }
-            tokio::time::sleep(Duration::from_millis(500)).await;
+            tokio::select! {
+                changed = readiness.changed() => {
+                    changed.map_err(|_| Error::Internal { code: "readiness_failed", message: "Network readiness probe stopped unexpectedly".to_owned() })?;
+                },
+                _ = async { if !*closing.borrow() { let _ = closing.changed().await; } } => {
+                    return Err(Error::Conflict { code: "service_stopping", message: "Readiness checks interrupted by graceful service shutdown".to_owned() });
+                }
+            }
         }
     }
 

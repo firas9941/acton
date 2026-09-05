@@ -46,6 +46,14 @@ pub(super) struct Context {
 
 impl Runtime {
     pub(crate) async fn submit(&self, action: Action) -> Result<Operation, Error> {
+        if let Action::CreateSnapshot { name: Some(name) } = &action
+            && (name.trim().is_empty() || name.trim().chars().count() > 80)
+        {
+            return Err(Error::invalid(
+                "Snapshot name must contain 1 to 80 characters",
+            ));
+        }
+
         let admission = self.inner.admission.lock().await;
         if !*admission {
             return Err(Error::Conflict {
@@ -71,7 +79,18 @@ impl Runtime {
             progress: None,
             completed_steps: Vec::new(),
             error: None,
+            error_code: None,
+            error_status: None,
             result: None,
+            startup_timings: None,
+            snapshot_id: match &action {
+                Action::RestoreSnapshot { id } => Some(id.clone()),
+                _ => None,
+            },
+            snapshot_name: match &action {
+                Action::CreateSnapshot { name } => name.clone(),
+                _ => None,
+            },
             log_path: entry.data_dir.join("startup.log").display().to_string(),
         };
 
@@ -99,6 +118,8 @@ impl Runtime {
                     context.operation.status = OperationStatus::Failed;
                     "failed".clone_into(&mut context.operation.phase);
                     context.operation.error = Some(message.clone());
+                    context.operation.error_code = Some(error.code().to_owned());
+                    context.operation.error_status = Some(error.status());
                     let mut record = context.entry.record.write().await;
                     record.error = Some(message);
                     if matches!(record.status, Status::Starting | Status::Stopping) {
@@ -153,6 +174,18 @@ impl Context {
 
     pub(super) async fn publish(&mut self) -> Result<(), Error> {
         self.operation.duration_ms = self.started.elapsed().as_millis() as u64;
+        self.operation
+            .startup_timings
+            .clone_from(&self.entry.record.read().await.startup_timings);
+        if let Some(result) = &self.operation.result {
+            if let Some(id) = result.get("id").and_then(Value::as_str) {
+                self.operation.snapshot_id = Some(id.to_owned());
+            }
+            if let Some(name) = result.get("name").and_then(Value::as_str) {
+                self.operation.snapshot_name = Some(name.to_owned());
+            }
+        }
+
         storage::write_json(
             &self
                 .runtime
@@ -163,7 +196,16 @@ impl Context {
             &self.operation,
         )
         .await?;
-        self.entry.record.write().await.operation = Some(self.operation.clone());
+        {
+            let mut record = self.entry.record.write().await;
+            record.operation = Some(self.operation.clone());
+            if matches!(
+                self.operation.kind.as_str(),
+                "createSnapshot" | "restoreSnapshot"
+            ) {
+                record.snapshot_operation = Some(self.operation.clone());
+            }
+        }
         Runtime::save(&self.entry).await?;
         log::info!(
             "operation={} target={} phase={} duration_ms={} outcome={:?} progress={:?}",
@@ -244,11 +286,21 @@ impl Context {
                 self.observe(&driver, driver.stop()).await?;
                 self.entry.record.write().await.status = Status::Stopped;
                 self.phase("restoringState").await?;
-                let snapshot = driver.restore_snapshot(&id).await?;
-                self.phase("resettingIndexer").await?;
-                driver.reset_indexer().await?;
-                self.start(&driver).await?;
-                return serde_json::to_value(snapshot).map_err(|e| Error::invalid(e.to_string()));
+                let result = async {
+                    let snapshot = driver.restore_snapshot(&id).await?;
+                    self.phase("resettingIndexer").await?;
+                    driver.reset_indexer().await?;
+                    Ok(snapshot)
+                }
+                .await;
+                // Restore failure must not strand a previously usable network.
+                // Cleanup during service shutdown still takes precedence over restart.
+                let restarted = if *self.runtime.inner.closing.borrow() {
+                    Ok(())
+                } else {
+                    self.start(&driver).await
+                };
+                return snapshot_result(result, restarted);
             }
             Action::DeleteSnapshot { id } => {
                 storage::validate_id(&id)?;

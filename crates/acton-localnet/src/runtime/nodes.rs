@@ -26,12 +26,12 @@ impl Context {
         self.require_running().await?;
         let name = name.trim();
         if name.is_empty()
-            || name.chars().count() > 64
+            || name.chars().count() > 80
             || name.eq_ignore_ascii_case("genesis")
             || name.contains('$')
         {
             return Err(Error::invalid(
-                "Node names must contain 1 to 64 characters, cannot contain $, and cannot be genesis",
+                "Node names must contain 1 to 80 characters, cannot contain $, and cannot be genesis",
             ));
         }
 

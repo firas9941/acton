@@ -23,19 +23,7 @@ pub struct FullTonAccountImport {
     pub(crate) shard_account_boc_hex: Option<String>,
 }
 
-/// A Localton node managed as part of a full TON Studio environment.
-///
-/// The genesis node owns the shared HTTP APIs and indexer. Entries in this
-/// collection are additional validator-engine instances that join the same
-/// chain and publish telemetry to the genesis observability collector.
-#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize, ToSchema)]
-#[serde(rename_all = "camelCase")]
-pub struct FullTonNode {
-    pub id: String,
-    pub name: String,
-    pub validator: bool,
-    pub port_base: u16,
-}
+pub use acton_localnet::Node as FullTonNode;
 
 /// User-selected properties for a node that Studio should join to a running network.
 #[derive(Clone, Debug, Deserialize, Serialize, ToSchema)]
@@ -127,21 +115,7 @@ pub struct CreateEnvironmentSnapshotRequest {
     pub name: Option<String>,
 }
 
-#[derive(Clone, Debug, Deserialize, Serialize, ToSchema)]
-#[serde(rename_all = "camelCase")]
-pub struct EnvironmentSnapshot {
-    pub format_version: u32,
-    pub id: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub name: Option<String>,
-    pub created_at: u64,
-    pub archive_size_bytes: u64,
-    pub state_size_bytes: u64,
-    pub state_schema_version: u32,
-    pub ton_release: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub masterchain_seqno: Option<u32>,
-}
+pub use acton_localnet::Snapshot as EnvironmentSnapshot;
 
 #[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Serialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
@@ -163,18 +137,7 @@ pub enum EnvironmentSnapshotOperationPhase {
     Failed,
 }
 
-#[derive(Clone, Debug, Default, Deserialize, Serialize, ToSchema)]
-#[serde(rename_all = "camelCase")]
-pub struct EnvironmentStartupTimings {
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub compose_ms: Option<u64>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub ton_ready_ms: Option<u64>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub indexer_ready_ms: Option<u64>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub api_ready_ms: Option<u64>,
-}
+pub use acton_localnet::StartupTimings as EnvironmentStartupTimings;
 
 #[derive(Clone, Debug, Deserialize, Serialize, ToSchema)]
 #[serde(rename_all = "camelCase")]

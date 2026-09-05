@@ -12,15 +12,18 @@ const VALIDATOR_ARGS: &str = r"- --validator
       - http://127.0.0.1:18000/faucet";
 
 pub(super) fn render_compose(image: &str, config: &NetworkConfig, nodes: &[Node]) -> String {
-    let port = config.port_base;
+    let ports = config.ports();
 
     COMPOSE_TEMPLATE
         .replace("__LOCALTON_IMAGE__", image)
-        .replace("__LOCALTON_V2_PORT__", &(port + 2).to_string())
-        .replace("__LOCALTON_V3_PORT__", &(port + 3).to_string())
-        .replace("__LOCALTON_ADMIN_PORT__", &(port + 1).to_string())
-        .replace("__LOCALTON_CONFIG_PORT__", &port.to_string())
-        .replace("__LOCALTON_OBSERVABILITY_PORT__", &(port + 4).to_string())
+        .replace("__LOCALTON_V2_PORT__", &ports.api_v2.to_string())
+        .replace("__LOCALTON_V3_PORT__", &ports.api_v3.to_string())
+        .replace("__LOCALTON_ADMIN_PORT__", &ports.admin.to_string())
+        .replace("__LOCALTON_CONFIG_PORT__", &ports.config.to_string())
+        .replace(
+            "__LOCALTON_OBSERVABILITY_PORT__",
+            &ports.observability.to_string(),
+        )
         .replace(
             "__LOCALTON_BLOCK_TIME__",
             &config
