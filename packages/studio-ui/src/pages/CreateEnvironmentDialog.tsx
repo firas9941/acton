@@ -247,7 +247,7 @@ export function CreateEnvironmentDialog({
             autoFocus
             onChange={event => updateKind(event.target.value as EnvironmentFormState["kind"])}
           >
-            <option value="actonSimulatedLocalnet">Acton simulated localnet</option>
+            <option value="actonSimulatedLocalnet">Simulated localnet</option>
             <option value="fullTonNetwork">Full localnet</option>
           </Select>
 
@@ -598,7 +598,7 @@ function defaultEnvironmentName(
   environmentCount: number,
 ): string {
   return kind === "actonSimulatedLocalnet"
-    ? `Acton simulated localnet ${environmentCount + 1}`
+    ? `Simulated localnet ${environmentCount + 1}`
     : `Full localnet ${environmentCount + 1}`
 }
 

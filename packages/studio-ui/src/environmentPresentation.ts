@@ -9,7 +9,7 @@ export const environmentStatusLabels = {
 } satisfies Record<EnvironmentStatus, string>
 
 export function formatEnvironmentType(config: EnvironmentConfig) {
-  if (config.kind === "actonSimulatedLocalnet") return "Acton simulated localnet"
+  if (config.kind === "actonSimulatedLocalnet") return "Simulated localnet"
   if (config.kind === "fullTonNetwork") return "Full localnet"
   return config.network === "mainnet" ? "Mainnet" : "Testnet"
 }

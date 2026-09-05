@@ -285,7 +285,7 @@ export const SettingsPage: FC<SettingsPageProps> = ({
                 ? "Full localnet"
                 : environment?.config.kind === "remoteTonNetwork"
                   ? "Remote TON network"
-                  : "Acton simulated localnet"
+                  : "Simulated localnet"
             }
           />
 

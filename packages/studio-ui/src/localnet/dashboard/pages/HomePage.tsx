@@ -527,7 +527,7 @@ export const HomePage: FC<HomePageProps> = ({client}) => {
                                   <CircleDot size={15} aria-hidden="true" />
                                 )}
                                 <span>
-                                  {fullNetworkConfig ? "Full localnet" : "Acton simulated localnet"}
+                                  {fullNetworkConfig ? "Full localnet" : "Simulated localnet"}
                                 </span>
                                 <Tooltip
                                   content={
@@ -541,7 +541,7 @@ export const HomePage: FC<HomePageProps> = ({client}) => {
                                   <button
                                     type="button"
                                     className={styles.settingsSectionHelp}
-                                    aria-label={`About ${fullNetworkConfig ? "Full localnet" : "Acton simulated localnet"}`}
+                                    aria-label={`About ${fullNetworkConfig ? "Full localnet" : "Simulated localnet"}`}
                                   >
                                     <CircleHelp size={14} aria-hidden="true" />
                                   </button>

@@ -429,7 +429,7 @@ impl EnvironmentConfig {
             },
             Self::ActonSimulatedLocalnet { .. } => EnvironmentNetwork {
                 id: "acton-simulated-localnet".to_owned(),
-                label: "Acton simulated localnet".to_owned(),
+                label: "Simulated localnet".to_owned(),
                 chain_id: -3,
                 test_only: true,
                 supports_actions: false,
