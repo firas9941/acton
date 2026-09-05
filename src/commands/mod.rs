@@ -1,4 +1,5 @@
 pub mod abi_args;
+mod browser;
 pub mod build;
 pub mod check;
 pub mod common;

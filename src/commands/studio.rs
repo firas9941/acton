@@ -15,11 +15,16 @@ use acton_studio::{
 use anyhow::Context;
 use fs2::FileExt;
 
+use crate::commands::browser::open_browser;
 use crate::studio_wallets::ProjectWalletRuntime;
 
 mod shutdown;
 
-pub async fn studio_start_cmd(host: IpAddr, port: u16, open_browser: bool) -> anyhow::Result<()> {
+pub async fn studio_start_cmd(
+    host: IpAddr,
+    port: u16,
+    should_open_browser: bool,
+) -> anyhow::Result<()> {
     if !host.is_loopback() {
         anyhow::bail!(
             "Acton Studio requires a loopback host until remote authentication is configured"
@@ -73,11 +78,8 @@ pub async fn studio_start_cmd(host: IpAddr, port: u16, open_browser: bool) -> an
 
     println!("    {} Acton Studio at {}", "Starting".green().bold(), url);
 
-    if open_browser
-        && host.is_loopback()
-        && let Err(error) = opener::open(&url)
-    {
-        eprintln!("Warning: Failed to open Acton Studio at {url}: {error}");
+    if should_open_browser && host.is_loopback() {
+        open_browser(&url);
     }
 
     let (requested, received) = tokio::sync::oneshot::channel();
