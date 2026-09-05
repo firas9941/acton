@@ -17,10 +17,9 @@ serde_json.workspace = true
 thiserror.workspace = true
 tokio.workspace = true
 tracing.workspace = true
+utoipa.workspace = true
 uuid.workspace = true
 xxhash-rust.workspace = true
-
-utoipa = { version = "5.5" }
 
 [dev-dependencies]
 expect-test.workspace = true
