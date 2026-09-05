@@ -109,6 +109,8 @@ RUN set -eux; \
 
 FROM ubuntu:${UBUNTU_VERSION} AS http-api-builder
 ARG HTTP_API_BUILD_JOBS=4
+ARG TON_HTTP_API_COMMIT
+ARG TON_HTTP_API_REPOSITORY
 
 RUN apt-get update \
     && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
@@ -205,13 +207,11 @@ COPY --from=localton-builder /out/xtask /usr/local/bin/xtask
 RUN --mount=type=cache,id=ton-http-api-v2-ccache,target=/tmp/http-api-build/tools/ton-http-api-v2/ccache \
     xtask build-ton-http-api-v2 \
         --state-dir /tmp/http-api-build \
+        --install-dir /opt/ton-http-api-v2 \
         --jobs "${HTTP_API_BUILD_JOBS}" \
-    && mkdir -p /opt/ton-http-api-v2 \
-    && cp -a /tmp/http-api-build/tools/ton-http-api-v2/install/. /opt/ton-http-api-v2/ \
     && strip --strip-unneeded /opt/ton-http-api-v2/bin/ton-http-api-v2 \
     && rm -rf \
         /tmp/http-api-build/tools/ton-http-api-v2/build \
-        /tmp/http-api-build/tools/ton-http-api-v2/install \
         /tmp/http-api-build/tools/ton-http-api-v2/source
 
 FROM golang:${GO_VERSION}-bookworm AS go-toolchain

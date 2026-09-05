@@ -365,7 +365,25 @@ Make sure that the API returns the current masterchain block:
 curl http://127.0.0.1:18002/api/v2/getMasterchainInfo
 ```
 
-The build uses the pinned API V2 source and the same TON release as the node. Build artifacts stay under `.localton/tools`.
+The build uses the pinned API V2 source and the same TON release as the node.
+Sources and build files stay under `.localton/tools/ton-http-api-v2`; installed
+artifacts go into its `install` directory. Use `--install-dir` to choose another
+installation directory:
+
+```bash
+xtask build-ton-http-api-v2 --state-dir .localton --install-dir ./build/ton-http-api-v2 --jobs 8
+```
+
+With a custom installation directory, pass the installed binary and config to
+`localton bootstrap` using `--ton-http-api-command` and
+`--ton-http-api-static-config` alongside `--ton-http-api`.
+
+Override the pinned API repository and commit with `--repository` and `--commit`,
+or `TON_HTTP_API_REPOSITORY` and `TON_HTTP_API_COMMIT`. The corresponding Docker
+build arguments are also available. The commit must be a full 40-character SHA;
+the TON submodule remains pinned to the node-compatible version. Changing the
+repository or commit invalidates the native build cache. Changing only the
+installation directory reuses the compiled binary.
 
 The native build requires these development components:
 
