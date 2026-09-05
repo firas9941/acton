@@ -126,6 +126,7 @@
       "version": "0.1.0",
       "dependencies": {
         "@acton/explorer-core": "workspace:*",
+        "@acton/explorer-ui": "workspace:*",
         "@acton/localton-ui": "workspace:*",
         "@acton/test-ui": "workspace:*",
         "@acton/transaction-ui": "workspace:*",

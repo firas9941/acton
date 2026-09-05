@@ -100,6 +100,7 @@ export type EnvironmentCapability =
   | "configApi"
   | "explorer"
   | "integration"
+  | "testnetFaucet"
   | "controlApi"
   | "simulator"
   | "wallets"

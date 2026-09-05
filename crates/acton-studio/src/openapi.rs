@@ -69,6 +69,9 @@ pub fn openapi() -> utoipa::openapi::OpenApi {
         crate::list_wallets,
         crate::sign_wallet,
         crate::get_environment_api_calls,
+        crate::testnet_faucet::auth_status,
+        crate::testnet_faucet::challenge,
+        crate::testnet_faucet::claim,
         proxy_environment_rpc_root,
         proxy_environment_rpc_get,
         proxy_environment_rpc_post,
@@ -158,6 +161,7 @@ pub fn openapi() -> utoipa::openapi::OpenApi {
         (name = "environments", description = "Environment lifecycle"),
         (name = "wallets", description = "Environment wallets"),
         (name = "environment RPC", description = "Environment API proxy"),
+        (name = "testnet faucet", description = "Guest Testnet GRAM faucet proxy"),
         (name = "contracts", description = "Studio contract metadata facade"),
         (name = "test runs", description = "Test execution and events"),
         (name = "test artifacts", description = "Artifacts produced by test runs")

@@ -229,7 +229,7 @@ export const EnvironmentNavigation: FC<EnvironmentNavigationProps> = ({
       ? supports(environment, "wallets")
       : item.path === "/snapshots"
         ? supports(environment, "snapshots")
-        : supportsAny(environment, "gramFaucet", "jettonFaucet"),
+        : supportsAny(environment, "testnetFaucet", "gramFaucet", "jettonFaucet"),
   )
   const visibleApiReferenceItems = apiReferenceItems.filter(item => {
     if (item.path === "/api-reference/v2") return supports(environment, "apiV2")

@@ -24,6 +24,7 @@ import {ConfigPage} from "@acton/explorer-core/pages/ConfigPage"
 import {EmulatePage} from "@acton/explorer-core/pages/EmulatePage"
 import {ExplorerIndexPage} from "@acton/explorer-core/pages/ExplorerIndexPage"
 import {FavoriteAccountsPage} from "@acton/explorer-core/pages/FavoriteAccountsPage"
+import {FaucetPage as TestnetFaucetPage} from "@acton/explorer-ui/faucet/FaucetPage"
 import {SuspendedAddressesPage} from "@acton/explorer-core/pages/SuspendedAddressesPage"
 import {TransactionPage} from "@acton/explorer-core/pages/TransactionPage"
 import {AddressBookProvider} from "@acton/explorer-core/hooks/useAddressBook"
@@ -313,7 +314,21 @@ const AppContent: FC<AppContentProps> = ({
             <Route
               path={path("/faucet")}
               element={
-                runtime.gramFaucetEnabled || runtime.jettonFaucetEnabled ? (
+                supports(runtime.environment, "testnetFaucet") ? (
+                  <DashboardPage>
+                    <TestnetFaucetPage
+                      isTestnetSelected
+                      selectedNetworkLabel="Testnet"
+                      testnetClient={client}
+                      onSwitchToTestnet={() => undefined}
+                      githubAuthEnabled={false}
+                      faucetBaseUrl="/api/v1/testnet-faucet/"
+                      addressPath={(address: string) =>
+                        path(`/explorer/address/${encodeURIComponent(address)}`)
+                      }
+                    />
+                  </DashboardPage>
+                ) : runtime.gramFaucetEnabled || runtime.jettonFaucetEnabled ? (
                   <DashboardPage>
                     <FaucetPage
                       client={client}

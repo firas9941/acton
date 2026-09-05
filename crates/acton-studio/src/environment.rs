@@ -222,6 +222,7 @@ pub enum EnvironmentCapability {
     ControlApi,
     Explorer,
     Integration,
+    TestnetFaucet,
     GramFaucet,
     JettonFaucet,
     Wallets,
@@ -399,16 +400,22 @@ impl EnvironmentConfig {
                 EnvironmentCapability::Observability,
                 EnvironmentCapability::Health,
             ],
-            Self::RemoteTonNetwork { .. } => vec![
-                EnvironmentCapability::ApiV2,
-                EnvironmentCapability::ApiV3,
-                EnvironmentCapability::Explorer,
-                EnvironmentCapability::Integration,
-                EnvironmentCapability::Wallets,
-                EnvironmentCapability::Simulator,
-                EnvironmentCapability::Contracts,
-                EnvironmentCapability::ApiCalls,
-            ],
+            Self::RemoteTonNetwork { network } => {
+                let mut capabilities = vec![
+                    EnvironmentCapability::ApiV2,
+                    EnvironmentCapability::ApiV3,
+                    EnvironmentCapability::Explorer,
+                    EnvironmentCapability::Integration,
+                    EnvironmentCapability::Wallets,
+                    EnvironmentCapability::Simulator,
+                    EnvironmentCapability::Contracts,
+                    EnvironmentCapability::ApiCalls,
+                ];
+                if *network == PublicTonNetwork::Testnet {
+                    capabilities.insert(4, EnvironmentCapability::TestnetFaucet);
+                }
+                capabilities
+            }
         }
     }
 

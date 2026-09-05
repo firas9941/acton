@@ -38,6 +38,7 @@ mod openapi;
 mod test_api;
 mod test_run;
 mod test_runtime;
+mod testnet_faucet;
 mod wallet;
 
 pub use api_calls::{
@@ -86,6 +87,7 @@ pub const STUDIO_HEALTH_PATH: &str = "/api/v1/health";
 pub const STUDIO_INFO_PATH: &str = "/api/v1/info";
 pub const STUDIO_OPENAPI_PATH: &str = "/api/v1/openapi.json";
 pub const STUDIO_WALLETS_PATH_SUFFIX: &str = "/wallets";
+pub const DEFAULT_TESTNET_FAUCET_URL: &str = "https://faucet.ton.org/";
 
 const MAX_DEPLOYMENT_SUBMISSION_BODY_BYTES: usize = 4 * 1024 * 1024;
 const TONCENTER_API_KEY_HEADER: &str = "x-api-key";
@@ -137,6 +139,7 @@ pub struct StudioServerConfig {
     server_version: String,
     workspace: Option<StudioWorkspace>,
     toncenter_api_keys: PublicToncenterApiKeys,
+    testnet_faucet_url: reqwest::Url,
 }
 
 impl StudioServerConfig {
@@ -145,6 +148,8 @@ impl StudioServerConfig {
             server_version: server_version.into(),
             workspace: None,
             toncenter_api_keys: PublicToncenterApiKeys::from_environment(),
+            testnet_faucet_url: reqwest::Url::parse(DEFAULT_TESTNET_FAUCET_URL)
+                .expect("default Testnet faucet URL must be valid"),
         }
     }
 
@@ -162,6 +167,17 @@ impl StudioServerConfig {
     ) -> Self {
         self.toncenter_api_keys
             .set(network, sensitive_header_value(api_key.as_ref()));
+        self
+    }
+
+    /// Replaces the fixed upstream used by the guest Testnet faucet proxy.
+    ///
+    /// Production Studio uses [`DEFAULT_TESTNET_FAUCET_URL`]. Tests and private
+    /// distributions can provide a controlled compatible service without exposing
+    /// an arbitrary proxy target through the HTTP API.
+    #[must_use]
+    pub fn with_testnet_faucet_url(mut self, url: reqwest::Url) -> Self {
+        self.testnet_faucet_url = url;
         self
     }
 }
@@ -310,6 +326,7 @@ impl StudioServer {
                 .build()
                 .expect("Studio HTTP client must build"),
             toncenter_api_keys: self.config.toncenter_api_keys.clone(),
+            testnet_faucet_url: self.config.testnet_faucet_url.clone(),
         };
         let api = Router::new()
             .route("/openapi.json", get(openapi::handler))
@@ -390,6 +407,7 @@ impl StudioServer {
                 "/environments/{environment_id}/observability/{*path}",
                 any(proxy_environment_observability),
             )
+            .merge(testnet_faucet::router())
             .merge(test_api::router())
             .fallback(api_not_found);
         let app = Router::new()
@@ -446,6 +464,7 @@ pub(crate) struct StudioState {
     wallet_runtime: Arc<dyn WalletRuntime>,
     http_client: reqwest::Client,
     toncenter_api_keys: PublicToncenterApiKeys,
+    testnet_faucet_url: reqwest::Url,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize, utoipa::ToSchema)]

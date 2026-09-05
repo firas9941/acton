@@ -143,7 +143,7 @@ async fn openapi_contract_lists_every_studio_operation_and_resolves_schema_refer
         openapi: 3.1.0
         title: Acton Studio API
         version: 1.0.0
-        operations: 57
+        operations: 60
         DELETE /api/v1/environments/{environment_id}
         DELETE /api/v1/environments/{environment_id}/nodes/{node_id}
         DELETE /api/v1/environments/{environment_id}/snapshots/{snapshot_id}
@@ -178,6 +178,7 @@ async fn openapi_contract_lists_every_studio_operation_and_resolves_schema_refer
         GET /api/v1/test-runs/{run_id}/artifacts/test-logs
         GET /api/v1/test-runs/{run_id}/artifacts/trace/{name}
         GET /api/v1/test-runs/{run_id}/output
+        GET /api/v1/testnet-faucet/auth/status
         PATCH /api/v1/environments/{environment_id}
         POST /api/v1/environments
         POST /api/v1/environments/{environment_id}/nodes
@@ -201,6 +202,8 @@ async fn openapi_contract_lists_every_studio_operation_and_resolves_schema_refer
         POST /api/v1/test-runs
         POST /api/v1/test-runs/{run_id}/cancel
         POST /api/v1/test-runs/{run_id}/events
+        POST /api/v1/testnet-faucet/challenge
+        POST /api/v1/testnet-faucet/claim
         schemas: 81
         missing schema references: none"]]
     .assert_eq(&actual);
