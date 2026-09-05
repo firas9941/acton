@@ -10,7 +10,7 @@ use crate::{Error, Network, NetworkConfig};
 
 const COMPOSE_TEMPLATE: &str = include_str!("../../assets/localton.compose.yaml");
 const DEFAULT_LOCALTON_IMAGE: &str =
-    "ghcr.io/ton-blockchain/localton:sha-daddb274ef00101efd81f604371b2de50d446f10";
+    "ghcr.io/ton-blockchain/localton:sha-fb807b4286149081379b337cc1f50165972384d7";
 const COMPOSE_WAIT_TIMEOUT_SECONDS: u16 = 600;
 const DOCKER_CONFIG_DIRECTORY: &str = "docker-pull-config";
 const RUNTIME_DESCRIPTOR_FILE: &str = "runtime.json";
