@@ -376,6 +376,16 @@ export async function fetchStudioInfo(signal: AbortSignal): Promise<StudioInfo> 
   return info
 }
 
+/** Checks whether the Studio owner process still serves its control API. */
+export async function checkStudioConnection(signal: AbortSignal): Promise<void> {
+  // The health endpoint intentionally returns 204, so parsing it as JSON would
+  // turn every successful heartbeat into a false connection failure.
+  await request("/api/v1/health", {
+    cache: "no-store",
+    signal,
+  })
+}
+
 export function fetchStudioEnvironments(signal?: AbortSignal): Promise<StudioEnvironment[]> {
   return requestJson<StudioEnvironment[]>("/api/v1/environments", {
     headers: {accept: "application/json"},
