@@ -9,6 +9,7 @@ use axum::{
 use expect_test::expect;
 use serde_json::{Value, json};
 use std::sync::Arc;
+use std::time::{Duration, SystemTime, UNIX_EPOCH};
 use tokio::sync::Notify;
 use tower::ServiceExt;
 
@@ -180,7 +181,7 @@ async fn accepted_operations_survive_client_disconnect_and_service_shutdown_reje
     let operation_id = accepted["id"].as_str().expect("operation id");
 
     drop(app);
-    let operation = tokio::time::timeout(std::time::Duration::from_secs(3), async {
+    let operation = tokio::time::timeout(Duration::from_secs(3), async {
         loop {
             let operation = runtime
                 .operation(operation_id)
@@ -239,4 +240,112 @@ async fn accepted_operations_survive_client_disconnect_and_service_shutdown_reje
           }
         ]"#]]
     .assert_eq(&serde_json::to_string_pretty(&stopped).expect("snapshot"));
+}
+
+#[tokio::test]
+async fn health_compares_live_v2_and_v3_heads_and_retains_recent_samples() {
+    let root = tempfile::tempdir().expect("state directory");
+    let location = catalog::create(
+        root.path(),
+        CreateNetwork {
+            name: "observed".to_owned(),
+            block_time_ms: Some(400),
+            ..Default::default()
+        },
+    )
+    .await
+    .expect("network");
+    let ports = location.network.config.ports();
+    let block_time = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .expect("system time")
+        .as_secs()
+        .saturating_sub(1);
+    let v2 = Router::new()
+        .route(
+            "/api/v2/getMasterchainInfo",
+            axum::routing::get(|| async {
+                axum::Json(json!({"ok": true, "result": {"last": {"seqno": 42}}}))
+            }),
+        )
+        .route(
+            "/api/v2/getBlockHeader",
+            axum::routing::get(move || async move {
+                axum::Json(json!({"ok": true, "result": {"gen_utime": block_time}}))
+            }),
+        );
+    let v3 = Router::new()
+        .route("/healthcheck", axum::routing::get(|| async { "OK" }))
+        .route(
+            "/api/v3/masterchainInfo",
+            axum::routing::get(|| async { axum::Json(json!({"last": {"seqno": 39}})) }),
+        );
+    let v2_listener = tokio::net::TcpListener::bind(("127.0.0.1", ports.api_v2))
+        .await
+        .expect("v2 listener");
+    let v3_listener = tokio::net::TcpListener::bind(("127.0.0.1", ports.api_v3))
+        .await
+        .expect("v3 listener");
+    let v2_server = tokio::spawn(async move { axum::serve(v2_listener, v2).await });
+    let v3_server = tokio::spawn(async move { axum::serve(v3_listener, v3).await });
+    let runtime = Runtime::open(&location.path).await.expect("runtime");
+    let app = http::router(
+        runtime.clone(),
+        "secret".to_owned(),
+        Arc::new(Notify::new()),
+    );
+
+    let first = request(
+        &app,
+        Method::GET,
+        "/v1/network/health",
+        Value::Null,
+        Some("secret"),
+    )
+    .await;
+    tokio::time::sleep(Duration::from_millis(1050)).await;
+    let second = request(
+        &app,
+        Method::GET,
+        "/v1/network/health",
+        Value::Null,
+        Some("secret"),
+    )
+    .await;
+    let summary = json!({
+        "statusCode": second.0,
+        "status": second.1["status"],
+        "apiV2": second.1["apiV2"]["status"],
+        "apiV3": second.1["apiV3"]["status"],
+        "v2Seqno": second.1["apiV2"]["masterchainSeqno"],
+        "v3Seqno": second.1["apiV3"]["masterchainSeqno"],
+        "lagBlocks": second.1["indexerLagBlocks"],
+        "estimatedLagMs": second.1["estimatedIndexerLagMs"],
+        "historyPoints": second.1["history"].as_array().map(Vec::len),
+        "latencyRecorded": second.1["apiV2"]["latencyMs"].is_number()
+            && second.1["apiV3"]["latencyMs"].is_number(),
+        "blockAgeRecorded": second.1["apiV2"]["blockAgeMs"].is_number(),
+        "firstHistoryPoints": first.1["history"].as_array().map(Vec::len),
+    });
+
+    expect![[r#"
+        {
+          "apiV2": "ready",
+          "apiV3": "syncing",
+          "blockAgeRecorded": true,
+          "estimatedLagMs": 1200,
+          "firstHistoryPoints": 1,
+          "historyPoints": 2,
+          "lagBlocks": 3,
+          "latencyRecorded": true,
+          "status": "syncing",
+          "statusCode": 200,
+          "v2Seqno": 42,
+          "v3Seqno": 39
+        }"#]]
+    .assert_eq(&serde_json::to_string_pretty(&summary).expect("health snapshot"));
+
+    v2_server.abort();
+    v3_server.abort();
+    runtime.shutdown().await.expect("runtime shutdown");
 }

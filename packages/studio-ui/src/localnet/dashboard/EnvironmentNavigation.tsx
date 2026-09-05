@@ -78,6 +78,7 @@ const networkItems: NestedSidebarItem[] = [
   {label: "Overview", path: "/network"},
   {label: "Nodes", path: "/network/nodes"},
   {label: "Validators", path: "/network/validators"},
+  {label: "Health", path: "/network/health"},
 ]
 
 const contractItems: NestedSidebarItem[] = [
@@ -220,6 +221,9 @@ export const EnvironmentNavigation: FC<EnvironmentNavigationProps> = ({
       ? formatForkNetworkLabel(forkNetwork)
       : undefined
   const visibleStandaloneItems = supports(environment, "simulator") ? standaloneItems : []
+  const visibleNetworkItems = networkItems.filter(
+    item => item.path !== "/network/health" || supports(environment, "health"),
+  )
   const visibleEnvironmentItems = environmentItems.filter(item =>
     item.path === "/wallets"
       ? supports(environment, "wallets")
@@ -330,14 +334,14 @@ export const EnvironmentNavigation: FC<EnvironmentNavigationProps> = ({
             />
           ))}
 
-          {supports(environment, "observability") ? (
+          {supportsAny(environment, "observability", "health") ? (
             <NavigationDisclosure
               active={isNetworkActive}
               ariaLabel="Network pages"
               controlsId="environment-network-navigation"
               icon={RadioTower}
               isItemActive={item => localPathname === item.path}
-              items={networkItems}
+              items={visibleNetworkItems}
               label="Network"
               onItemSelect={path => void navigate(routes.path(path))}
               onParentSelect={() => void navigate(routes.path("/network"))}

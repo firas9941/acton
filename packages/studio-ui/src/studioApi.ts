@@ -112,6 +112,57 @@ export type EnvironmentCapability =
   | "snapshots"
   | "checkpoints"
   | "observability"
+  | "health"
+
+export type NetworkHealthStatus = "healthy" | "syncing" | "degraded" | "stopped"
+export type ApiHealthStatus = "ready" | "syncing" | "unavailable" | "stopped"
+export type ServiceHealthStatus =
+  | "ready"
+  | "starting"
+  | "completed"
+  | "stopped"
+  | "failed"
+  | "unknown"
+
+export interface ApiHealth {
+  readonly status: ApiHealthStatus
+  readonly endpoint: string
+  readonly latencyMs: number | null
+  readonly masterchainSeqno: number | null
+  readonly blockTimeUnix: number | null
+  readonly blockAgeMs: number | null
+  readonly error: string | null
+}
+
+export interface ServiceHealth {
+  readonly name: string
+  readonly status: ServiceHealthStatus
+  readonly state: string | null
+  readonly health: string | null
+  readonly exitCode: number | null
+}
+
+export interface NetworkHealthSample {
+  readonly observedAtMs: number
+  readonly apiV2LatencyMs: number | null
+  readonly apiV3LatencyMs: number | null
+  readonly apiV2Seqno: number | null
+  readonly apiV3Seqno: number | null
+  readonly indexerLagBlocks: number | null
+  readonly blockAgeMs: number | null
+}
+
+export interface NetworkHealth {
+  readonly observedAtMs: number
+  readonly status: NetworkHealthStatus
+  readonly apiV2: ApiHealth
+  readonly apiV3: ApiHealth
+  readonly indexerLagBlocks: number | null
+  readonly estimatedIndexerLagMs: number | null
+  readonly services: readonly ServiceHealth[]
+  readonly history: readonly NetworkHealthSample[]
+  readonly infrastructureError: string | null
+}
 
 export interface EnvironmentEndpoints {
   readonly apiV2?: string
@@ -361,6 +412,16 @@ export function restartStudioEnvironment(environmentId: string): Promise<StudioE
       method: "POST",
       headers: {accept: "application/json"},
     },
+  )
+}
+
+export function fetchStudioEnvironmentHealth(
+  environmentId: string,
+  signal?: AbortSignal,
+): Promise<NetworkHealth> {
+  return requestJson<NetworkHealth>(
+    `/api/v1/environments/${encodeURIComponent(environmentId)}/health`,
+    {headers: {accept: "application/json"}, signal},
   )
 }
 

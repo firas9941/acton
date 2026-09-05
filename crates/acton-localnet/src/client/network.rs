@@ -1,7 +1,7 @@
 //! Typed network operations keep wire paths and completion semantics out of applications.
 
 use super::Client;
-use crate::{Error, Network, Operation, OperationStatus, Snapshot};
+use crate::{Error, Network, NetworkHealth, Operation, OperationStatus, Snapshot};
 use reqwest::Method;
 use serde_json::json;
 
@@ -9,6 +9,11 @@ impl Client {
     /// Reads current state and progress without waiting for an active mutation.
     pub async fn network(&self) -> Result<Network, Error> {
         self.request(Method::GET, "/v1/network", None).await
+    }
+
+    /// Samples endpoint and Compose health from the process that owns this network.
+    pub async fn health(&self) -> Result<NetworkHealth, Error> {
+        self.request(Method::GET, "/v1/network/health", None).await
     }
 
     /// Starts this service's network; completion is reported by the returned operation.

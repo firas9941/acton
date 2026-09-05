@@ -233,6 +233,7 @@ pub enum EnvironmentCapability {
     Snapshots,
     Checkpoints,
     Observability,
+    Health,
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize, ToSchema)]
@@ -396,6 +397,7 @@ impl EnvironmentConfig {
                 EnvironmentCapability::ApiCalls,
                 EnvironmentCapability::Snapshots,
                 EnvironmentCapability::Observability,
+                EnvironmentCapability::Health,
             ],
             Self::RemoteTonNetwork { .. } => vec![
                 EnvironmentCapability::ApiV2,
@@ -499,6 +501,20 @@ pub trait EnvironmentRuntime: Send + Sync {
     fn stop(&self, environment_id: &str) -> EnvironmentRuntimeFuture<'_, StudioEnvironment>;
 
     fn restart(&self, environment_id: &str) -> EnvironmentRuntimeFuture<'_, StudioEnvironment>;
+
+    /// Returns live infrastructure health when the environment has an external owner.
+    /// Implementations must not infer service state from saved environment metadata.
+    fn health(
+        &self,
+        _environment_id: &str,
+    ) -> EnvironmentRuntimeFuture<'_, acton_localnet::NetworkHealth> {
+        Box::pin(async {
+            Err(EnvironmentRuntimeError::Conflict {
+                code: "environment_health_unavailable",
+                message: "Health diagnostics are not available for this environment".to_owned(),
+            })
+        })
+    }
 
     fn add_full_ton_node(
         &self,

@@ -350,6 +350,10 @@ impl StudioServer {
                 post(restart_environment),
             )
             .route(
+                "/environments/{environment_id}/health",
+                get(get_environment_health),
+            )
+            .route(
                 "/environments/{environment_id}/snapshots",
                 get(list_environment_snapshots).post(create_environment_snapshot),
             )
@@ -917,6 +921,30 @@ async fn restart_environment(
         .restart(&environment_id)
         .await
         .map(|environment| Json(public_environment(environment)))
+        .map_err(StudioApiError)
+}
+
+#[utoipa::path(
+    get,
+    path = "/api/v1/environments/{environment_id}/health",
+    params(("environment_id" = String, Path, description = "Environment ID")),
+    responses(
+        (status = 200, description = "Live Full localnet health", body = acton_localnet::NetworkHealth),
+        (status = 404, description = "Environment not found", body = StudioApiErrorBody),
+        (status = 409, description = "Health diagnostics are unavailable", body = StudioApiErrorBody),
+        (status = 500, description = "Failed to inspect environment health", body = StudioApiErrorBody)
+    ),
+    tag = "environments"
+)]
+async fn get_environment_health(
+    State(state): State<StudioState>,
+    AxumPath(environment_id): AxumPath<String>,
+) -> Result<Json<acton_localnet::NetworkHealth>, StudioApiError> {
+    state
+        .environment_runtime
+        .health(&environment_id)
+        .await
+        .map(Json)
         .map_err(StudioApiError)
 }
 

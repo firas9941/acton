@@ -2,7 +2,7 @@
 //! Docker, network mutations and startup readiness belong exclusively to acton-localnet.
 
 use acton_localnet::{
-    Network, Operation, OperationStatus, Status,
+    Network, NetworkHealth, Operation, OperationStatus, Status,
     catalog::{self, NetworkDirectory},
     client::Client,
     process::Launcher,
@@ -78,6 +78,11 @@ impl FullLocalnet {
             return Ok(network);
         }
         self.launcher.inspect(&self.location).await.map_err(error)
+    }
+
+    /// Reads live health from the process that owns Docker and the API probes.
+    pub(crate) async fn health(&self) -> Result<NetworkHealth, EnvironmentRuntimeError> {
+        self.client().await?.health().await.map_err(error)
     }
 
     pub(crate) async fn shutdown(&self) -> Result<(), EnvironmentRuntimeError> {

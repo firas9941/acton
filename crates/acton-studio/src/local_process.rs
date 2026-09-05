@@ -386,6 +386,28 @@ impl EnvironmentRuntime for LocalProcessEnvironmentRuntime {
         })
     }
 
+    fn health(
+        &self,
+        environment_id: &str,
+    ) -> EnvironmentRuntimeFuture<'_, acton_localnet::NetworkHealth> {
+        let environment_id = environment_id.to_owned();
+
+        Box::pin(async move {
+            let environment = find_environment(&self.inner, &environment_id).await?;
+
+            match &environment.driver {
+                EnvironmentDriver::FullTonNetwork(driver) => driver.health().await,
+                EnvironmentDriver::ActonSimulatedLocalnet { .. } => {
+                    Err(EnvironmentRuntimeError::Conflict {
+                        code: "environment_health_unavailable",
+                        message: "Health diagnostics are available for Full localnet environments"
+                            .to_owned(),
+                    })
+                }
+            }
+        })
+    }
+
     fn add_full_ton_node(
         &self,
         environment_id: &str,

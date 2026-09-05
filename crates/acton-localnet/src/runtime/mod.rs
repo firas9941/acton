@@ -1,5 +1,6 @@
 //! One owner per state directory and one mutation at a time per network.
 
+mod health;
 mod lifecycle;
 mod nodes;
 mod operations;
@@ -11,6 +12,7 @@ use crate::{docker::DockerNetwork, storage};
 pub(crate) use operations::Action;
 use operations::Context;
 use std::{
+    collections::VecDeque,
     path::{Path, PathBuf},
     sync::Arc,
 };
@@ -29,6 +31,7 @@ struct Inner {
     entry: Arc<Entry>,
     admission: Mutex<bool>,
     closing: tokio::sync::watch::Sender<bool>,
+    health_history: Mutex<VecDeque<crate::NetworkHealthSample>>,
 }
 
 struct Entry {
@@ -90,6 +93,7 @@ impl Runtime {
                 _lock: lock,
                 admission: Mutex::new(true),
                 closing: tokio::sync::watch::channel(false).0,
+                health_history: Mutex::new(VecDeque::new()),
             }),
         })
     }

@@ -16,9 +16,10 @@ mod storage;
 
 pub use error::Error;
 pub use model::{
-    CreateNetwork, Endpoints, Network, NetworkConfig, NetworkPorts, NetworkState, Node, Operation,
-    OperationProgress, OperationStatus, OperationStep, PortOptions, Snapshot, StartupTimings,
-    Status,
+    ApiHealth, ApiHealthStatus, CreateNetwork, Endpoints, Network, NetworkConfig, NetworkHealth,
+    NetworkHealthSample, NetworkHealthStatus, NetworkPorts, NetworkState, Node, Operation,
+    OperationProgress, OperationStatus, OperationStep, PortOptions, ServiceHealth,
+    ServiceHealthStatus, Snapshot, StartupTimings, Status,
 };
 pub use runtime::Runtime;
 pub use storage::{ServiceDescriptor, service_descriptor_path};

@@ -30,6 +30,7 @@ import {AddressBookProvider} from "@acton/explorer-core/hooks/useAddressBook"
 import {MetadataRegistryProvider} from "@acton/explorer-core/metadata/MetadataRegistryProvider"
 import {FaucetPage} from "./dashboard/pages/FaucetPage"
 import {HomePage} from "./dashboard/pages/HomePage"
+import {HealthPage} from "./dashboard/pages/HealthPage"
 import {AbiCatalogPage, AbiDetailsPage} from "./dashboard/pages/AbiCatalogPage"
 import {ApiCallsPage} from "./dashboard/pages/ApiCallsPage"
 import {IntegratePage} from "./dashboard/pages/IntegratePage"
@@ -55,6 +56,7 @@ const ApiReferencePage = lazy(async () => {
 })
 const LOCALNET_PAGE_TITLES: Readonly<Record<string, string>> = {
   "/dashboard": "Dashboard",
+  "/network/health": "Health",
   "/network": "Network overview",
   "/network/nodes": "Nodes and synchronization",
   "/network/validators": "Validators",
@@ -82,6 +84,7 @@ const LOCALNET_PAGE_TITLES: Readonly<Record<string, string>> = {
 
 const LOCALNET_PAGE_DESCRIPTIONS: Readonly<Record<string, string>> = {
   "/dashboard": "Network status and recent activity",
+  "/network/health": "API readiness, indexer lag and service health",
   "/network": "Throughput, topology and consensus health",
   "/network/nodes": "Node availability, synchronization and diagnostics",
   "/network/validators": "Elections, validator sets and block production",
@@ -278,6 +281,19 @@ const AppContent: FC<AppContentProps> = ({
                   </RouteSuspense>
                 </DashboardPage>
               }
+            />
+            <Route
+              path={path("/network/health")}
+              element={withCapability(
+                "health",
+                <DashboardPage>
+                  {runtime.environment ? (
+                    <HealthPage environment={runtime.environment} />
+                  ) : (
+                    fallback
+                  )}
+                </DashboardPage>,
+              )}
             />
             {(["/network", "/network/nodes", "/network/validators"] as const).map(networkPath => (
               <Route

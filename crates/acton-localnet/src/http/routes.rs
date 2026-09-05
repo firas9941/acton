@@ -19,6 +19,7 @@ pub(super) fn router() -> Router<ApiState> {
         )
         .route("/v1/shutdown", post(shutdown))
         .route("/v1/network", get(network).delete(remove))
+        .route("/v1/network/health", get(network_health))
         .route("/v1/network/start", post(start))
         .route("/v1/network/stop", post(stop))
         .route("/v1/network/logs", get(logs))
@@ -46,6 +47,12 @@ pub(super) fn router() -> Router<ApiState> {
 
 async fn network(State(state): State<ApiState>) -> Json<crate::Network> {
     Json(state.runtime.get().await)
+}
+
+async fn network_health(
+    State(state): State<ApiState>,
+) -> Result<Json<crate::NetworkHealth>, Error> {
+    state.runtime.health().await.map(Json)
 }
 
 async fn operation(

@@ -4,13 +4,27 @@ use super::{
     DOCKER_DIAGNOSTICS_TIMEOUT, DOCKER_METADATA_TIMEOUT, DockerNetwork, FAILED_CONTAINER_LOG_LINES,
     STARTUP_ERROR_LINES,
 };
-use crate::{Error, Node};
+use crate::{Error, Node, ServiceHealth, ServiceHealthStatus};
 use serde::Deserialize;
 use std::{
     process::{ExitStatus, Stdio},
     time::Duration,
 };
 use tokio::{process::Command, time::timeout};
+
+const CORE_SERVICES: [&str; 9] = [
+    "localton",
+    "postgres",
+    "redis",
+    "v3-basechain-bootstrap",
+    "v3-migrations",
+    "v3-worker",
+    "v3-account-scanner",
+    "v3-api",
+    "v3-classifier",
+];
+
+const ONE_SHOT_SERVICES: [&str; 2] = ["v3-basechain-bootstrap", "v3-migrations"];
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "PascalCase")]
@@ -63,6 +77,47 @@ impl ComposeContainerState {
             format!("{service} ({})", status.join(", "))
         }
     }
+
+    fn normalized_status(&self, one_shot: bool) -> ServiceHealthStatus {
+        if self.failed() {
+            return ServiceHealthStatus::Failed;
+        }
+
+        if one_shot && self.state.eq_ignore_ascii_case("exited") {
+            return ServiceHealthStatus::Completed;
+        }
+
+        if self.state.eq_ignore_ascii_case("running") {
+            return if self.health.is_empty() || self.health.eq_ignore_ascii_case("healthy") {
+                ServiceHealthStatus::Ready
+            } else {
+                ServiceHealthStatus::Starting
+            };
+        }
+
+        if matches!(
+            self.state.to_ascii_lowercase().as_str(),
+            "created" | "starting"
+        ) {
+            return ServiceHealthStatus::Starting;
+        }
+
+        if self.state.eq_ignore_ascii_case("exited") {
+            return ServiceHealthStatus::Stopped;
+        }
+
+        ServiceHealthStatus::Unknown
+    }
+
+    fn health(&self, one_shot: bool) -> ServiceHealth {
+        ServiceHealth {
+            name: self.service.clone(),
+            status: self.normalized_status(one_shot),
+            state: (!self.state.is_empty()).then(|| self.state.clone()),
+            health: (!self.health.is_empty()).then(|| self.health.clone()),
+            exit_code: Some(self.exit_code),
+        }
+    }
 }
 
 impl DockerNetwork {
@@ -83,21 +138,10 @@ impl DockerNetwork {
         }
 
         let states = parse_compose_container_states(&String::from_utf8_lossy(&output.stdout));
-        let services = [
-            "localton",
-            "postgres",
-            "redis",
-            "v3-basechain-bootstrap",
-            "v3-migrations",
-            "v3-worker",
-            "v3-account-scanner",
-            "v3-api",
-            "v3-classifier",
-        ];
         let mut pending = Vec::new();
         let mut completed = 0;
 
-        for service in services
+        for service in CORE_SERVICES
             .into_iter()
             .chain(nodes.iter().map(|node| node.id.as_str()))
         {
@@ -106,7 +150,7 @@ impl DockerNetwork {
                 state.is_none_or(|state| matches!(state.state.as_str(), "exited" | "dead"))
             } else {
                 state.is_some_and(|state| {
-                    if matches!(service, "v3-basechain-bootstrap" | "v3-migrations") {
+                    if ONE_SHOT_SERVICES.contains(&service) {
                         state.state == "exited" && state.exit_code == 0
                     } else {
                         state.state == "running"
@@ -124,7 +168,7 @@ impl DockerNetwork {
                 let waiting = if stopping {
                     "stopping"
                 } else if state.is_some_and(|state| state.state == "running") {
-                    if matches!(service, "v3-basechain-bootstrap" | "v3-migrations") {
+                    if ONE_SHOT_SERVICES.contains(&service) {
                         "finishing"
                     } else {
                         "health check"
@@ -138,7 +182,7 @@ impl DockerNetwork {
 
         Some(crate::OperationProgress {
             completed,
-            total: Some(services.len() as u64 + nodes.len() as u64),
+            total: Some(CORE_SERVICES.len() as u64 + nodes.len() as u64),
             unit: if stopping { "stopped" } else { "ready" }.to_owned(),
             detail: if pending.is_empty() {
                 if stopping {
@@ -156,6 +200,49 @@ impl DockerNetwork {
                 }
             },
         })
+    }
+
+    /// Returns the current state of every Compose service in stable lifecycle order.
+    /// Missing services remain visible as stopped so clients can explain an incomplete deployment.
+    pub(crate) async fn service_health(&self, nodes: &[Node]) -> Result<Vec<ServiceHealth>, Error> {
+        let mut command = self.compose_command();
+        command.args(["ps", "--all", "--format", "json"]);
+        let output = self
+            .command_output(
+                command,
+                "inspect service health",
+                "service_health_failed",
+                DOCKER_METADATA_TIMEOUT,
+            )
+            .await?;
+        let states = parse_compose_container_states(&String::from_utf8_lossy(&output.stdout));
+
+        // Completed setup jobs lead the list because they explain whether the durable
+        // index schema and starting boundary were prepared before live services ran.
+        Ok(ONE_SHOT_SERVICES
+            .into_iter()
+            .chain(
+                CORE_SERVICES
+                    .into_iter()
+                    .filter(|service| !ONE_SHOT_SERVICES.contains(service)),
+            )
+            .chain(nodes.iter().map(|node| node.id.as_str()))
+            .map(|service| {
+                states
+                    .iter()
+                    .find(|state| state.service == service)
+                    .map_or_else(
+                        || ServiceHealth {
+                            name: service.to_owned(),
+                            status: ServiceHealthStatus::Stopped,
+                            state: None,
+                            health: None,
+                            exit_code: None,
+                        },
+                        |state| state.health(ONE_SHOT_SERVICES.contains(&service)),
+                    )
+            })
+            .collect())
     }
 
     /// Classifies the Compose deployment while ignoring successful one-shot jobs.

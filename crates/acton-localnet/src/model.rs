@@ -132,6 +132,95 @@ pub enum Status {
     Deleted,
 }
 
+/// Fresh aggregate health for the network's APIs and Docker services.
+///
+/// This response is sampled on demand and is never persisted as lifecycle state.
+/// Consumers must use `observed_at_ms` to decide whether a sample is still current.
+#[derive(Clone, Debug, Deserialize, Serialize, ToSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct NetworkHealth {
+    pub observed_at_ms: u64,
+    pub status: NetworkHealthStatus,
+    pub api_v2: ApiHealth,
+    pub api_v3: ApiHealth,
+    pub indexer_lag_blocks: Option<u32>,
+    pub estimated_indexer_lag_ms: Option<u64>,
+    pub services: Vec<ServiceHealth>,
+    pub history: Vec<NetworkHealthSample>,
+    pub infrastructure_error: Option<String>,
+}
+
+/// User-facing health summary derived from probes and required service state.
+#[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Serialize, ToSchema)]
+#[serde(rename_all = "camelCase")]
+pub enum NetworkHealthStatus {
+    Healthy,
+    Syncing,
+    Degraded,
+    Stopped,
+}
+
+/// Result of a synthetic request to one TON HTTP API.
+///
+/// Latency measures this probe only. It is not a percentile of application traffic.
+#[derive(Clone, Debug, Deserialize, Serialize, ToSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct ApiHealth {
+    pub status: ApiHealthStatus,
+    pub endpoint: String,
+    pub latency_ms: Option<u64>,
+    pub masterchain_seqno: Option<u32>,
+    pub block_time_unix: Option<u64>,
+    pub block_age_ms: Option<u64>,
+    pub error: Option<String>,
+}
+
+/// Readiness of one API endpoint at the sample time.
+#[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Serialize, ToSchema)]
+#[serde(rename_all = "camelCase")]
+pub enum ApiHealthStatus {
+    Ready,
+    Syncing,
+    Unavailable,
+    Stopped,
+}
+
+/// Current Compose state for one long-running service or one-shot setup job.
+#[derive(Clone, Debug, Deserialize, Serialize, ToSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct ServiceHealth {
+    pub name: String,
+    pub status: ServiceHealthStatus,
+    pub state: Option<String>,
+    pub health: Option<String>,
+    pub exit_code: Option<i32>,
+}
+
+/// Normalized service state used by clients instead of Docker-specific strings.
+#[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Serialize, ToSchema)]
+#[serde(rename_all = "camelCase")]
+pub enum ServiceHealthStatus {
+    Ready,
+    Starting,
+    Completed,
+    Stopped,
+    Failed,
+    Unknown,
+}
+
+/// Bounded time-series point retained by the owning localnet service.
+#[derive(Clone, Debug, Deserialize, Serialize, ToSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct NetworkHealthSample {
+    pub observed_at_ms: u64,
+    pub api_v2_latency_ms: Option<u64>,
+    pub api_v3_latency_ms: Option<u64>,
+    pub api_v2_seqno: Option<u32>,
+    pub api_v3_seqno: Option<u32>,
+    pub indexer_lag_blocks: Option<u32>,
+    pub block_age_ms: Option<u64>,
+}
+
 /// A network's durable definition plus the latest observable runtime state.
 /// The service is its sole writer; clients do not edit this record on disk.
 #[derive(Clone, Debug, Deserialize, Serialize)]

@@ -143,13 +143,14 @@ async fn openapi_contract_lists_every_studio_operation_and_resolves_schema_refer
         openapi: 3.1.0
         title: Acton Studio API
         version: 1.0.0
-        operations: 56
+        operations: 57
         DELETE /api/v1/environments/{environment_id}
         DELETE /api/v1/environments/{environment_id}/nodes/{node_id}
         DELETE /api/v1/environments/{environment_id}/snapshots/{snapshot_id}
         GET /api/v1/environments
         GET /api/v1/environments/{environment_id}
         GET /api/v1/environments/{environment_id}/api-calls
+        GET /api/v1/environments/{environment_id}/health
         GET /api/v1/environments/{environment_id}/observability/{path}
         GET /api/v1/environments/{environment_id}/rpc/acton_getAddressName
         GET /api/v1/environments/{environment_id}/rpc/acton_getCompilerAbi
@@ -200,7 +201,7 @@ async fn openapi_contract_lists_every_studio_operation_and_resolves_schema_refer
         POST /api/v1/test-runs
         POST /api/v1/test-runs/{run_id}/cancel
         POST /api/v1/test-runs/{run_id}/events
-        schemas: 74
+        schemas: 81
         missing schema references: none"]]
     .assert_eq(&actual);
 }
