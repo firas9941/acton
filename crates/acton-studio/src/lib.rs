@@ -173,14 +173,30 @@ struct PublicToncenterApiKeys {
 }
 
 impl PublicToncenterApiKeys {
+    /// Loads public-network credentials once when the Studio server is configured.
+    ///
+    /// Distributed binaries carry application keys supplied at compile time.
+    /// Runtime keys take precedence so operators can replace them without rebuilding.
+    /// These defaults only authenticate Studio's requests to the public `TonCenter` APIs.
     fn from_environment() -> Self {
         let mut keys = Self::default();
+
         for descriptor in environment_catalog::PUBLIC_TON_NETWORKS {
+            let embedded = match descriptor.network {
+                PublicTonNetwork::Testnet => {
+                    option_env!("ACTON_STUDIO_TONCENTER_TESTNET_API_KEY")
+                }
+                PublicTonNetwork::Mainnet => {
+                    option_env!("ACTON_STUDIO_TONCENTER_MAINNET_API_KEY")
+                }
+            };
             let value = std::env::var(descriptor.api_key_environment_variable)
                 .ok()
-                .and_then(|value| sensitive_header_value(&value));
+                .and_then(|value| sensitive_header_value(&value))
+                .or_else(|| embedded.and_then(sensitive_header_value));
             keys.set(descriptor.network, value);
         }
+
         keys
     }
 
