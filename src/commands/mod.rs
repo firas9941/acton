@@ -14,6 +14,7 @@ pub mod hooks;
 pub mod init;
 pub mod internal;
 pub mod library;
+pub mod localnet;
 pub mod ls;
 pub mod meta;
 pub mod new;

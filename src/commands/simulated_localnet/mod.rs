@@ -158,6 +158,12 @@ pub async fn simulated_localnet_start_cmd(
             error => Err(error.into()),
         };
     }
+
+    println!(
+        "     {} Acton simulated localnet gracefully",
+        "Stopped".green().bold()
+    );
+
     Ok(())
 }
 

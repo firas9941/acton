@@ -35,6 +35,7 @@ acton-abi-catalog = { path = "crates/acton-abi-catalog" }
 acton-debug = { path = "crates/acton-debug", default-features = false }
 acton-source-trace = { path = "crates/acton-source-trace" }
 acton-studio = { path = "crates/acton-studio" }
+acton-localnet = { path = "crates/acton-localnet" }
 acton-mdman = { path = "crates/acton-mdman" }
 ton-objs = { path = "crates/ton-objs" }
 tolk-compiler = { path = "crates/tolk-compiler" }
@@ -229,6 +230,7 @@ acton-config = { workspace = true }
 acton-abi-catalog = { workspace = true }
 acton-debug = { workspace = true, features = ["dap-server"] }
 acton-studio = { workspace = true }
+acton-localnet = { workspace = true }
 acton-mdman = { workspace = true }
 tolk-compiler = { workspace = true }
 tolk-source-map = { workspace = true }

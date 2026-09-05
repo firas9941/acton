@@ -272,7 +272,10 @@ pub async fn run_server(node: Arc<Localnet>, args: ServerArgs) -> Result<(), Ser
     axum::serve(listener, app)
         .with_graceful_shutdown(async move {
             if tokio::signal::ctrl_c().await.is_ok() {
-                println!("  {} Acton simulated localnet", "Stopping".yellow().bold());
+                println!(
+                    "\n    {} Acton simulated localnet gracefully (shutdown requested)",
+                    "Stopping".yellow().bold()
+                );
                 shutdown.notify();
             }
         })
