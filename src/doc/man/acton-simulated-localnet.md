@@ -512,7 +512,9 @@ expose the localnet server publicly.
 3. Load and dump JSON state files:
 
    ```bash
-   acton simulated-localnet start --load-state states/localnet.json --dump-state states/localnet.json
+   acton simulated-localnet start \
+     --load-state states/localnet.json \
+     --dump-state states/localnet.json
    ```
 
 4. Airdrop local funds:
