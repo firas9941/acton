@@ -17,7 +17,7 @@ the same Acton version that produced them.
 Use a database file when you want state continuity across runs:
 
 ```bash
-acton localnet start --db-path .acton/localnet.db
+acton simulated-localnet start --db-path .acton/localnet.db
 ```
 
 To make persistence the project default, configure the same path in
@@ -46,8 +46,8 @@ or checkpoint when those runtime details must be carried over exactly.
 Dump or load the state of a running localnet directly:
 
 ```bash
-acton localnet state dump states/localnet.json
-acton localnet state load states/localnet.json
+acton simulated-localnet state dump states/localnet.json
+acton simulated-localnet state load states/localnet.json
 ```
 
 `state load` replaces the current live state and clears all in-memory
@@ -65,19 +65,19 @@ You can also load state during startup:
 Load state before startup:
 
 ```bash
-acton localnet start --load-state snapshots/localnet.json
+acton simulated-localnet start --load-state snapshots/localnet.json
 ```
 
 Dump state on graceful shutdown:
 
 ```bash
-acton localnet start --dump-state snapshots/localnet.json
+acton simulated-localnet start --dump-state snapshots/localnet.json
 ```
 
 You can combine both to evolve a portable local chain state file between sessions:
 
 ```bash
-acton localnet start \
+acton simulated-localnet start \
   --load-state snapshots/localnet.json \
   --dump-state snapshots/localnet.json
 ```
@@ -92,11 +92,11 @@ acton localnet start \
 Checkpoints are fast, named restore points kept in the running localnet process:
 
 ```bash
-acton localnet checkpoint create before-upgrade
-acton localnet checkpoint list
-acton localnet checkpoint restore before-upgrade
-acton localnet checkpoint delete before-upgrade
-acton localnet checkpoint clear
+acton simulated-localnet checkpoint create before-upgrade
+acton simulated-localnet checkpoint list
+acton simulated-localnet checkpoint restore before-upgrade
+acton simulated-localnet checkpoint delete before-upgrade
+acton simulated-localnet checkpoint clear
 ```
 
 Restoring a checkpoint is non-destructive: the checkpoint and checkpoints made
@@ -104,8 +104,8 @@ after it remain available. Checkpoints disappear when the localnet process
 stops unless you export them:
 
 ```bash
-acton localnet checkpoint export before-upgrade --out states/before-upgrade.json
-acton localnet checkpoint import states/before-upgrade.json --name before-upgrade
+acton simulated-localnet checkpoint export before-upgrade --out states/before-upgrade.json
+acton simulated-localnet checkpoint import states/before-upgrade.json --name before-upgrade
 ```
 
 ## What a JSON State File Contains

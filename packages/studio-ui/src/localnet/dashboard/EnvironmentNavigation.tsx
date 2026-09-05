@@ -216,7 +216,9 @@ export const EnvironmentNavigation: FC<EnvironmentNavigationProps> = ({
   const navigationRef = useRef<HTMLElement>(null)
   const [explorerPath, setExplorerPath] = useState(() => readExplorerLastPath())
   const forkBadgeLabel =
-    environment?.config.kind === "actonLocalnet" ? formatForkNetworkLabel(forkNetwork) : undefined
+    environment?.config.kind === "actonSimulatedLocalnet"
+      ? formatForkNetworkLabel(forkNetwork)
+      : undefined
   const visibleStandaloneItems = supports(environment, "simulator") ? standaloneItems : []
   const visibleEnvironmentItems = environmentItems.filter(item =>
     item.path === "/wallets"

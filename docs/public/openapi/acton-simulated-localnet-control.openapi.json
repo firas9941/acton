@@ -1,9 +1,9 @@
 {
   "openapi": "3.0.3",
   "info": {
-    "title": "Acton Localnet Control API",
+    "title": "Acton Simulated Localnet Control API",
     "version": "1.0.0",
-    "description": "Local development control endpoints exposed by the Acton localnet server. These routes are intended for local tooling. When localnet is started with --require-auth, pass the printed token as Authorization: Bearer <token> or X-API-Key: <token>."
+    "description": "Control endpoints for Acton's fast local TON development environment, which provides TON-compatible blocks and APIs for local tooling. The environment is Acton's custom simplified implementation, not a real TON network or validator cluster. When Acton simulated localnet is started with --require-auth, pass the printed token as Authorization: Bearer <token> or X-API-Key: <token>."
   },
   "servers": [
     {
@@ -842,7 +842,7 @@
       "BearerAuth": {
         "type": "http",
         "scheme": "bearer",
-        "description": "Localnet API token printed by `acton localnet start --require-auth`."
+        "description": "Localnet API token printed by `acton simulated-localnet start --require-auth`."
       },
       "APIKeyHeader": {
         "type": "apiKey",

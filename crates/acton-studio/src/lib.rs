@@ -1491,7 +1491,8 @@ fn public_ton_network(environment: &StudioEnvironment) -> Option<PublicTonNetwor
     }
     match &environment.config {
         EnvironmentConfig::RemoteTonNetwork { network } => Some(*network),
-        EnvironmentConfig::ActonLocalnet { .. } | EnvironmentConfig::FullTonNetwork { .. } => None,
+        EnvironmentConfig::ActonSimulatedLocalnet { .. }
+        | EnvironmentConfig::FullTonNetwork { .. } => None,
     }
 }
 

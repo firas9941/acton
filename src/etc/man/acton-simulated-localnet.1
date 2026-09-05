@@ -1,25 +1,31 @@
 '\" t
-.TH "ACTON\-LOCALNET" "1"
+.TH "ACTON\-SIMULATED\-LOCALNET" "1"
 .nh
 .ad l
 .ss \n[.ss] 0
 .SH "NAME"
-acton\-localnet \[em] Manage Acton\[cq]s local TON network
+acton\-simulated\-localnet \[em] Run Acton\[cq]s simplified TON development environment
 .SH "SYNOPSIS"
-\fBacton localnet\fR [\fIoptions\fR] \fIcommand\fR
+\fBacton simulated\-localnet\fR [\fIoptions\fR] \fIcommand\fR
 .SH "DESCRIPTION"
-Manage the local development node used for TON\-compatible local execution,
-forked\-state development, and faucet\-based local funding.
+Acton simulated localnet is a fast, deterministic TON development environment
+for local execution, forked\-state development, and faucet\-based funding. It
+produces TON\-compatible blocks and provides LiteAPI, TonCenter v2/v3, Streaming
+API, and Emulate API surfaces used by many contract and dApp workflows.
+.sp
+It is Acton\[cq]s custom simplified implementation, not a real TON network or
+validator cluster. It does not model validators, consensus, shard elections,
+or the full production node and indexer stack.
 .SH "SUBCOMMANDS"
-.SS "acton localnet start"
-Start the local TON network.
+.SS "acton simulated-localnet start"
+Start Acton\[cq]s simplified TON development environment.
 .SS "Synopsis"
-\fBacton localnet start\fR [\fIoptions\fR]
+\fBacton simulated\-localnet start\fR [\fIoptions\fR]
 .SS "Options"
 .sp
 \fB\-\-port\fR \fIport\fR
 .RS 4
-Localnet server port.
+Simulated localnet HTTP port.
 .RE
 .sp
 \fB\-\-fork\-net\fR \fInetwork\fR
@@ -68,7 +74,7 @@ Localnet block production interval.
 \fB\-\-no\-mining\fR
 .RS 4
 Disable automatic block production. Mine blocks manually with
-\fBacton localnet mine\fR or \fBPOST /acton_mine\fR\&.
+\fBacton simulated\-localnet mine\fR or \fBPOST /acton_mine\fR\&.
 .RE
 .sp
 \fB\-\-load\-state\fR \fIpath\fR
@@ -101,10 +107,10 @@ endpoints. The server prints the token on startup.
 .sp
 \fB\-\-load\-state\fR cannot be used when a database path comes from either
 \fB\-\-db\-path\fR or \fB[localnet].db\-path\fR\&.
-.SS "acton localnet airdrop"
+.SS "acton simulated-localnet airdrop"
 Send GRAM from the local faucet to an address.
 .SS "Synopsis"
-\fBacton localnet airdrop\fR [\fIoptions\fR] \fIaddress\fR
+\fBacton simulated\-localnet airdrop\fR [\fIoptions\fR] \fIaddress\fR
 .SS "Options"
 .sp
 \fIaddress\fR
@@ -119,7 +125,7 @@ Amount of GRAM to request.
 .sp
 \fB\-p\fR, \fB\-\-port\fR \fIport\fR
 .RS 4
-Localnet server port.
+Simulated localnet HTTP port.
 .RE
 .sp
 \fB\-\-auth\-token\fR \fItoken\fR
@@ -127,10 +133,10 @@ Localnet server port.
 Localnet API token for a server started with \fB\-\-require\-auth\fR\&. If omitted,
 Acton reads \fBACTON_LOCALNET_AUTH_TOKEN\fR\&.
 .RE
-.SS "acton localnet mine"
+.SS "acton simulated-localnet mine"
 Mine localnet blocks manually.
 .SS "Synopsis"
-\fBacton localnet mine\fR [\fIoptions\fR] [\fIn\fR]
+\fBacton simulated\-localnet mine\fR [\fIoptions\fR] [\fIn\fR]
 .SS "Options"
 .sp
 \fIn\fR
@@ -140,7 +146,7 @@ Number of blocks to mine. Defaults to \fB1\fR\&.
 .sp
 \fB\-p\fR, \fB\-\-port\fR \fIport\fR
 .RS 4
-Localnet server port.
+Simulated localnet HTTP port.
 .RE
 .sp
 \fB\-\-auth\-token\fR \fItoken\fR
@@ -148,10 +154,10 @@ Localnet server port.
 Localnet API token for a server started with \fB\-\-require\-auth\fR\&. If omitted,
 Acton reads \fBACTON_LOCALNET_AUTH_TOKEN\fR\&.
 .RE
-.SS "acton localnet increase-time"
+.SS "acton simulated-localnet increase-time"
 Increase the localnet virtual clock.
 .SS "Synopsis"
-\fBacton localnet increase\-time\fR [\fIoptions\fR] \fIseconds\fR
+\fBacton simulated\-localnet increase\-time\fR [\fIoptions\fR] \fIseconds\fR
 .SS "Options"
 .sp
 \fIseconds\fR
@@ -161,7 +167,7 @@ Seconds to add to the virtual localnet clock.
 .sp
 \fB\-p\fR, \fB\-\-port\fR \fIport\fR
 .RS 4
-Localnet server port.
+Simulated localnet HTTP port.
 .RE
 .sp
 \fB\-\-auth\-token\fR \fItoken\fR
@@ -169,10 +175,10 @@ Localnet server port.
 Localnet API token for a server started with \fB\-\-require\-auth\fR\&. If omitted,
 Acton reads \fBACTON_LOCALNET_AUTH_TOKEN\fR\&.
 .RE
-.SS "acton localnet set-time"
+.SS "acton simulated-localnet set-time"
 Set the localnet virtual clock.
 .SS "Synopsis"
-\fBacton localnet set\-time\fR [\fIoptions\fR] \fItimestamp\fR
+\fBacton simulated\-localnet set\-time\fR [\fIoptions\fR] \fItimestamp\fR
 .SS "Options"
 .sp
 \fItimestamp\fR
@@ -183,7 +189,7 @@ block time.
 .sp
 \fB\-p\fR, \fB\-\-port\fR \fIport\fR
 .RS 4
-Localnet server port.
+Simulated localnet HTTP port.
 .RE
 .sp
 \fB\-\-auth\-token\fR \fItoken\fR
@@ -191,10 +197,10 @@ Localnet server port.
 Localnet API token for a server started with \fB\-\-require\-auth\fR\&. If omitted,
 Acton reads \fBACTON_LOCALNET_AUTH_TOKEN\fR\&.
 .RE
-.SS "acton localnet set-next-block-timestamp"
+.SS "acton simulated-localnet set-next-block-timestamp"
 Set a one\-shot timestamp for the next localnet block.
 .SS "Synopsis"
-\fBacton localnet set\-next\-block\-timestamp\fR [\fIoptions\fR] \fItimestamp\fR
+\fBacton simulated\-localnet set\-next\-block\-timestamp\fR [\fIoptions\fR] \fItimestamp\fR
 .SS "Options"
 .sp
 \fItimestamp\fR
@@ -206,7 +212,7 @@ latest mined block time.
 .sp
 \fB\-p\fR, \fB\-\-port\fR \fIport\fR
 .RS 4
-Localnet server port.
+Simulated localnet HTTP port.
 .RE
 .sp
 \fB\-\-auth\-token\fR \fItoken\fR
@@ -214,15 +220,15 @@ Localnet server port.
 Localnet API token for a server started with \fB\-\-require\-auth\fR\&. If omitted,
 Acton reads \fBACTON_LOCALNET_AUTH_TOKEN\fR\&.
 .RE
-.SS "acton localnet status"
+.SS "acton simulated-localnet status"
 Inspect the current localnet status.
 .SS "Synopsis"
-\fBacton localnet status\fR [\fIoptions\fR]
+\fBacton simulated\-localnet status\fR [\fIoptions\fR]
 .SS "Options"
 .sp
 \fB\-p\fR, \fB\-\-port\fR \fIport\fR
 .RS 4
-Localnet server port.
+Simulated localnet HTTP port.
 .RE
 .sp
 \fB\-\-json\fR
@@ -235,10 +241,10 @@ Print machine\-readable JSON.
 Localnet API token for a server started with \fB\-\-require\-auth\fR\&. If omitted,
 Acton reads \fBACTON_LOCALNET_AUTH_TOKEN\fR\&.
 .RE
-.SS "acton localnet state"
+.SS "acton simulated-localnet state"
 Transfer the current state of a running localnet as a portable JSON file.
 .SS "Synopsis"
-\fBacton localnet state\fR [\fIoptions\fR] \fIcommand\fR
+\fBacton simulated\-localnet state\fR [\fIoptions\fR] \fIcommand\fR
 .SS "Subcommands"
 .sp
 .RS 4
@@ -251,10 +257,10 @@ Transfer the current state of a running localnet as a portable JSON file.
 .sp
 \fBdump\fR refuses to overwrite an existing file unless \fB\-\-force\fR is passed. A
 successful \fBload\fR clears all in\-memory checkpoints.
-.SS "acton localnet checkpoint"
+.SS "acton simulated-localnet checkpoint"
 Manage named in\-memory restore points for a running localnet.
 .SS "Synopsis"
-\fBacton localnet checkpoint\fR [\fIoptions\fR] \fIcommand\fR
+\fBacton simulated\-localnet checkpoint\fR [\fIoptions\fR] \fIcommand\fR
 .SS "Subcommands"
 .sp
 .RS 4
@@ -325,7 +331,7 @@ Acton loads \fB\&.env\fR automatically, so the simplest setup during project wor
 usually to keep these keys there and use shell environment variables only for
 one\-off overrides or CI.
 .SH "LOCALNET API AUTH"
-\fBacton localnet start \-\-require\-auth\fR protects every Localnet HTTP route under
+\fBacton simulated\-localnet start \-\-require\-auth\fR protects every Localnet HTTP route under
 \fB/api/*\fR, \fB/acton_*\fR, \fB/api/emulate/*\fR, and \fB/api/streaming/*\fR\&. Static UI files
 remain public, but the bundled UI does not receive the token from the server.
 When a protected API request returns \fB401\fR, the bundled UI shows a token overlay;
@@ -356,7 +362,7 @@ and prints a fresh token.
 .RE
 .sp
 .RS 4
-\h'-04'\(bu\h'+03'\fBacton localnet start\fR runs in the foreground until the process is stopped
+\h'-04'\(bu\h'+03'\fBacton simulated\-localnet start\fR runs in the foreground until the process is stopped
 .RE
 .sp
 .RS 4
@@ -381,14 +387,14 @@ to 500 ms, and still creates empty blocks when no transactions are queued
 .sp
 .RS 4
 \h'-04'\(bu\h'+03'\fB\-\-no\-mining\fR or \fB[localnet].no\-mining = true\fR disables automatic block
-production; use \fBacton localnet mine [N]\fR or \fBPOST /acton_mine\fR to create
+production; use \fBacton simulated\-localnet mine [N]\fR or \fBPOST /acton_mine\fR to create
 blocks manually
 .RE
 .sp
 .RS 4
 \h'-04'\(bu\h'+03'localnet has a virtual clock for block and transaction time; use
-\fBacton localnet increase\-time\fR, \fBacton localnet set\-time\fR, or
-\fBacton localnet set\-next\-block\-timestamp\fR to move it without waiting for real
+\fBacton simulated\-localnet increase\-time\fR, \fBacton simulated\-localnet set\-time\fR, or
+\fBacton simulated\-localnet set\-next\-block\-timestamp\fR to move it without waiting for real
 time
 .RE
 .sp
@@ -572,7 +578,7 @@ or dumped
 .sp
 .RS 4
 \h'-04'\(bu\h'+03'\fB0\fR: The selected localnet subcommand completed successfully. For
-\fBacton localnet status\fR, this also includes the selected port not running;
+\fBacton simulated\-localnet status\fR, this also includes the selected port not running;
 use \fB\-\-json\fR and inspect \fBrunning\fR for automation.
 .RE
 .sp
@@ -612,7 +618,7 @@ This conflicts with \fB\-\-manifest\-path\fR\&.
 .sp
 .RS 4
 .nf
-acton localnet start
+acton simulated\-localnet start
 .fi
 .RE
 .RE
@@ -622,7 +628,7 @@ acton localnet start
 .sp
 .RS 4
 .nf
-acton localnet start \-\-fork\-net testnet \-\-fork\-block\-number 55000000
+acton simulated\-localnet start \-\-fork\-net testnet \-\-fork\-block\-number 55000000
 .fi
 .RE
 .RE
@@ -632,7 +638,7 @@ acton localnet start \-\-fork\-net testnet \-\-fork\-block\-number 55000000
 .sp
 .RS 4
 .nf
-acton localnet start \-\-load\-state states/localnet.json \-\-dump\-state states/localnet.json
+acton simulated\-localnet start \-\-load\-state states/localnet.json \-\-dump\-state states/localnet.json
 .fi
 .RE
 .RE
@@ -642,7 +648,7 @@ acton localnet start \-\-load\-state states/localnet.json \-\-dump\-state states
 .sp
 .RS 4
 .nf
-acton localnet airdrop UQA_ftKIJsHEAE_UgtFOUK15hPzycZooFuUr8duyY9T3kwwM \-\-amount 25
+acton simulated\-localnet airdrop UQA_ftKIJsHEAE_UgtFOUK15hPzycZooFuUr8duyY9T3kwwM \-\-amount 25
 .fi
 .RE
 .RE
@@ -652,7 +658,7 @@ acton localnet airdrop UQA_ftKIJsHEAE_UgtFOUK15hPzycZooFuUr8duyY9T3kwwM \-\-amou
 .sp
 .RS 4
 .nf
-acton localnet start \-\-accounts deployer,user \-\-db\-path build/localnet.db
+acton simulated\-localnet start \-\-accounts deployer,user \-\-db\-path build/localnet.db
 .fi
 .RE
 .RE
@@ -662,7 +668,7 @@ acton localnet start \-\-accounts deployer,user \-\-db\-path build/localnet.db
 .sp
 .RS 4
 .nf
-acton localnet status \-\-json
+acton simulated\-localnet status \-\-json
 .fi
 .RE
 .RE
@@ -672,12 +678,12 @@ acton localnet status \-\-json
 .sp
 .RS 4
 .nf
-acton localnet state dump states/localnet.json
-acton localnet checkpoint create before\-upgrade
-acton localnet checkpoint list
-acton localnet checkpoint restore before\-upgrade
-acton localnet checkpoint export before\-upgrade \-\-out states/before\-upgrade.json
-acton localnet checkpoint import states/before\-upgrade.json
+acton simulated\-localnet state dump states/localnet.json
+acton simulated\-localnet checkpoint create before\-upgrade
+acton simulated\-localnet checkpoint list
+acton simulated\-localnet checkpoint restore before\-upgrade
+acton simulated\-localnet checkpoint export before\-upgrade \-\-out states/before\-upgrade.json
+acton simulated\-localnet checkpoint import states/before\-upgrade.json
 .fi
 .RE
 .RE
@@ -688,5 +694,5 @@ acton localnet checkpoint import states/before\-upgrade.json
 .RE
 .sp
 .RS 4
-\h'-04'\(bu\h'+03'\fILocal development node guide\fR <https://ton\-blockchain.github.io/acton/docs/localnet/overview>
+\h'-04'\(bu\h'+03'\fISimulated localnet guide\fR <https://ton\-blockchain.github.io/acton/docs/simulated\-localnet/overview>
 .RE

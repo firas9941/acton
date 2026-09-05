@@ -9,7 +9,7 @@ development platform. It adds Acton Studio, a full local TON network, Actonscan,
 source verification, a testnet faucet, a native language server, substantially
 more capable RPC and localnet tooling, and a shared explorer and transaction UI.
 
-`acton localnet` remains the lightweight in-process simulator. Acton Studio can
+`acton simulated-localnet` remains the lightweight in-process simulator. Acton Studio can
 manage both simulator environments and full local TON networks; those full
 networks are powered by the separate Localton runtime. The new verifier service,
 API, and web UI are included below, while the `acton verify --new` CLI
@@ -177,7 +177,7 @@ integration remains hidden and preview-only.
 ### Localnet Simulator
 
 - Added interval and manual block production with `--block-interval-ms`,
-  `--no-mining`, `acton localnet mine`, `/acton_mine`, and optional empty-block
+  `--no-mining`, `acton simulated-localnet mine`, `/acton_mine`, and optional empty-block
   mining. Submitted messages are queued into blocks, and automatic mining runs
   only while messages are pending unless empty-block mining is enabled.
   Generated blocks include a simplified masterchain, state updates, Merkle
@@ -187,8 +187,8 @@ integration remains hidden and preview-only.
 - Added optional API authentication through `--require-auth`, bearer tokens,
   `X-API-Key`, and WebSocket query tokens. Static UI assets remain public.
 - Added persistent SQLite state through `[localnet].db-path`, state file
-  dump/load through `acton localnet state`, and named in-memory checkpoints
-  through `acton localnet checkpoint`, including import and export over HTTP.
+  dump/load through `acton simulated-localnet state`, and named in-memory checkpoints
+  through `acton simulated-localnet checkpoint`, including import and export over HTTP.
   Imports validate histories, hashes, references, transactions, messages,
   queues, and configuration before atomic replacement.
 - Added typed TonCenter v2, v3, Emulation, and Streaming APIs with stable error
@@ -1299,7 +1299,7 @@ test-runner performance, Tolk 1.4 support, and a new NFT starter template.
   `<NORMALIZED_NAME>_API_KEY` instead, for example `custom:foo-bar` ->
   `FOO_BAR_API_KEY`. The old shared `TONCENTER_API_KEY` fallback is gone.
 
-- `acton litenode` was renamed to `acton localnet`, and the manifest section
+- `acton litenode` was renamed to `acton simulated-localnet`, and the manifest section
   `[litenode]` was renamed to `[localnet]`. The network name stays `localnet`,
   so `--net localnet` and `[networks.localnet]` do not change.
 

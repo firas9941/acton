@@ -305,7 +305,7 @@ export const WalletRuntimeProvider: FC<WalletRuntimeProviderProps> = ({
           const wallet = await addProjectWalletToKit(walletKit, walletRecord, {
             environmentId,
             chainId,
-            useLocalnetAdapters: environmentKind === "actonLocalnet",
+            useLocalnetAdapters: environmentKind === "actonSimulatedLocalnet",
           })
           if (wallet) {
             nextRuntimeWallets.push({

@@ -297,7 +297,7 @@ mod tests {
   "id": "environment-2",
   "name": "Forked network",
   "config": {
-    "kind": "actonLocalnet",
+    "kind": "actonSimulatedLocalnet",
     "port": 5401,
     "forkNetwork": "testnet",
     "forkBlockNumber": 12345,
@@ -313,7 +313,7 @@ mod tests {
   "resumeOnStartup": false
 }
 LOADED
-environment-2 | Forked network | resume=false | {"kind":"actonLocalnet","port":5401,"forkNetwork":"testnet","forkBlockNumber":12345,"accounts":["deployer"],"rateLimit":120,"responseDelayMs":15,"blockIntervalMs":1000,"noMining":false,"mineEmptyBlocks":true}
+environment-2 | Forked network | resume=false | {"kind":"actonSimulatedLocalnet","port":5401,"forkNetwork":"testnet","forkBlockNumber":12345,"accounts":["deployer"],"rateLimit":120,"responseDelayMs":15,"blockIntervalMs":1000,"noMining":false,"mineEmptyBlocks":true}
 next_id=3"#]]
         .assert_eq(&format!(
             "FILE\n{}LOADED\n{}\nnext_id={}",
@@ -350,7 +350,7 @@ next_id=3"#]]
         }
         names.sort();
 
-        expect![[r#"environment-1 | Persistent network | resume=true | {"kind":"actonLocalnet","port":5401,"forkNetwork":"testnet","forkBlockNumber":12345,"accounts":["deployer"],"rateLimit":120,"responseDelayMs":15,"blockIntervalMs":1000,"noMining":false,"mineEmptyBlocks":true}
+        expect![[r#"environment-1 | Persistent network | resume=true | {"kind":"actonSimulatedLocalnet","port":5401,"forkNetwork":"testnet","forkBlockNumber":12345,"accounts":["deployer"],"rateLimit":120,"responseDelayMs":15,"blockIntervalMs":1000,"noMining":false,"mineEmptyBlocks":true}
 files=environment.json"#]]
         .assert_eq(&format!(
             "{}\nfiles={}",
@@ -435,7 +435,7 @@ environment_store_unsupported_version: <workspace>/.studio/environments/environm
         StoredEnvironment {
             id: id.to_owned(),
             name: name.to_owned(),
-            config: EnvironmentConfig::ActonLocalnet {
+            config: EnvironmentConfig::ActonSimulatedLocalnet {
                 port: 5401,
                 fork_network: Some("testnet".to_owned()),
                 fork_block_number: Some(12_345),

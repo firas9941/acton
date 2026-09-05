@@ -12,20 +12,21 @@ fail-on-diff = false
 
 [lint]
 exclude = [
-  "apps/**",
   "tests/**",
   "**/templates/**",
   "packages/test-ui/e2e/**",
   "crates/ton-language-server-core/tests/fixtures/**",
   "crates/ton-language-server-core/tests/languages/tolk/compiler/fixtures/**",
+  "apps/localton/.localton/**",
+  "apps/localton/load-test/**",
 ]
 
 [fmt]
 ignore = [
-  "apps/**",
   "crates/tolk-compiler/**",
   "crates/ton-language-server-core/tests/languages/tolk/compiler/fixtures/**",
   "tests/integration/snapshots/check/**",
+  "apps/localton/.localton/**",
 ]
 
 [localnet]

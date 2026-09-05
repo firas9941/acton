@@ -16,8 +16,8 @@ export type StudioConnectionState = "connecting" | "connected" | "disconnected"
 export type EnvironmentStatus = "starting" | "running" | "stopping" | "stopped" | "failed"
 export type EnvironmentLifecycle = "managed" | "external"
 
-export interface ActonLocalnetEnvironmentConfig {
-  readonly kind: "actonLocalnet"
+export interface ActonSimulatedLocalnetEnvironmentConfig {
+  readonly kind: "actonSimulatedLocalnet"
   readonly port: number
   readonly forkNetwork?: string
   readonly forkBlockNumber?: number
@@ -61,12 +61,12 @@ export interface RemoteTonNetworkEnvironmentConfig {
 }
 
 export type EnvironmentConfig =
-  | ActonLocalnetEnvironmentConfig
+  | ActonSimulatedLocalnetEnvironmentConfig
   | FullTonNetworkEnvironmentConfig
   | RemoteTonNetworkEnvironmentConfig
 
-export interface CreateActonLocalnetEnvironmentConfig {
-  readonly kind: "actonLocalnet"
+export interface CreateActonSimulatedLocalnetEnvironmentConfig {
+  readonly kind: "actonSimulatedLocalnet"
   readonly port?: number
   readonly forkNetwork?: string
   readonly forkBlockNumber?: number
@@ -91,7 +91,7 @@ export interface CreateFullTonNetworkEnvironmentConfig {
 }
 
 export type CreateEnvironmentConfig =
-  | CreateActonLocalnetEnvironmentConfig
+  | CreateActonSimulatedLocalnetEnvironmentConfig
   | CreateFullTonNetworkEnvironmentConfig
 
 export type EnvironmentCapability =

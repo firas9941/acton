@@ -13,16 +13,16 @@ block's Unix time.
 
 ```bash
 # Fork from testnet
-acton localnet start --fork-net testnet
+acton simulated-localnet start --fork-net testnet
 
 # Fork from mainnet
-acton localnet start --fork-net mainnet
+acton simulated-localnet start --fork-net mainnet
 ```
 
 ## Historical Fork at a Specific Block
 
 ```bash
-acton localnet start --fork-net testnet --fork-block-number 55000000
+acton simulated-localnet start --fork-net testnet --fork-block-number 55000000
 ```
 
 This is useful for deterministic debugging of historical behavior.
@@ -44,8 +44,8 @@ the matching cache entry. Use `--clear-cache` to remove these entries.
 Use the TonCenter env var that matches the forked network:
 
 ```bash
-TONCENTER_TESTNET_API_KEY=YOUR_API_KEY acton localnet start --fork-net testnet
-TONCENTER_MAINNET_API_KEY=YOUR_API_KEY acton localnet start --fork-net mainnet
+TONCENTER_TESTNET_API_KEY=YOUR_API_KEY acton simulated-localnet start --fork-net testnet
+TONCENTER_MAINNET_API_KEY=YOUR_API_KEY acton simulated-localnet start --fork-net mainnet
 ```
 
 Acton reads these env vars automatically for the built-in `testnet` and
@@ -59,4 +59,4 @@ fork-net = "testnet"
 fork-block-number = 55000000
 ```
 
-Now `acton localnet start` automatically uses these defaults.
+Now `acton simulated-localnet start` automatically uses these defaults.

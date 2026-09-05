@@ -44,7 +44,7 @@ impl EnvironmentRuntime for TestEnvironmentRuntime {
     ) -> EnvironmentRuntimeFuture<'_, StudioEnvironment> {
         Box::pin(async move {
             let (config, runtime_endpoints) = match request.config {
-                CreateEnvironmentConfig::ActonLocalnet {
+                CreateEnvironmentConfig::ActonSimulatedLocalnet {
                     port,
                     fork_network,
                     fork_block_number,
@@ -57,7 +57,7 @@ impl EnvironmentRuntime for TestEnvironmentRuntime {
                 } => {
                     let port = port.unwrap_or(5411);
                     (
-                        EnvironmentConfig::ActonLocalnet {
+                        EnvironmentConfig::ActonSimulatedLocalnet {
                             port,
                             fork_network,
                             fork_block_number,
@@ -786,7 +786,7 @@ async fn remote_ton_networks_cannot_be_created() {
 
     expect![[r"
         status: 422 Unprocessable Entity
-        body: Failed to deserialize the JSON body into the target type: config.kind: unknown variant `remoteTonNetwork`, expected `actonLocalnet` or `fullTonNetwork` at line 4 column 53"]]
+        body: Failed to deserialize the JSON body into the target type: config.kind: unknown variant `remoteTonNetwork`, expected `actonSimulatedLocalnet` or `fullTonNetwork` at line 4 column 53"]]
     .assert_eq(&actual);
 }
 
@@ -802,7 +802,7 @@ async fn environment_create_list_stop_and_restart_share_one_api_contract() {
                     r#"{
                         "name":"Forked mainnet",
                         "config":{
-                            "kind":"actonLocalnet",
+                            "kind":"actonSimulatedLocalnet",
                             "port":5511,
                             "forkNetwork":"mainnet",
                             "forkBlockNumber":81973221,
@@ -886,23 +886,23 @@ async fn environment_create_list_stop_and_restart_share_one_api_contract() {
     expect![[r#"
         CREATE
         status: 201 Created
-        body: {"id":"test-environment-1","name":"Forked mainnet","status":"running","lifecycle":"managed","rpcUrl":"/api/v1/environments/test-environment-1/rpc","config":{"kind":"actonLocalnet","port":5511,"forkNetwork":"mainnet","forkBlockNumber":81973221,"accounts":["deployer","treasury"],"rateLimit":30,"responseDelayMs":120,"blockIntervalMs":750,"noMining":false,"mineEmptyBlocks":true},"capabilities":["apiV2","apiV3","controlApi","explorer","integration","gramFaucet","jettonFaucet","wallets","simulator","contracts","apiCalls","mining","timeTravel","checkpoints"],"endpoints":{"apiV2":"/api/v1/environments/test-environment-1/rpc/api/v2","apiV3":"/api/v1/environments/test-environment-1/rpc/api/v3","control":"/api/v1/environments/test-environment-1/rpc"},"network":{"id":"mainnet","label":"Mainnet fork","chainId":-3,"testOnly":true,"supportsActions":false}}
+        body: {"id":"test-environment-1","name":"Forked mainnet","status":"running","lifecycle":"managed","rpcUrl":"/api/v1/environments/test-environment-1/rpc","config":{"kind":"actonSimulatedLocalnet","port":5511,"forkNetwork":"mainnet","forkBlockNumber":81973221,"accounts":["deployer","treasury"],"rateLimit":30,"responseDelayMs":120,"blockIntervalMs":750,"noMining":false,"mineEmptyBlocks":true},"capabilities":["apiV2","apiV3","controlApi","explorer","integration","gramFaucet","jettonFaucet","wallets","simulator","contracts","apiCalls","mining","timeTravel","checkpoints"],"endpoints":{"apiV2":"/api/v1/environments/test-environment-1/rpc/api/v2","apiV3":"/api/v1/environments/test-environment-1/rpc/api/v3","control":"/api/v1/environments/test-environment-1/rpc"},"network":{"id":"mainnet","label":"Mainnet fork","chainId":-3,"testOnly":true,"supportsActions":false}}
 
         LIST
         status: 200 OK
-        body: [{"id":"testnet","name":"Testnet","status":"running","lifecycle":"external","rpcUrl":"/api/v1/environments/testnet/rpc","config":{"kind":"remoteTonNetwork","network":"testnet"},"capabilities":["apiV2","apiV3","explorer","integration","wallets","simulator","contracts","apiCalls"],"endpoints":{"apiV2":"/api/v1/environments/testnet/rpc/api/v2","apiV3":"/api/v1/environments/testnet/rpc/api/v3"},"network":{"id":"testnet","label":"Testnet","chainId":-3,"testOnly":true,"supportsActions":true}},{"id":"mainnet","name":"Mainnet","status":"running","lifecycle":"external","rpcUrl":"/api/v1/environments/mainnet/rpc","config":{"kind":"remoteTonNetwork","network":"mainnet"},"capabilities":["apiV2","apiV3","explorer","integration","wallets","simulator","contracts","apiCalls"],"endpoints":{"apiV2":"/api/v1/environments/mainnet/rpc/api/v2","apiV3":"/api/v1/environments/mainnet/rpc/api/v3"},"network":{"id":"mainnet","label":"Mainnet","chainId":-239,"testOnly":false,"supportsActions":true}},{"id":"test-environment-1","name":"Forked mainnet","status":"running","lifecycle":"managed","rpcUrl":"/api/v1/environments/test-environment-1/rpc","config":{"kind":"actonLocalnet","port":5511,"forkNetwork":"mainnet","forkBlockNumber":81973221,"accounts":["deployer","treasury"],"rateLimit":30,"responseDelayMs":120,"blockIntervalMs":750,"noMining":false,"mineEmptyBlocks":true},"capabilities":["apiV2","apiV3","controlApi","explorer","integration","gramFaucet","jettonFaucet","wallets","simulator","contracts","apiCalls","mining","timeTravel","checkpoints"],"endpoints":{"apiV2":"/api/v1/environments/test-environment-1/rpc/api/v2","apiV3":"/api/v1/environments/test-environment-1/rpc/api/v3","control":"/api/v1/environments/test-environment-1/rpc"},"network":{"id":"mainnet","label":"Mainnet fork","chainId":-3,"testOnly":true,"supportsActions":false}}]
+        body: [{"id":"testnet","name":"Testnet","status":"running","lifecycle":"external","rpcUrl":"/api/v1/environments/testnet/rpc","config":{"kind":"remoteTonNetwork","network":"testnet"},"capabilities":["apiV2","apiV3","explorer","integration","wallets","simulator","contracts","apiCalls"],"endpoints":{"apiV2":"/api/v1/environments/testnet/rpc/api/v2","apiV3":"/api/v1/environments/testnet/rpc/api/v3"},"network":{"id":"testnet","label":"Testnet","chainId":-3,"testOnly":true,"supportsActions":true}},{"id":"mainnet","name":"Mainnet","status":"running","lifecycle":"external","rpcUrl":"/api/v1/environments/mainnet/rpc","config":{"kind":"remoteTonNetwork","network":"mainnet"},"capabilities":["apiV2","apiV3","explorer","integration","wallets","simulator","contracts","apiCalls"],"endpoints":{"apiV2":"/api/v1/environments/mainnet/rpc/api/v2","apiV3":"/api/v1/environments/mainnet/rpc/api/v3"},"network":{"id":"mainnet","label":"Mainnet","chainId":-239,"testOnly":false,"supportsActions":true}},{"id":"test-environment-1","name":"Forked mainnet","status":"running","lifecycle":"managed","rpcUrl":"/api/v1/environments/test-environment-1/rpc","config":{"kind":"actonSimulatedLocalnet","port":5511,"forkNetwork":"mainnet","forkBlockNumber":81973221,"accounts":["deployer","treasury"],"rateLimit":30,"responseDelayMs":120,"blockIntervalMs":750,"noMining":false,"mineEmptyBlocks":true},"capabilities":["apiV2","apiV3","controlApi","explorer","integration","gramFaucet","jettonFaucet","wallets","simulator","contracts","apiCalls","mining","timeTravel","checkpoints"],"endpoints":{"apiV2":"/api/v1/environments/test-environment-1/rpc/api/v2","apiV3":"/api/v1/environments/test-environment-1/rpc/api/v3","control":"/api/v1/environments/test-environment-1/rpc"},"network":{"id":"mainnet","label":"Mainnet fork","chainId":-3,"testOnly":true,"supportsActions":false}}]
 
         UPDATE
         status: 200 OK
-        body: {"id":"test-environment-1","name":"Renamed environment","status":"running","lifecycle":"managed","rpcUrl":"/api/v1/environments/test-environment-1/rpc","config":{"kind":"actonLocalnet","port":5511,"forkNetwork":"mainnet","forkBlockNumber":81973221,"accounts":["deployer","treasury"],"rateLimit":30,"responseDelayMs":120,"blockIntervalMs":750,"noMining":false,"mineEmptyBlocks":true},"capabilities":["apiV2","apiV3","controlApi","explorer","integration","gramFaucet","jettonFaucet","wallets","simulator","contracts","apiCalls","mining","timeTravel","checkpoints"],"endpoints":{"apiV2":"/api/v1/environments/test-environment-1/rpc/api/v2","apiV3":"/api/v1/environments/test-environment-1/rpc/api/v3","control":"/api/v1/environments/test-environment-1/rpc"},"network":{"id":"mainnet","label":"Mainnet fork","chainId":-3,"testOnly":true,"supportsActions":false}}
+        body: {"id":"test-environment-1","name":"Renamed environment","status":"running","lifecycle":"managed","rpcUrl":"/api/v1/environments/test-environment-1/rpc","config":{"kind":"actonSimulatedLocalnet","port":5511,"forkNetwork":"mainnet","forkBlockNumber":81973221,"accounts":["deployer","treasury"],"rateLimit":30,"responseDelayMs":120,"blockIntervalMs":750,"noMining":false,"mineEmptyBlocks":true},"capabilities":["apiV2","apiV3","controlApi","explorer","integration","gramFaucet","jettonFaucet","wallets","simulator","contracts","apiCalls","mining","timeTravel","checkpoints"],"endpoints":{"apiV2":"/api/v1/environments/test-environment-1/rpc/api/v2","apiV3":"/api/v1/environments/test-environment-1/rpc/api/v3","control":"/api/v1/environments/test-environment-1/rpc"},"network":{"id":"mainnet","label":"Mainnet fork","chainId":-3,"testOnly":true,"supportsActions":false}}
 
         STOP
         status: 200 OK
-        body: {"id":"test-environment-1","name":"Renamed environment","status":"stopped","lifecycle":"managed","rpcUrl":"/api/v1/environments/test-environment-1/rpc","config":{"kind":"actonLocalnet","port":5511,"forkNetwork":"mainnet","forkBlockNumber":81973221,"accounts":["deployer","treasury"],"rateLimit":30,"responseDelayMs":120,"blockIntervalMs":750,"noMining":false,"mineEmptyBlocks":true},"capabilities":["apiV2","apiV3","controlApi","explorer","integration","gramFaucet","jettonFaucet","wallets","simulator","contracts","apiCalls","mining","timeTravel","checkpoints"],"endpoints":{"apiV2":"/api/v1/environments/test-environment-1/rpc/api/v2","apiV3":"/api/v1/environments/test-environment-1/rpc/api/v3","control":"/api/v1/environments/test-environment-1/rpc"},"network":{"id":"mainnet","label":"Mainnet fork","chainId":-3,"testOnly":true,"supportsActions":false}}
+        body: {"id":"test-environment-1","name":"Renamed environment","status":"stopped","lifecycle":"managed","rpcUrl":"/api/v1/environments/test-environment-1/rpc","config":{"kind":"actonSimulatedLocalnet","port":5511,"forkNetwork":"mainnet","forkBlockNumber":81973221,"accounts":["deployer","treasury"],"rateLimit":30,"responseDelayMs":120,"blockIntervalMs":750,"noMining":false,"mineEmptyBlocks":true},"capabilities":["apiV2","apiV3","controlApi","explorer","integration","gramFaucet","jettonFaucet","wallets","simulator","contracts","apiCalls","mining","timeTravel","checkpoints"],"endpoints":{"apiV2":"/api/v1/environments/test-environment-1/rpc/api/v2","apiV3":"/api/v1/environments/test-environment-1/rpc/api/v3","control":"/api/v1/environments/test-environment-1/rpc"},"network":{"id":"mainnet","label":"Mainnet fork","chainId":-3,"testOnly":true,"supportsActions":false}}
 
         RESTART
         status: 200 OK
-        body: {"id":"test-environment-1","name":"Renamed environment","status":"starting","lifecycle":"managed","rpcUrl":"/api/v1/environments/test-environment-1/rpc","config":{"kind":"actonLocalnet","port":5511,"forkNetwork":"mainnet","forkBlockNumber":81973221,"accounts":["deployer","treasury"],"rateLimit":30,"responseDelayMs":120,"blockIntervalMs":750,"noMining":false,"mineEmptyBlocks":true},"capabilities":["apiV2","apiV3","controlApi","explorer","integration","gramFaucet","jettonFaucet","wallets","simulator","contracts","apiCalls","mining","timeTravel","checkpoints"],"endpoints":{"apiV2":"/api/v1/environments/test-environment-1/rpc/api/v2","apiV3":"/api/v1/environments/test-environment-1/rpc/api/v3","control":"/api/v1/environments/test-environment-1/rpc"},"network":{"id":"mainnet","label":"Mainnet fork","chainId":-3,"testOnly":true,"supportsActions":false}}
+        body: {"id":"test-environment-1","name":"Renamed environment","status":"starting","lifecycle":"managed","rpcUrl":"/api/v1/environments/test-environment-1/rpc","config":{"kind":"actonSimulatedLocalnet","port":5511,"forkNetwork":"mainnet","forkBlockNumber":81973221,"accounts":["deployer","treasury"],"rateLimit":30,"responseDelayMs":120,"blockIntervalMs":750,"noMining":false,"mineEmptyBlocks":true},"capabilities":["apiV2","apiV3","controlApi","explorer","integration","gramFaucet","jettonFaucet","wallets","simulator","contracts","apiCalls","mining","timeTravel","checkpoints"],"endpoints":{"apiV2":"/api/v1/environments/test-environment-1/rpc/api/v2","apiV3":"/api/v1/environments/test-environment-1/rpc/api/v3","control":"/api/v1/environments/test-environment-1/rpc"},"network":{"id":"mainnet","label":"Mainnet fork","chainId":-3,"testOnly":true,"supportsActions":false}}
 
         DELETE
         status: 204 No Content
@@ -940,7 +940,7 @@ async fn environment_rpc_is_proxied_through_the_studio_origin() {
             Request::post(STUDIO_ENVIRONMENTS_PATH)
                 .header("content-type", "application/json")
                 .body(Body::from(format!(
-                    r#"{{"name":"Proxy target","config":{{"kind":"actonLocalnet","port":{port}}}}}"#
+                    r#"{{"name":"Proxy target","config":{{"kind":"actonSimulatedLocalnet","port":{port}}}}}"#
                 )))
                 .expect("create request must be valid"),
         )
@@ -997,7 +997,7 @@ async fn studio_records_api_calls_per_environment_for_every_proxy_target() {
                 Request::post(STUDIO_ENVIRONMENTS_PATH)
                     .header("content-type", "application/json")
                     .body(Body::from(format!(
-                        r#"{{"name":"{name}","config":{{"kind":"actonLocalnet","port":{port},"accounts":[],"noMining":false,"mineEmptyBlocks":false}}}}"#
+                        r#"{{"name":"{name}","config":{{"kind":"actonSimulatedLocalnet","port":{port},"accounts":[],"noMining":false,"mineEmptyBlocks":false}}}}"#
                     )))
                     .expect("environment request must be valid"),
             )

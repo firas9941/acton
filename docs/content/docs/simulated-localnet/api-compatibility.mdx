@@ -1,9 +1,12 @@
 ---
-title: "API Compatibility"
-description: "Coverage matrix for TonCenter v2/v3 and Streaming API endpoints in Acton local development node"
+title: "API compatibility"
+description: "Coverage matrix for Acton's simulated LiteAPI, TonCenter v2/v3, Streaming API, and Emulate API surfaces"
 ---
 
-This page tracks TonCenter v2, v3, Streaming API v2, and Emulate API coverage in Acton local development node.
+Acton simulated localnet implements the TON-compatible surfaces listed on this page for local
+contract and dApp workflows. It is Acton's custom simplified implementation, not a real TON
+network. Use the coverage matrices to decide whether a workflow can use the simulation or
+requires a Full localnet.
 
 ## TonCenter v2 Coverage Matrix
 
@@ -93,7 +96,7 @@ message bodies retain `body_raw` and use `parsed_body_type: "unknown"`.
 
 ## Streaming API v2
 
-Acton local development node supports a TonCenter Streaming API v2-compatible
+Acton simulated localnet supports a TonCenter Streaming API v2-compatible
 subset for local tools and the bundled explorer UI. For protocol details,
 request fields, finality behavior, and notification schemas, use the
 [official TON Center Streaming API documentation](https://docs.ton.org/api/streaming/overview).

@@ -1,25 +1,33 @@
-ACTON-LOCALNET(1)
+ACTON-SIMULATED-LOCALNET(1)
 
 NAME
-       acton-localnet — Manage Acton’s local TON network
+       acton-simulated-localnet — Run Acton’s simplified TON development
+       environment
 
 SYNOPSIS
-       acton localnet [options] command
+       acton simulated-localnet [options] command
 
 DESCRIPTION
-       Manage the local development node used for TON-compatible local
-       execution, forked-state development, and faucet-based local funding.
+       Acton simulated localnet is a fast, deterministic TON development
+       environment for local execution, forked-state development, and
+       faucet-based funding. It produces TON-compatible blocks and provides
+       LiteAPI, TonCenter v2/v3, Streaming API, and Emulate API surfaces used
+       by many contract and dApp workflows.
+
+       It is Acton’s custom simplified implementation, not a real TON network
+       or validator cluster. It does not model validators, consensus, shard
+       elections, or the full production node and indexer stack.
 
 SUBCOMMANDS
-   acton localnet start
-       Start the local TON network.
+   acton simulated-localnet start
+       Start Acton’s simplified TON development environment.
 
       Synopsis
-          acton localnet start [options]
+          acton simulated-localnet start [options]
 
       Options
           --port port
-              Localnet server port.
+              Simulated localnet HTTP port.
 
           --fork-net network
               Remote network to use for forked account resolution.
@@ -54,7 +62,7 @@ SUBCOMMANDS
 
           --no-mining
               Disable automatic block production. Mine blocks manually with
-              acton localnet mine or POST /acton_mine.
+              acton simulated-localnet mine or POST /acton_mine.
 
           --load-state path
               Load Localnet state from a JSON state file before startup.
@@ -77,11 +85,11 @@ SUBCOMMANDS
           --load-state cannot be used when a database path comes from either
           --db-path or [localnet].db-path.
 
-   acton localnet airdrop
+   acton simulated-localnet airdrop
        Send GRAM from the local faucet to an address.
 
       Synopsis
-          acton localnet airdrop [options] address
+          acton simulated-localnet airdrop [options] address
 
       Options
           address
@@ -91,51 +99,51 @@ SUBCOMMANDS
               Amount of GRAM to request.
 
           -p, --port port
-              Localnet server port.
+              Simulated localnet HTTP port.
 
           --auth-token token
               Localnet API token for a server started with --require-auth. If
               omitted, Acton reads ACTON_LOCALNET_AUTH_TOKEN.
 
-   acton localnet mine
+   acton simulated-localnet mine
        Mine localnet blocks manually.
 
       Synopsis
-          acton localnet mine [options] [n]
+          acton simulated-localnet mine [options] [n]
 
       Options
           n
               Number of blocks to mine. Defaults to 1.
 
           -p, --port port
-              Localnet server port.
+              Simulated localnet HTTP port.
 
           --auth-token token
               Localnet API token for a server started with --require-auth. If
               omitted, Acton reads ACTON_LOCALNET_AUTH_TOKEN.
 
-   acton localnet increase-time
+   acton simulated-localnet increase-time
        Increase the localnet virtual clock.
 
       Synopsis
-          acton localnet increase-time [options] seconds
+          acton simulated-localnet increase-time [options] seconds
 
       Options
           seconds
               Seconds to add to the virtual localnet clock.
 
           -p, --port port
-              Localnet server port.
+              Simulated localnet HTTP port.
 
           --auth-token token
               Localnet API token for a server started with --require-auth. If
               omitted, Acton reads ACTON_LOCALNET_AUTH_TOKEN.
 
-   acton localnet set-time
+   acton simulated-localnet set-time
        Set the localnet virtual clock.
 
       Synopsis
-          acton localnet set-time [options] timestamp
+          acton simulated-localnet set-time [options] timestamp
 
       Options
           timestamp
@@ -143,17 +151,17 @@ SUBCOMMANDS
               latest mined block time.
 
           -p, --port port
-              Localnet server port.
+              Simulated localnet HTTP port.
 
           --auth-token token
               Localnet API token for a server started with --require-auth. If
               omitted, Acton reads ACTON_LOCALNET_AUTH_TOKEN.
 
-   acton localnet set-next-block-timestamp
+   acton simulated-localnet set-next-block-timestamp
        Set a one-shot timestamp for the next localnet block.
 
       Synopsis
-          acton localnet set-next-block-timestamp [options] timestamp
+          acton simulated-localnet set-next-block-timestamp [options] timestamp
 
       Options
           timestamp
@@ -162,21 +170,21 @@ SUBCOMMANDS
               cannot be lower than the latest mined block time.
 
           -p, --port port
-              Localnet server port.
+              Simulated localnet HTTP port.
 
           --auth-token token
               Localnet API token for a server started with --require-auth. If
               omitted, Acton reads ACTON_LOCALNET_AUTH_TOKEN.
 
-   acton localnet status
+   acton simulated-localnet status
        Inspect the current localnet status.
 
       Synopsis
-          acton localnet status [options]
+          acton simulated-localnet status [options]
 
       Options
           -p, --port port
-              Localnet server port.
+              Simulated localnet HTTP port.
 
           --json
               Print machine-readable JSON.
@@ -185,12 +193,12 @@ SUBCOMMANDS
               Localnet API token for a server started with --require-auth. If
               omitted, Acton reads ACTON_LOCALNET_AUTH_TOKEN.
 
-   acton localnet state
+   acton simulated-localnet state
        Transfer the current state of a running localnet as a portable JSON
        file.
 
       Synopsis
-          acton localnet state [options] command
+          acton simulated-localnet state [options] command
 
       Subcommands
           o  dump <path> downloads the current live state directly to a file
@@ -201,11 +209,11 @@ SUBCOMMANDS
           dump refuses to overwrite an existing file unless --force is passed.
           A successful load clears all in-memory checkpoints.
 
-   acton localnet checkpoint
+   acton simulated-localnet checkpoint
        Manage named in-memory restore points for a running localnet.
 
       Synopsis
-          acton localnet checkpoint [options] command
+          acton simulated-localnet checkpoint [options] command
 
       Subcommands
           o  create <name> stores the current localnet state as a checkpoint
@@ -262,13 +270,13 @@ TONCENTER API KEYS
        variables only for one-off overrides or CI.
 
 LOCALNET API AUTH
-       acton localnet start --require-auth protects every Localnet HTTP route
-       under /api/*, /acton_*, /api/emulate/*, and /api/streaming/*. Static UI
-       files remain public, but the bundled UI does not receive the token from
-       the server. When a protected API request returns 401, the bundled UI
-       shows a token overlay; paste the printed token there before using
-       protected API views. The key button in the sidebar footer reopens the
-       same overlay.
+       acton simulated-localnet start --require-auth protects every Localnet
+       HTTP route under /api/*, /acton_*, /api/emulate/*, and /api/streaming/*.
+       Static UI files remain public, but the bundled UI does not receive the
+       token from the server. When a protected API request returns 401, the
+       bundled UI shows a token overlay; paste the printed token there before
+       using protected API views. The key button in the sidebar footer reopens
+       the same overlay.
 
        When auth is enabled, the server prints a localnet API token. Pass it as
        either:
@@ -288,8 +296,8 @@ LOCALNET API AUTH
 RUNTIME MODEL
        o  fork mode allows local development against remote chain state
 
-       o  acton localnet start runs in the foreground until the process is
-          stopped
+       o  acton simulated-localnet start runs in the foreground until the
+          process is stopped
 
        o  Acton starts an HTTP server on 127.0.0.1:<port> for localnet API,
           control endpoints, and the bundled localnet UI
@@ -305,13 +313,13 @@ RUNTIME MODEL
           transactions are queued
 
        o  --no-mining or [localnet].no-mining = true disables automatic block
-          production; use acton localnet mine [N] or POST /acton_mine to create
-          blocks manually
+          production; use acton simulated-localnet mine [N] or POST /acton_mine
+          to create blocks manually
 
        o  localnet has a virtual clock for block and transaction time; use
-          acton localnet increase-time, acton localnet set-time, or acton
-          localnet set-next-block-timestamp to move it without waiting for real
-          time
+          acton simulated-localnet increase-time, acton simulated-localnet
+          set-time, or acton simulated-localnet set-next-block-timestamp to
+          move it without waiting for real time
 
        o  messages accepted through send_boc, acton_sendInternalMessage, or the
           faucet are queued and included on a later automatic or manually mined
@@ -429,8 +437,8 @@ PERSISTENCE
 
 EXIT STATUS
        o  0: The selected localnet subcommand completed successfully. For acton
-          localnet status, this also includes the selected port not running;
-          use --json and inspect running for automation.
+          simulated-localnet status, this also includes the selected port not
+          running; use --json and inspect running for automation.
 
        o  1: Startup failed because port binding, state loading, remote fork
           initialization, faucet handling, or a status/control query failed.
@@ -457,40 +465,40 @@ PROJECT OPTIONS
 EXAMPLES
        1. Start with defaults:
 
-              acton localnet start
+              acton simulated-localnet start
 
        2. Fork from testnet at a historical block:
 
-              acton localnet start --fork-net testnet --fork-block-number 55000000
+              acton simulated-localnet start --fork-net testnet --fork-block-number 55000000
 
        3. Load and dump JSON state files:
 
-              acton localnet start --load-state states/localnet.json --dump-state states/localnet.json
+              acton simulated-localnet start --load-state states/localnet.json --dump-state states/localnet.json
 
        4. Airdrop local funds:
 
-              acton localnet airdrop UQA_ftKIJsHEAE_UgtFOUK15hPzycZooFuUr8duyY9T3kwwM --amount 25
+              acton simulated-localnet airdrop UQA_ftKIJsHEAE_UgtFOUK15hPzycZooFuUr8duyY9T3kwwM --amount 25
 
        5. Start a local integration node with pre-funded accounts:
 
-              acton localnet start --accounts deployer,user --db-path build/localnet.db
+              acton simulated-localnet start --accounts deployer,user --db-path build/localnet.db
 
        6. Inspect a running localnet:
 
-              acton localnet status --json
+              acton simulated-localnet status --json
 
        7. Dump/load state files and manage runtime checkpoints:
 
-              acton localnet state dump states/localnet.json
-              acton localnet checkpoint create before-upgrade
-              acton localnet checkpoint list
-              acton localnet checkpoint restore before-upgrade
-              acton localnet checkpoint export before-upgrade --out states/before-upgrade.json
-              acton localnet checkpoint import states/before-upgrade.json
+              acton simulated-localnet state dump states/localnet.json
+              acton simulated-localnet checkpoint create before-upgrade
+              acton simulated-localnet checkpoint list
+              acton simulated-localnet checkpoint restore before-upgrade
+              acton simulated-localnet checkpoint export before-upgrade --out states/before-upgrade.json
+              acton simulated-localnet checkpoint import states/before-upgrade.json
 
 SEE ALSO
        o  acton help wallet
 
-       o  Local development node guide
-          <https://ton-blockchain.github.io/acton/docs/localnet/overview>
+       o  Simulated localnet guide
+          <https://ton-blockchain.github.io/acton/docs/simulated-localnet/overview>
 

@@ -1,34 +1,36 @@
 ---
-title: "LiteAPI Support"
-description: "LiteServer binary API coverage in Acton local development node"
+title: "LiteAPI support"
+description: "LiteServer binary API coverage in Acton's simulated localnet"
 ---
 
-Acton localnet can expose a `LiteServer`-compatible binary endpoint for tools
-that talk to TON nodes through LiteAPI instead of TonCenter HTTP APIs. The
-endpoint is intended for local indexing, ABI discovery, and get-method execution
-against the localnet state. It returns real TON block cells for the local
-basechain and masterchain streams, but it is not a validator liteserver.
+Acton simulated localnet exposes a `LiteServer`-compatible binary endpoint for tools that talk
+to TON nodes through LiteAPI instead of TonCenter HTTP APIs. The endpoint supports local
+indexing, ABI discovery, and get-method execution against simulated state. It returns
+TON-compatible block cells for the local basechain and masterchain streams.
+
+This endpoint belongs to Acton's custom simplified implementation, not a real TON network or
+validator liteserver. It does not provide validator signatures or consensus proof chains.
 
 ## Endpoint
 
 LiteAPI is disabled by default. Enable it with `--liteapi`:
 
 ```bash
-acton localnet start --liteapi
+acton simulated-localnet start --liteapi
 ```
 
 When Localnet runs on HTTP port `5411`, LiteAPI listens on TCP port `5412` by
 default. Set another port explicitly with `--liteapi-port`:
 
 ```bash
-acton localnet start --liteapi --liteapi-port 15000
+acton simulated-localnet start --liteapi --liteapi-port 15000
 ```
 
 Startup output prints both values:
 
 ```text
-Starting Localnet server on http://127.0.0.1:5411
-Starting Localnet LiteAPI on tcp://127.0.0.1:5412
+Starting Acton simulated localnet on http://127.0.0.1:5411
+Starting simulated localnet LiteAPI on tcp://127.0.0.1:5412
      Key LiteAPI public key: <base64-ed25519-public-key>
 ```
 
@@ -52,7 +54,7 @@ config JSON, `127.0.0.1` is usually encoded as integer `2130706433`.
 
 <Callout type="info">
 The localnet LiteAPI key is stable across runs, but the docs intentionally show a
-sample value. Copy the key from the `acton localnet start` output.
+sample value. Copy the key from the `acton simulated-localnet start` output.
 </Callout>
 
 ## Advertised Capabilities

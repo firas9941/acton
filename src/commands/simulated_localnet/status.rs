@@ -35,7 +35,7 @@ struct LocalnetStatusResult {
     fork_block_number: Option<u64>,
 }
 
-pub async fn localnet_status_cmd(
+pub async fn simulated_localnet_status_cmd(
     port: u16,
     json: bool,
     auth_token: Option<String>,

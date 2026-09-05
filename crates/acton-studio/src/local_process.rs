@@ -85,7 +85,7 @@ struct LocalEnvironment {
 }
 
 enum EnvironmentDriver {
-    ActonLocalnet {
+    ActonSimulatedLocalnet {
         acton_executable: PathBuf,
         workspace_root: PathBuf,
         db_path: PathBuf,
@@ -1520,7 +1520,7 @@ fn resolve_request(
 ) -> Result<(String, EnvironmentConfig), EnvironmentRuntimeError> {
     let name = validate_environment_name(&request.name)?;
     let config = match request.config {
-        CreateEnvironmentConfig::ActonLocalnet {
+        CreateEnvironmentConfig::ActonSimulatedLocalnet {
             port,
             mut fork_network,
             fork_block_number,
@@ -1558,7 +1558,7 @@ fn resolve_request(
                 });
             }
 
-            EnvironmentConfig::ActonLocalnet {
+            EnvironmentConfig::ActonSimulatedLocalnet {
                 port: select_port(FIRST_LOCALNET_PORT, port, reserved_ports)?,
                 fork_network,
                 fork_block_number,
@@ -1850,7 +1850,7 @@ async fn reserved_environment_ports(runtime: &LocalProcessRuntimeInner) -> Vec<u
     let mut ports = Vec::with_capacity(environments.len() * 5);
     for environment in environments {
         match &environment.details.read().await.config {
-            EnvironmentConfig::ActonLocalnet { port, .. } => ports.push(*port),
+            EnvironmentConfig::ActonSimulatedLocalnet { port, .. } => ports.push(*port),
             EnvironmentConfig::FullTonNetwork {
                 api_v2_port,
                 api_v3_port,
@@ -1873,7 +1873,7 @@ async fn reserved_environment_ports(runtime: &LocalProcessRuntimeInner) -> Vec<u
 
 fn runtime_endpoints(config: &EnvironmentConfig) -> EnvironmentEndpoints {
     match config {
-        EnvironmentConfig::ActonLocalnet { port, .. } => {
+        EnvironmentConfig::ActonSimulatedLocalnet { port, .. } => {
             let root = format!("http://127.0.0.1:{port}");
             EnvironmentEndpoints {
                 api_v2: Some(format!("{root}/api/v2")),
@@ -2006,13 +2006,15 @@ impl EnvironmentDriver {
         resolved_imported_accounts: Option<&[FullTonAccountImport]>,
     ) -> Result<Self, EnvironmentRuntimeError> {
         match config {
-            EnvironmentConfig::ActonLocalnet { port, .. } => Ok(Self::ActonLocalnet {
-                acton_executable: acton_executable.to_owned(),
-                workspace_root: workspace_root.to_owned(),
-                db_path: data_dir.join("localnet.sqlite"),
-                config: config.clone(),
-                port: *port,
-            }),
+            EnvironmentConfig::ActonSimulatedLocalnet { port, .. } => {
+                Ok(Self::ActonSimulatedLocalnet {
+                    acton_executable: acton_executable.to_owned(),
+                    workspace_root: workspace_root.to_owned(),
+                    db_path: data_dir.join("localnet.sqlite"),
+                    config: config.clone(),
+                    port: *port,
+                })
+            }
             EnvironmentConfig::FullTonNetwork {
                 api_v2_port,
                 api_v3_port,
@@ -2052,7 +2054,7 @@ impl EnvironmentDriver {
 
     fn spawn_start(&self) -> Result<Child, EnvironmentRuntimeError> {
         match self {
-            Self::ActonLocalnet {
+            Self::ActonSimulatedLocalnet {
                 acton_executable,
                 workspace_root,
                 db_path,
@@ -2065,21 +2067,23 @@ impl EnvironmentDriver {
 
     fn ensure_restartable(&self) -> Result<(), EnvironmentRuntimeError> {
         match self {
-            Self::ActonLocalnet { port, .. } => select_port(*port, Some(*port), &[]).map(|_| ()),
+            Self::ActonSimulatedLocalnet { port, .. } => {
+                select_port(*port, Some(*port), &[]).map(|_| ())
+            }
             Self::FullTonNetwork(_) => Ok(()),
         }
     }
 
     async fn stop(&self) -> Result<(), EnvironmentRuntimeError> {
         match self {
-            Self::ActonLocalnet { .. } => Ok(()),
+            Self::ActonSimulatedLocalnet { .. } => Ok(()),
             Self::FullTonNetwork(driver) => driver.stop().await,
         }
     }
 
     async fn delete(&self) -> Result<(), EnvironmentRuntimeError> {
         match self {
-            Self::ActonLocalnet { .. } => Ok(()),
+            Self::ActonSimulatedLocalnet { .. } => Ok(()),
             Self::FullTonNetwork(driver) => driver.delete().await,
         }
     }
@@ -2091,7 +2095,7 @@ impl EnvironmentDriver {
     ) -> Result<(), EnvironmentRuntimeError> {
         match self {
             Self::FullTonNetwork(driver) => driver.add_node(existing_nodes, node).await,
-            Self::ActonLocalnet { .. } => Err(EnvironmentRuntimeError::Conflict {
+            Self::ActonSimulatedLocalnet { .. } => Err(EnvironmentRuntimeError::Conflict {
                 code: "environment_nodes_unavailable",
                 message: "Nodes can only be added to a full TON network".to_owned(),
             }),
@@ -2104,7 +2108,7 @@ impl EnvironmentDriver {
     ) -> Result<(), EnvironmentRuntimeError> {
         match self {
             Self::FullTonNetwork(driver) => driver.leave_validation(node).await,
-            Self::ActonLocalnet { .. } => Err(EnvironmentRuntimeError::Conflict {
+            Self::ActonSimulatedLocalnet { .. } => Err(EnvironmentRuntimeError::Conflict {
                 code: "environment_nodes_unavailable",
                 message: "Validator participation can only be changed in a full TON network"
                     .to_owned(),
@@ -2118,7 +2122,7 @@ impl EnvironmentDriver {
     ) -> Result<(), EnvironmentRuntimeError> {
         match self {
             Self::FullTonNetwork(driver) => driver.enter_validation(node).await,
-            Self::ActonLocalnet { .. } => Err(EnvironmentRuntimeError::Conflict {
+            Self::ActonSimulatedLocalnet { .. } => Err(EnvironmentRuntimeError::Conflict {
                 code: "environment_nodes_unavailable",
                 message: "Validator participation can only be changed in a full TON network"
                     .to_owned(),
@@ -2133,7 +2137,7 @@ impl EnvironmentDriver {
     ) -> Result<(), EnvironmentRuntimeError> {
         match self {
             Self::FullTonNetwork(driver) => driver.remove_node(existing_nodes, node).await,
-            Self::ActonLocalnet { .. } => Err(EnvironmentRuntimeError::Conflict {
+            Self::ActonSimulatedLocalnet { .. } => Err(EnvironmentRuntimeError::Conflict {
                 code: "environment_nodes_unavailable",
                 message: "Nodes can only be removed from a full TON network".to_owned(),
             }),
@@ -2147,7 +2151,7 @@ impl EnvironmentDriver {
         generation: u64,
     ) {
         match self {
-            Self::ActonLocalnet { port, .. } => {
+            Self::ActonSimulatedLocalnet { port, .. } => {
                 monitor_localnet(runtime, environment, generation, *port).await;
             }
             Self::FullTonNetwork(driver) => {
@@ -2163,7 +2167,7 @@ fn spawn_localnet(
     db_path: PathBuf,
     config: &EnvironmentConfig,
 ) -> Result<Child, EnvironmentRuntimeError> {
-    let EnvironmentConfig::ActonLocalnet {
+    let EnvironmentConfig::ActonSimulatedLocalnet {
         port,
         fork_network,
         fork_block_number,
@@ -2175,13 +2179,13 @@ fn spawn_localnet(
         mine_empty_blocks,
     } = config
     else {
-        unreachable!("localnet driver requires an Acton localnet configuration");
+        unreachable!("localnet driver requires an Acton simulated localnet configuration");
     };
     let mut command = Command::new(acton_executable);
     command
         .arg("--project-root")
         .arg(workspace_root)
-        .arg("localnet")
+        .arg("simulated-localnet")
         .arg("start")
         .arg("--port")
         .arg(port.to_string())
@@ -3123,7 +3127,7 @@ child installed: false"]]
     }
 
     fn test_environment() -> Arc<LocalEnvironment> {
-        let config = EnvironmentConfig::ActonLocalnet {
+        let config = EnvironmentConfig::ActonSimulatedLocalnet {
             port: 5411,
             fork_network: None,
             fork_block_number: None,
@@ -3142,7 +3146,7 @@ child installed: false"]]
                 config.clone(),
                 EnvironmentEndpoints::default(),
             )),
-            driver: EnvironmentDriver::ActonLocalnet {
+            driver: EnvironmentDriver::ActonSimulatedLocalnet {
                 acton_executable: PathBuf::from("acton"),
                 workspace_root: PathBuf::from("."),
                 db_path: PathBuf::from("localnet.sqlite"),

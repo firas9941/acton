@@ -112,7 +112,7 @@ export const HomePage: FC<HomePageProps> = ({client}) => {
   const runtime = useLocalnetRuntime()
   const environment = runtime.environment
   const localnetConfig =
-    environment?.config.kind === "actonLocalnet" ? environment.config : undefined
+    environment?.config.kind === "actonSimulatedLocalnet" ? environment.config : undefined
   const fullNetworkConfig =
     environment?.config.kind === "fullTonNetwork" ? environment.config : undefined
   const remoteNetworkConfig =
@@ -527,21 +527,21 @@ export const HomePage: FC<HomePageProps> = ({client}) => {
                                   <CircleDot size={15} aria-hidden="true" />
                                 )}
                                 <span>
-                                  {fullNetworkConfig ? "Full localnet" : "Simulated localnet"}
+                                  {fullNetworkConfig ? "Full localnet" : "Acton simulated localnet"}
                                 </span>
                                 <Tooltip
                                   content={
                                     fullNetworkConfig
                                       ? "Runs a complete local TON network and full indexer, supports actions, and reproduces full-node API behavior, but starts more slowly and uses more memory and disk space"
                                       : nodeInfo?.fork_network
-                                        ? "Uses the Acton emulator and starts from a TON network snapshot, supports manual mining, time travel, and network controls, but can behave differently from a real TON network in edge cases"
-                                        : "Uses the Acton emulator, starts quickly, uses little disk space, and supports manual mining, time travel, and network controls, but can behave differently from a real TON network in edge cases"
+                                        ? "Fast local environment starting from a TON network snapshot with compatible blocks and APIs; Acton's custom simplified implementation, not a real TON network"
+                                        : "Fast local environment with compatible blocks, LiteAPI, TonCenter v2/v3, Streaming API, and Emulate API; Acton's custom simplified implementation, not a real TON network"
                                   }
                                 >
                                   <button
                                     type="button"
                                     className={styles.settingsSectionHelp}
-                                    aria-label={`About ${fullNetworkConfig ? "Full localnet" : "Simulated localnet"}`}
+                                    aria-label={`About ${fullNetworkConfig ? "Full localnet" : "Acton simulated localnet"}`}
                                   >
                                     <CircleHelp size={14} aria-hidden="true" />
                                   </button>

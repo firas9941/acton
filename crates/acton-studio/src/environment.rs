@@ -83,7 +83,7 @@ impl FullTonAccountImport {
     rename_all_fields = "camelCase"
 )]
 pub enum CreateEnvironmentConfig {
-    ActonLocalnet {
+    ActonSimulatedLocalnet {
         port: Option<u16>,
         fork_network: Option<String>,
         fork_block_number: Option<u64>,
@@ -212,7 +212,7 @@ impl EnvironmentSnapshotOperation {
     rename_all_fields = "camelCase"
 )]
 pub enum EnvironmentConfig {
-    ActonLocalnet {
+    ActonSimulatedLocalnet {
         port: u16,
         fork_network: Option<String>,
         fork_block_number: Option<u64>,
@@ -403,7 +403,7 @@ impl EnvironmentConfig {
     #[must_use]
     pub fn capabilities(&self) -> Vec<EnvironmentCapability> {
         match self {
-            Self::ActonLocalnet { .. } => vec![
+            Self::ActonSimulatedLocalnet { .. } => vec![
                 EnvironmentCapability::ApiV2,
                 EnvironmentCapability::ApiV3,
                 EnvironmentCapability::ControlApi,
@@ -450,7 +450,7 @@ impl EnvironmentConfig {
     #[must_use]
     pub fn network(&self) -> EnvironmentNetwork {
         match self {
-            Self::ActonLocalnet {
+            Self::ActonSimulatedLocalnet {
                 fork_network: Some(network),
                 ..
             } => EnvironmentNetwork {
@@ -464,9 +464,9 @@ impl EnvironmentConfig {
                 test_only: true,
                 supports_actions: false,
             },
-            Self::ActonLocalnet { .. } => EnvironmentNetwork {
-                id: "acton-localnet".to_owned(),
-                label: "Simulated localnet".to_owned(),
+            Self::ActonSimulatedLocalnet { .. } => EnvironmentNetwork {
+                id: "acton-simulated-localnet".to_owned(),
+                label: "Acton simulated localnet".to_owned(),
                 chain_id: -3,
                 test_only: true,
                 supports_actions: false,

@@ -4,7 +4,7 @@ use std::fs;
 use std::io::Write;
 use std::path::{Path, PathBuf};
 
-pub async fn localnet_state_dump_cmd(
+pub async fn simulated_localnet_state_dump_cmd(
     path: PathBuf,
     force: bool,
     port: u16,
@@ -31,7 +31,7 @@ pub async fn localnet_state_dump_cmd(
     Ok(())
 }
 
-pub async fn localnet_state_load_cmd(
+pub async fn simulated_localnet_state_load_cmd(
     path: PathBuf,
     port: u16,
     auth_token: Option<String>,
@@ -61,7 +61,7 @@ pub async fn localnet_state_load_cmd(
     Ok(())
 }
 
-pub async fn localnet_checkpoint_create_cmd(
+pub async fn simulated_localnet_checkpoint_create_cmd(
     name: &str,
     force: bool,
     port: u16,
@@ -89,7 +89,7 @@ pub async fn localnet_checkpoint_create_cmd(
     Ok(())
 }
 
-pub async fn localnet_checkpoint_list_cmd(
+pub async fn simulated_localnet_checkpoint_list_cmd(
     port: u16,
     auth_token: Option<String>,
 ) -> anyhow::Result<()> {
@@ -125,7 +125,7 @@ pub async fn localnet_checkpoint_list_cmd(
     Ok(())
 }
 
-pub async fn localnet_checkpoint_restore_cmd(
+pub async fn simulated_localnet_checkpoint_restore_cmd(
     name: &str,
     port: u16,
     auth_token: Option<String>,
@@ -149,7 +149,7 @@ pub async fn localnet_checkpoint_restore_cmd(
     Ok(())
 }
 
-pub async fn localnet_checkpoint_delete_cmd(
+pub async fn simulated_localnet_checkpoint_delete_cmd(
     name: &str,
     port: u16,
     auth_token: Option<String>,
@@ -172,7 +172,7 @@ pub async fn localnet_checkpoint_delete_cmd(
     Ok(())
 }
 
-pub async fn localnet_checkpoint_clear_cmd(
+pub async fn simulated_localnet_checkpoint_clear_cmd(
     port: u16,
     auth_token: Option<String>,
 ) -> anyhow::Result<()> {
@@ -196,7 +196,7 @@ pub async fn localnet_checkpoint_clear_cmd(
     Ok(())
 }
 
-pub async fn localnet_checkpoint_export_cmd(
+pub async fn simulated_localnet_checkpoint_export_cmd(
     name: &str,
     out: PathBuf,
     force: bool,
@@ -231,7 +231,7 @@ pub async fn localnet_checkpoint_export_cmd(
     Ok(())
 }
 
-pub async fn localnet_checkpoint_import_cmd(
+pub async fn simulated_localnet_checkpoint_import_cmd(
     path: PathBuf,
     name: Option<String>,
     force: bool,
