@@ -288,6 +288,31 @@ RUN --mount=type=cache,id=ton-indexer-pip,target=/root/.cache/pip \
         --install-dir /out/ton-indexer \
         --component classifier
 
+# xtask owns compilation and installation; prepare only the runtime copies here
+# so discarded files never enter the final image's layers.
+FROM ubuntu:${UBUNTU_VERSION} AS runtime-artifacts
+ARG TARGETARCH
+
+RUN apt-get update \
+    && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+        binutils \
+        python3 \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY --from=ton-binaries /opt/ton /opt/ton
+COPY --from=http-api-builder /opt/ton-http-api-v2 /opt/ton-http-api-v2
+COPY --from=ton-indexer-builder \
+    /out/ton-indexer/bin/ton-index-postgres \
+    /out/ton-indexer/bin/ton-index-postgres-migrate \
+    /out/ton-indexer/bin/ton-smc-scanner \
+    /opt/ton-indexer/bin/
+COPY --from=ton-indexer-builder /out/ton-indexer/lib /opt/ton-indexer/lib
+COPY --from=ton-index-api-builder /out/ton-indexer/bin/ton-index-go /opt/ton-indexer/bin/ton-index-go
+COPY --from=ton-index-classifier-builder /out/ton-indexer/venv /opt/ton-indexer/venv
+COPY --from=ton-index-classifier-builder /out/ton-indexer/classifier /opt/ton-indexer/classifier
+COPY apps/localton/docker/prepare-runtime.sh /tmp/prepare-runtime.sh
+RUN bash /tmp/prepare-runtime.sh "${TARGETARCH}"
+
 FROM ubuntu:${UBUNTU_VERSION} AS runtime
 ARG BUILD_VERSION=dev
 ARG SOURCE_URL=https://github.com/ton-blockchain/acton
@@ -319,6 +344,7 @@ RUN apt-get update \
         tini \
         zlib1g \
     && rm -rf /var/lib/apt/lists/* \
+    && find /usr/lib/python3.12 -type d -name __pycache__ -prune -exec rm -rf {} + \
     && groupadd --gid 10001 localton \
     && useradd \
         --uid 10001 \
@@ -333,29 +359,12 @@ RUN apt-get update \
     && install -d -m 0755 /usr/share/doc/localton
 
 COPY --from=localton-builder /out/localton /usr/local/bin/localton
-COPY --from=ton-binaries /opt/ton /opt/ton
-COPY --from=http-api-builder /opt/ton-http-api-v2 /opt/ton-http-api-v2
-COPY --from=ton-indexer-builder \
-    /out/ton-indexer/bin/ton-index-postgres \
-    /out/ton-indexer/bin/ton-index-postgres-migrate \
-    /out/ton-indexer/bin/ton-smc-scanner \
-    /opt/ton-indexer/bin/
-COPY --from=ton-indexer-builder /out/ton-indexer/lib /opt/ton-indexer/lib
-COPY --from=ton-index-api-builder \
-    /out/ton-indexer/bin/ton-index-go \
-    /opt/ton-indexer/bin/ton-index-go
-COPY --from=ton-index-classifier-builder \
-    /out/ton-indexer/venv \
-    /opt/ton-indexer/venv
-COPY --from=ton-index-classifier-builder \
-    /out/ton-indexer/classifier \
-    /opt/ton-indexer/classifier
+COPY --from=runtime-artifacts /opt /opt
 COPY --from=ton-indexer-builder /out/ton-indexer/LICENSE /usr/share/doc/localton/TON-INDEXER-LICENSE
 COPY --chmod=0755 apps/localton/docker/container-entrypoint.sh /usr/local/bin/localton-container-entrypoint
 COPY apps/localton/NOTICE.md /usr/share/doc/localton/
 
 ENV HOME=/var/lib/localton \
-    APPIMAGE_EXTRACT_AND_RUN=1 \
     LD_LIBRARY_PATH=/opt/ton/lib:/opt/ton-indexer/lib \
     LOCALTON_CONFIG_HTTP_BIND=0.0.0.0 \
     LOCALTON_ADMIN_HTTP_BIND=0.0.0.0 \
