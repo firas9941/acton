@@ -11,6 +11,7 @@ import type {TonClient} from "@acton/explorer-core/api/client"
 import type {ValidatorSetConfiguration} from "@acton/explorer-core/api/config"
 import {
   validatorElectionFromConfig,
+  validatorElectionStage,
   type ValidatorElection,
 } from "@acton/explorer-core/api/validatorElections"
 import {ExplorerBreadcrumbs} from "@acton/explorer-core/components/ExplorerBreadcrumbs"
@@ -116,11 +117,12 @@ function ValidatorsPageContent({
     )
   }
 
-  return <ElectionSection election={toElectionObservation(loadState.election)} now={now} />
+  return <ElectionSection election={toElectionObservation(loadState.election, now)} now={now} />
 }
 
-function toElectionObservation(election: ValidatorElection): ElectionObservation {
+function toElectionObservation(election: ValidatorElection, now: number): ElectionObservation {
   return {
+    stage: validatorElectionStage(election, now),
     elections_open_at: election.current.utimeUntil - election.timing.electionsStartBefore,
     elections_close_at: election.current.utimeUntil - election.timing.electionsEndBefore,
     validators_elected_for: election.timing.validatorsElectedFor,
