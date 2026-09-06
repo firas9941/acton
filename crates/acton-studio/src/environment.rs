@@ -484,6 +484,24 @@ pub enum EnvironmentRuntimeError {
     Internal { code: &'static str, message: String },
 }
 
+/// A simulator commits during the request; full localnet confirmation runs independently.
+/// Only pending changes need durable operation polling, never a repeated submission.
+#[derive(Debug, Serialize, ToSchema)]
+#[serde(
+    tag = "status",
+    rename_all = "camelCase",
+    rename_all_fields = "camelCase"
+)]
+pub enum NetworkConfigUpdate {
+    Pending {
+        operation: Box<acton_localnet::Operation>,
+    },
+    Applied {
+        index: i32,
+        masterchain_seqno: u32,
+    },
+}
+
 pub type EnvironmentRuntimeFuture<'a, T> =
     Pin<Box<dyn Future<Output = Result<T, EnvironmentRuntimeError>> + Send + 'a>>;
 
@@ -523,17 +541,17 @@ pub trait EnvironmentRuntime: Send + Sync {
         })
     }
 
-    /// Submits a config mutation to the full localnet owner; Studio never signs it.
+    /// Delegates a parameter mutation to its network owner and reports completion or progress.
+    /// Studio never signs full localnet changes or edits the simulator's database directly.
     fn update_network_config(
         &self,
         _environment_id: &str,
         _request: acton_localnet::UpdateNetworkConfig,
-    ) -> EnvironmentRuntimeFuture<'_, acton_localnet::Operation> {
+    ) -> EnvironmentRuntimeFuture<'_, NetworkConfigUpdate> {
         Box::pin(async {
             Err(EnvironmentRuntimeError::Conflict {
                 code: "environment_config_unavailable",
-                message: "Configuration editing is available for Full localnet environments"
-                    .to_owned(),
+                message: "Configuration editing is unavailable for this environment".to_owned(),
             })
         })
     }

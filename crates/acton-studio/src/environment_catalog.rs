@@ -6,7 +6,8 @@ use crate::environment::{
     CreateEnvironmentRequest, CreateEnvironmentSnapshotRequest, CreateFullTonNodeRequest,
     EnvironmentConfig, EnvironmentEndpoints, EnvironmentRuntime, EnvironmentRuntimeError,
     EnvironmentRuntimeFuture, EnvironmentSnapshot, EnvironmentSnapshotOperation, EnvironmentStatus,
-    PublicTonNetwork, RemoveFullTonNodeRequest, StudioEnvironment, UpdateEnvironmentRequest,
+    NetworkConfigUpdate, PublicTonNetwork, RemoveFullTonNodeRequest, StudioEnvironment,
+    UpdateEnvironmentRequest,
 };
 
 pub const TESTNET_ENVIRONMENT_ID: &str = "testnet";
@@ -144,7 +145,7 @@ impl EnvironmentRuntime for EnvironmentCatalogRuntime {
         &self,
         environment_id: &str,
         request: acton_localnet::UpdateNetworkConfig,
-    ) -> EnvironmentRuntimeFuture<'_, acton_localnet::Operation> {
+    ) -> EnvironmentRuntimeFuture<'_, NetworkConfigUpdate> {
         if let Some(error) = lifecycle_unavailable(environment_id, "configured") {
             return error;
         }

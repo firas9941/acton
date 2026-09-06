@@ -29,6 +29,10 @@ interface LocalnetOperation {
   readonly result?: {readonly index: number; readonly masterchainSeqno: number}
 }
 
+type NetworkConfigUpdate =
+  | {readonly status: "pending"; readonly operation: LocalnetOperation}
+  | {readonly status: "applied"; readonly index: number; readonly masterchainSeqno: number}
+
 /** Studio supplies environment routing; encoding and chain mutations have separate owners. */
 export function NetworkConfigPage({
   environment,
@@ -84,6 +88,31 @@ export function NetworkConfigPage({
     [showToast],
   )
 
+  const showApplied = useCallback(
+    (toastId: string, result: NonNullable<LocalnetOperation["result"]>) => {
+      setReloadKey(value => value + 1)
+      setEditorOpen(false)
+      updateToast(toastId, {
+        title: `Parameter ${result.index} applied`,
+        description: (
+          <>
+            Confirmed in masterchain block{" "}
+            <Link
+              className={styles.blockLink}
+              to={blockPath(-1, "8000000000000000", result.masterchainSeqno)}
+            >
+              #{result.masterchainSeqno}
+            </Link>
+          </>
+        ),
+        variant: "success",
+        durationMs: 4000,
+      })
+      operationToast.current = undefined
+    },
+    [blockPath, updateToast],
+  )
+
   // The page owns operation tracking so closing the editor does not interrupt
   // confirmation or hide the eventual result from the notification stack.
   useEffect(() => {
@@ -114,32 +143,16 @@ export function NetworkConfigPage({
         if (current.status !== "running") {
           sessionStorage.removeItem(storageKey)
           setPendingId(undefined)
-          setReloadKey(value => value + 1)
           if (current.status === "failed") {
+            setReloadKey(value => value + 1)
             updateToast(toastId, {
               title: "Configuration update failed",
               description: current.error,
               variant: "error",
               durationMs: 8000,
             })
-          } else {
-            setEditorOpen(false)
-            updateToast(toastId, {
-              title: `Parameter ${current.result?.index} applied`,
-              description: current.result && (
-                <>
-                  Confirmed in masterchain block{" "}
-                  <Link
-                    className={styles.blockLink}
-                    to={blockPath(-1, "8000000000000000", current.result.masterchainSeqno)}
-                  >
-                    #{current.result.masterchainSeqno}
-                  </Link>
-                </>
-              ),
-              variant: "success",
-              durationMs: 4000,
-            })
+          } else if (current.result) {
+            showApplied(toastId, current.result)
           }
           operationToast.current = undefined
           return
@@ -172,7 +185,7 @@ export function NetworkConfigPage({
         operationToast.current = undefined
       }
     }
-  }, [base, blockPath, pendingId, storageKey, showToast, updateToast, dismissToast])
+  }, [base, pendingId, storageKey, showToast, updateToast, dismissToast, showApplied])
 
   const apply = async (update: ParameterUpdate) => {
     setSubmitting(true)
@@ -184,16 +197,20 @@ export function NetworkConfigPage({
     })
     operationToast.current = toastId
     try {
-      const accepted = await requestJson<LocalnetOperation>(`${base}/network/config`, {
+      const accepted = await requestJson<NetworkConfigUpdate>(`${base}/network/config`, {
         method: "POST",
         headers: {"content-type": "application/json"},
         body: JSON.stringify(update),
       })
-      // Only the operation ID is retained; reconnecting never resends a signature
-      // or replays a mutation which the network may already have accepted.
-      sessionStorage.setItem(storageKey, accepted.id)
-      setPendingId(accepted.id)
+      if (accepted.status === "applied") {
+        showApplied(toastId, accepted)
+      } else {
+        // Only the operation ID is retained; reconnecting never resubmits a change.
+        sessionStorage.setItem(storageKey, accepted.operation.id)
+        setPendingId(accepted.operation.id)
+      }
     } catch (cause) {
+      setReloadKey(value => value + 1)
       updateToast(toastId, {
         title: "Configuration update failed",
         description: cause instanceof Error ? cause.message : String(cause),

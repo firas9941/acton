@@ -14,7 +14,7 @@ use crate::environment::{
     CreateEnvironmentConfig, CreateEnvironmentRequest, CreateEnvironmentSnapshotRequest,
     CreateFullTonNodeRequest, EnvironmentConfig, EnvironmentEndpoints, EnvironmentRuntime,
     EnvironmentRuntimeError, EnvironmentRuntimeFuture, EnvironmentSnapshot,
-    EnvironmentSnapshotOperation, EnvironmentStatus, FullTonAccountImport,
+    EnvironmentSnapshotOperation, EnvironmentStatus, FullTonAccountImport, NetworkConfigUpdate,
     RemoveFullTonNodeRequest, StudioEnvironment, UpdateEnvironmentRequest,
 };
 use crate::environment_store::{
@@ -412,11 +412,12 @@ impl EnvironmentRuntime for LocalProcessEnvironmentRuntime {
         &self,
         environment_id: &str,
         request: acton_localnet::UpdateNetworkConfig,
-    ) -> EnvironmentRuntimeFuture<'_, acton_localnet::Operation> {
+    ) -> EnvironmentRuntimeFuture<'_, NetworkConfigUpdate> {
         let environment_id = environment_id.to_owned();
 
         Box::pin(async move {
             let environment = find_environment(&self.inner, &environment_id).await?;
+            let _guard = environment.lifecycle.lock().await;
             ensure_environment_not_deleted(&environment).await?;
 
             match &environment.driver {
@@ -425,13 +426,73 @@ impl EnvironmentRuntime for LocalProcessEnvironmentRuntime {
                     .await?
                     .update_network_config(&request)
                     .await
+                    .map(|operation| NetworkConfigUpdate::Pending {
+                        operation: Box::new(operation),
+                    })
                     .map_err(localnet::error),
-                EnvironmentDriver::ActonSimulatedLocalnet { .. } => {
-                    Err(EnvironmentRuntimeError::Conflict {
-                        code: "environment_config_unavailable",
-                        message:
-                            "Configuration editing is available for Full localnet environments"
+                EnvironmentDriver::ActonSimulatedLocalnet { port, .. } => {
+                    if environment.details.read().await.status != EnvironmentStatus::Running {
+                        return Err(EnvironmentRuntimeError::Conflict {
+                            code: "environment_not_running",
+                            message: "Start the network before updating its configuration"
                                 .to_owned(),
+                        });
+                    }
+
+                    let response = reqwest::Client::new()
+                        .post(format!("http://127.0.0.1:{port}/acton_setConfigParam"))
+                        .timeout(Duration::from_secs(30))
+                        .json(&request)
+                        .send()
+                        .await
+                        .map_err(|error| EnvironmentRuntimeError::Internal {
+                            code: "config_update_failed",
+                            message: format!(
+                                "Simulated localnet config update failed: {error}; reload the configuration before retrying"
+                            ),
+                        })?;
+                    let status = response.status();
+                    let body: serde_json::Value = response.json().await.map_err(|error| {
+                        EnvironmentRuntimeError::Internal {
+                            code: "config_update_failed",
+                            message: format!("Invalid simulated localnet config response: {error}"),
+                        }
+                    })?;
+                    if !status.is_success() {
+                        let message = body["error"]
+                            .as_str()
+                            .unwrap_or("Simulated localnet could not apply the configuration")
+                            .to_owned();
+                        return Err(if status == reqwest::StatusCode::CONFLICT {
+                            EnvironmentRuntimeError::Conflict {
+                                code: "config_update_conflict",
+                                message,
+                            }
+                        } else if status.is_client_error() {
+                            EnvironmentRuntimeError::InvalidRequest {
+                                code: "invalid_config_parameter",
+                                message,
+                            }
+                        } else {
+                            EnvironmentRuntimeError::Internal {
+                                code: "config_update_failed",
+                                message,
+                            }
+                        });
+                    }
+                    let masterchain_seqno = body["result"]["block_seqno"]
+                        .as_u64()
+                        .and_then(|seqno| u32::try_from(seqno).ok())
+                        .ok_or_else(|| EnvironmentRuntimeError::Internal {
+                            code: "config_update_failed",
+                            message: "Simulated localnet did not return the configuration block"
+                                .to_owned(),
+                        })?;
+                    environment.details.write().await.error = None;
+
+                    Ok(NetworkConfigUpdate::Applied {
+                        index: request.index,
+                        masterchain_seqno,
                     })
                 }
             }

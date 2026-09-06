@@ -224,8 +224,9 @@ export const EnvironmentNavigation: FC<EnvironmentNavigationProps> = ({
   const visibleStandaloneItems = supports(environment, "simulator") ? standaloneItems : []
   const visibleNetworkItems = networkItems.filter(item =>
     item.path === "/network/config"
-      ? environment?.config.kind === "fullTonNetwork"
-      : item.path !== "/network/health" || supports(environment, "health"),
+      ? supports(environment, "controlApi")
+      : environment?.config.kind === "fullTonNetwork" &&
+        (item.path !== "/network/health" || supports(environment, "health")),
   )
   const visibleEnvironmentItems = environmentItems.filter(item =>
     item.path === "/wallets"
@@ -337,7 +338,7 @@ export const EnvironmentNavigation: FC<EnvironmentNavigationProps> = ({
             />
           ))}
 
-          {supportsAny(environment, "observability", "health") ? (
+          {visibleNetworkItems.length > 0 ? (
             <NavigationDisclosure
               active={isNetworkActive}
               ariaLabel="Network pages"
@@ -347,7 +348,13 @@ export const EnvironmentNavigation: FC<EnvironmentNavigationProps> = ({
               items={visibleNetworkItems}
               label="Network"
               onItemSelect={path => void navigate(routes.path(path))}
-              onParentSelect={() => void navigate(routes.path("/network"))}
+              onParentSelect={() =>
+                void navigate(
+                  routes.path(
+                    environment?.config.kind === "fullTonNetwork" ? "/network" : "/network/config",
+                  ),
+                )
+              }
               onToggle={() => setIsNetworkOpen(open => !open)}
               open={isNetworkOpen}
             />

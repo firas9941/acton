@@ -293,7 +293,7 @@ const AppContent: FC<AppContentProps> = ({
                 </DashboardPage>
               }
             />
-            {runtime.environment?.config.kind === "fullTonNetwork" && (
+            {runtime.environment && supports(runtime.environment, "controlApi") && (
               <Route
                 path={path("/network/config")}
                 element={

@@ -56,7 +56,7 @@ pub use environment::{
     EnvironmentLifecycle, EnvironmentNetwork, EnvironmentRuntime, EnvironmentRuntimeError,
     EnvironmentRuntimeFuture, EnvironmentSnapshot, EnvironmentSnapshotOperation,
     EnvironmentSnapshotOperationKind, EnvironmentSnapshotOperationPhase, EnvironmentStartupTimings,
-    EnvironmentStatus, FullTonAccountImport, FullTonNode, PublicTonNetwork,
+    EnvironmentStatus, FullTonAccountImport, FullTonNode, NetworkConfigUpdate, PublicTonNetwork,
     RemoveFullTonNodeRequest, StudioEnvironment, UpdateEnvironmentRequest,
 };
 pub use environment_catalog::{
