@@ -118,7 +118,6 @@ function ValidatorsPageContent({
   if (loadState.status === "loading") {
     return (
       <NetworkDashboardSkeleton
-        showValidationRoundTitle={false}
         showValidatorPerformance={false}
         showValidatorProduction={false}
         view="validators"
@@ -151,7 +150,6 @@ function ValidatorsPageContent({
     <NetworkDashboardContent
       network={toNetworkView(loadState.election, loadState.cycle, now)}
       now={now}
-      showValidationRoundTitle={false}
       showValidatorPerformance={false}
       showValidatorProduction={false}
       tps={undefined}

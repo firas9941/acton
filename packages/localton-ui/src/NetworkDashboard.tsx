@@ -12,7 +12,6 @@ import {
   DataTableRow,
   DataTableSkeletonRows,
   DataTableTable,
-  DateTime,
   Duration,
   GramAmount,
   Percentage,
@@ -22,7 +21,12 @@ import {
   Tooltip,
 } from "@acton/ui"
 
-import {ElectionSection, validatorWeightParts} from "./components/ElectionSection"
+import {
+  ElectionSection,
+  ElectionSkeleton,
+  nodeForValidator,
+  validatorWeightParts,
+} from "./components/ElectionSection"
 import {Metric} from "./components/Metric"
 import {NodesSection} from "./components/NodesSection"
 import {StatusPill} from "./components/StatusPill"
@@ -53,7 +57,6 @@ export interface NetworkDashboardProps {
   readonly onNetworkChange?: (network: NetworkView) => void
   /** Host-owned row controls; standalone Localton omits this callback */
   readonly renderNodeActions?: (node: NodeView) => ReactNode
-  readonly showValidationRoundTitle?: boolean
   readonly showValidatorPerformance?: boolean
   readonly showValidatorProduction?: boolean
   readonly view?: NetworkDashboardView
@@ -67,7 +70,6 @@ export function NetworkDashboard({
   onAddressClick,
   onNetworkChange,
   renderNodeActions,
-  showValidationRoundTitle = true,
   showValidatorPerformance = true,
   showValidatorProduction = true,
   view = "all",
@@ -82,7 +84,6 @@ export function NetworkDashboard({
     return (
       <NetworkDashboardSkeleton
         nodesFooter={nodesFooter}
-        showValidationRoundTitle={showValidationRoundTitle}
         showValidatorPerformance={showValidatorPerformance}
         showValidatorProduction={showValidatorProduction}
         view={view}
@@ -108,7 +109,6 @@ export function NetworkDashboard({
       now={now}
       onAddressClick={onAddressClick}
       renderNodeActions={renderNodeActions}
-      showValidationRoundTitle={showValidationRoundTitle}
       showValidatorPerformance={showValidatorPerformance}
       showValidatorProduction={showValidatorProduction}
       tps={tps}
@@ -125,13 +125,11 @@ interface LoadingTableColumn {
 
 export function NetworkDashboardSkeleton({
   nodesFooter,
-  showValidationRoundTitle = true,
   showValidatorPerformance = true,
   showValidatorProduction = true,
   view,
 }: {
   readonly nodesFooter?: ReactNode
-  readonly showValidationRoundTitle?: boolean
   readonly showValidatorPerformance?: boolean
   readonly showValidatorProduction?: boolean
   readonly view: NetworkDashboardView
@@ -147,17 +145,6 @@ export function NetworkDashboardSkeleton({
 
       {view === "all" || view === "validators" ? (
         <>
-          <LoadingTableSection
-            ariaLabel="Current validation round"
-            columns={[
-              {label: "Metric", width: "12rem"},
-              {label: "Value", width: "22rem"},
-            ]}
-            minWidth="36rem"
-            rows={3}
-            showTitle={showValidationRoundTitle}
-            title="Current validation round"
-          />
           <ElectionSkeleton />
           {showValidatorProduction ? (
             <LoadingTableSection
@@ -274,40 +261,6 @@ function NetworkOverviewSkeleton({showTitle}: {readonly showTitle: boolean}) {
   )
 }
 
-function ElectionSkeleton() {
-  return (
-    <section className={styles.sectionStack} aria-label="Loading validator elections">
-      <div className={styles.electionSkeletonPanel}>
-        <div className={styles.electionSkeletonSummary}>
-          {["Round ID", "Current set", "Main subset", "Next set", "Stake hold"].map(label => (
-            <Metric
-              key={label}
-              density="compact"
-              label={label}
-              value={<Skeleton width="5.5rem" height="1.0625rem" />}
-            />
-          ))}
-        </div>
-        <div className={styles.electionSkeletonChart}>
-          {Array.from({length: 3}, (_, index) => (
-            <div className={styles.electionSkeletonRound} key={index}>
-              <Skeleton width={index === 1 ? "11rem" : "9rem"} />
-              <Skeleton shape="rect" width="100%" height="0.7rem" radius="round" />
-            </div>
-          ))}
-        </div>
-        <div className={styles.electionSkeletonDisclosures}>
-          {Array.from({length: 3}, (_, index) => (
-            <div className={styles.electionSkeletonDisclosure} key={index}>
-              <Skeleton width={index === 2 ? "8rem" : "14rem"} />
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
-  )
-}
-
 function LoadingTableSection({
   ariaLabel,
   columns,
@@ -370,7 +323,6 @@ interface NetworkDashboardContentProps {
   readonly now: number
   readonly onAddressClick?: (address: string, event?: MouseEvent<HTMLElement>) => void
   readonly renderNodeActions?: (node: NodeView) => ReactNode
-  readonly showValidationRoundTitle?: boolean
   readonly showValidatorPerformance?: boolean
   readonly showValidatorProduction?: boolean
   readonly tps: TpsView | undefined
@@ -384,7 +336,6 @@ export function NetworkDashboardContent({
   now,
   onAddressClick,
   renderNodeActions,
-  showValidationRoundTitle = true,
   showValidatorPerformance = true,
   showValidatorProduction = true,
   tps,
@@ -401,12 +352,7 @@ export function NetworkDashboardContent({
 
       {view === "all" || view === "validators" ? (
         <>
-          <ValidationRoundSection
-            network={network}
-            now={now}
-            showTitle={showValidationRoundTitle}
-          />
-          <ElectionSection election={network.election} now={now} />
+          <ElectionSection election={network.election} nodes={network.nodes} now={now} />
           {showValidatorProduction ? <ValidatorsSection nodes={network.nodes} /> : null}
           {showValidatorPerformance ? (
             <ValidatorPerformanceSection network={network} onAddressClick={onAddressClick} />
@@ -648,162 +594,6 @@ function ValidatorsSection({nodes}: {readonly nodes: readonly NodeView[]}) {
   )
 }
 
-function ValidationRoundSection({
-  network,
-  now,
-  showTitle,
-}: {
-  readonly network: NetworkView
-  readonly now: number
-  readonly showTitle: boolean
-}) {
-  const election = network.election
-  const members = election?.current.members ?? []
-  const stakes = members.flatMap(validator => {
-    const stake = nodeForValidator(network.nodes, validator)?.validator_stake_nano
-
-    return stake ? [BigInt(stake)] : []
-  })
-  const completeStakeSet = members.length > 0 && stakes.length === members.length
-  const reportedStake = election?.current.stake
-  const totalStake =
-    reportedStake?.total_nano ??
-    (completeStakeSet ? stakes.reduce((total, stake) => total + stake, 0n).toString() : undefined)
-  const minimumStake =
-    reportedStake?.minimum_nano ??
-    (completeStakeSet
-      ? stakes.reduce((minimum, stake) => (stake < minimum ? stake : minimum)).toString()
-      : undefined)
-  const maximumStake =
-    reportedStake?.maximum_nano ??
-    (completeStakeSet
-      ? stakes.reduce((maximum, stake) => (stake > maximum ? stake : maximum)).toString()
-      : undefined)
-
-  return (
-    <section
-      className={styles.sectionStack}
-      aria-label={showTitle ? undefined : "Current validation round"}
-      aria-labelledby={showTitle ? "validation-round-title" : undefined}
-    >
-      {showTitle ? (
-        <div className={styles.sectionHeading}>
-          <h2 id="validation-round-title">Current validation round</h2>
-        </div>
-      ) : null}
-      {election ? (
-        <div className={styles.validationRoundPanel} aria-label="Current validation round">
-          <ValidationRoundGroup label="Round" columns={4}>
-            <ValidationRoundMetric
-              label="Number"
-              value={election.current.round_id.toLocaleString()}
-            />
-            <ValidationRoundMetric
-              label="Start"
-              value={
-                <ValidationRoundTime now={now} timestamp={election.current.validation_started_at} />
-              }
-            />
-            <ValidationRoundMetric
-              label="End"
-              value={
-                <ValidationRoundTime now={now} timestamp={election.current.validation_ended_at} />
-              }
-            />
-            <ValidationRoundMetric
-              label="Unfreezing stakes"
-              value={
-                <ValidationRoundTime
-                  now={now}
-                  timestamp={election.current.validation_ended_at + election.stake_held_for}
-                />
-              }
-            />
-          </ValidationRoundGroup>
-          <ValidationRoundGroup label="Stake" columns={4}>
-            <ValidationRoundMetric
-              label="Validators"
-              value={`${election.current.validators.toLocaleString()} / ${election.max_validators.toLocaleString()}`}
-            />
-            <ValidationRoundMetric label="Total" value={<GramAmount value={totalStake} />} />
-            <ValidationRoundMetric label="Actual min" value={<GramAmount value={minimumStake} />} />
-            <ValidationRoundMetric label="Actual max" value={<GramAmount value={maximumStake} />} />
-          </ValidationRoundGroup>
-          <ValidationRoundGroup label="Network config" columns={4}>
-            <ValidationRoundMetric
-              label="Min stake"
-              value={<GramAmount value={election.min_stake_nano} />}
-            />
-            <ValidationRoundMetric
-              label="Max stake"
-              value={<GramAmount value={election.max_stake_nano} />}
-            />
-            <ValidationRoundMetric
-              label="Min validators"
-              value={election.min_validators.toLocaleString()}
-            />
-            <ValidationRoundMetric
-              label="Max validators"
-              value={election.max_validators.toLocaleString()}
-            />
-            <ValidationRoundMetric
-              label="Max masterchain validators"
-              value={election.max_main_validators.toLocaleString()}
-            />
-          </ValidationRoundGroup>
-        </div>
-      ) : (
-        <div className={styles.validationRoundEmpty}>Current validation round is not available</div>
-      )}
-    </section>
-  )
-}
-
-function ValidationRoundGroup({
-  children,
-  columns,
-  label,
-}: {
-  readonly children: ReactNode
-  readonly columns: number
-  readonly label: string
-}) {
-  return (
-    <div className={styles.validationRoundGroup}>
-      <div className={styles.validationRoundGroupLabel}>{label}</div>
-      <div className={styles.validationRoundGrid} data-columns={columns}>
-        {children}
-      </div>
-    </div>
-  )
-}
-
-function ValidationRoundMetric({
-  label,
-  value,
-}: {
-  readonly label: string
-  readonly value: ReactNode
-}) {
-  return (
-    <div className={styles.validationRoundMetric}>
-      <span className={styles.validationRoundMetricLabel}>{label}</span>
-      <span className={styles.validationRoundMetricValue}>{value}</span>
-    </div>
-  )
-}
-
-function ValidationRoundTime({now, timestamp}: {readonly now: number; readonly timestamp: number}) {
-  return (
-    <span className={styles.validationRoundTime}>
-      <DateTime display="date-time-numeric-seconds" unit="seconds" value={timestamp} />
-      <span className={styles.validationRoundRelativeTime}>
-        (<RelativeTime mode="relative" now={now} unit="seconds" value={timestamp} />)
-      </span>
-    </span>
-  )
-}
-
 function ValidatorPerformanceSection({
   network,
   onAddressClick,
@@ -956,19 +746,6 @@ function ValidatorEfficiency({
 }
 
 /** Finds the host report that owns a key from the on-chain validator set */
-function nodeForValidator(
-  nodes: readonly NodeView[],
-  validator: ValidatorObservation,
-): NodeView | undefined {
-  const publicKey = validator.public_key.toLowerCase()
-
-  return nodes.find(
-    node =>
-      node.validator_public_key?.toLowerCase() === publicKey ||
-      node.validator_public_keys.some(key => key.toLowerCase() === publicKey),
-  )
-}
-
 function ShardsSection({
   shards,
   now,

@@ -10,29 +10,45 @@ import {
   DataTableHeaderCell,
   DataTableRow,
   DataTableTable,
+  DateTime,
   Disclosure,
+  Duration,
+  GramAmount,
   Percentage,
+  RelativeTime,
+  Skeleton,
   TechnicalValue,
   Tooltip,
 } from "@acton/ui"
 
-import type {ElectionObservation, ValidatorObservation, ValidatorSetObservation} from "../types"
+import type {
+  ElectionObservation,
+  NodeView,
+  ValidatorObservation,
+  ValidatorSetObservation,
+} from "../types"
 import {Metric} from "./Metric"
 import styles from "./ElectionSection.module.css"
 
 interface ElectionSectionProps {
   readonly election: ElectionObservation | null
+  readonly nodes?: readonly NodeView[]
   readonly now: number
 }
 
 const VALIDATOR_PREVIEW_COUNT = 7
 
-/** Owns the election timeline and validator-set presentation for an aggregated network view */
-export function ElectionSection({election, now}: ElectionSectionProps) {
+/** Keeps the timeline, round details, and validator sets in one shared network panel */
+export function ElectionSection({election, nodes = [], now}: ElectionSectionProps) {
   return (
     <section id="elections" className={styles.sectionStack} aria-label="Validator elections">
       {election ? (
-        <ElectionDiagram election={election} now={now} />
+        <div className={styles.electionPanel}>
+          <ElectionSummary election={election} />
+          <ElectionDiagram election={election} now={now} />
+          <ValidationRoundDetails election={election} nodes={nodes} now={now} />
+          <ValidatorSetTables election={election} />
+        </div>
       ) : (
         <div className={styles.notice}>
           <Clock3 size={16} aria-hidden="true" />
@@ -40,6 +56,97 @@ export function ElectionSection({election, now}: ElectionSectionProps) {
         </div>
       )}
     </section>
+  )
+}
+
+/** Uses the loaded panel's layout so loading preserves its rows, spacing, and breakpoints */
+export function ElectionSkeleton() {
+  return (
+    <section
+      className={styles.sectionStack}
+      aria-label="Loading validator elections"
+      aria-busy="true"
+      inert
+    >
+      <div className={styles.electionPanel}>
+        <ElectionSummary />
+        <div className={styles.electionChart}>
+          <div className={styles.electionTimeline}>
+            {["Previous round", "Current round", "Next round"].map(label => (
+              <div className={styles.electionRound} data-active="true" key={label}>
+                <div className={styles.electionRoundHeading}>
+                  <strong>{label}</strong>
+                  <Skeleton width="7rem" />
+                  <Skeleton width="5.5rem" />
+                </div>
+                <div className={styles.electionRoundTrack}>
+                  <Skeleton shape="rect" height="100%" radius="round" />
+                </div>
+                <div className={styles.electionRoundPhases}>
+                  {[12, 30, 60, 88].map(position => (
+                    <span key={position} style={{left: `${position}%`}}>
+                      <Skeleton width="3rem" />
+                    </span>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+        <ValidationRoundDetails />
+        <div className={styles.validatorSetDisclosures}>
+          {["Previous set", "Current set", "Next set"].map(label => (
+            <Disclosure
+              className={styles.validatorSetDisclosure}
+              key={label}
+              label={
+                <span className={styles.validatorSetSummary}>
+                  <span>{label}</span>
+                  <Skeleton width="8rem" />
+                </span>
+              }
+            >
+              {null}
+            </Disclosure>
+          ))}
+        </div>
+      </div>
+    </section>
+  )
+}
+
+function ElectionSummary({election}: {readonly election?: ElectionObservation}) {
+  const metrics = [
+    {label: "Round ID", value: election?.current.round_id.toLocaleString()},
+    {
+      label: "Current set",
+      value: election && formatValidators(election.current.validators),
+    },
+    {
+      label: "Main subset",
+      value: election && formatValidators(election.current.main_validators),
+    },
+    {
+      label: "Next set",
+      value: election?.next ? formatValidators(election.next.validators) : "Pending",
+    },
+    {
+      label: "Stake hold",
+      value: election && <Duration display="parts" maxParts={3} value={election.stake_held_for} />,
+    },
+  ]
+
+  return (
+    <div className={styles.electionSummary}>
+      {metrics.map(({label, value}) => (
+        <Metric
+          density="compact"
+          key={label}
+          label={label}
+          value={election ? value : <Skeleton width="5.5rem" height="1.0625rem" />}
+        />
+      ))}
+    </div>
   )
 }
 
@@ -101,138 +208,234 @@ function ElectionDiagram({
   const nowPosition = position(now)
 
   return (
-    <div className={styles.electionPanel}>
-      <div className={styles.electionSummary}>
-        <Metric
-          density="compact"
-          label="Round ID"
-          value={election.current.round_id.toLocaleString()}
-        />
-        <Metric
-          density="compact"
-          label="Current set"
-          value={formatValidators(election.current.validators)}
-        />
-        <Metric
-          density="compact"
-          label="Main subset"
-          value={formatValidators(election.current.main_validators)}
-        />
-        <Metric
-          density="compact"
-          label="Next set"
-          value={election.next === null ? "Pending" : formatValidators(election.next.validators)}
-        />
-        <Metric density="compact" label="Stake hold" value={`${election.stake_held_for}s`} />
-      </div>
-      <div className={styles.electionChart} data-stage={election.stage}>
-        <div
-          aria-label="Validator election timeline"
-          className={styles.electionTimeline}
-          data-rollover={rollingOver}
-          role="img"
-        >
-          <div className={styles.timelineNow} style={{left: `${nowPosition}%`}}>
-            <strong>NOW</strong>
-          </div>
-          {rounds.map(round => {
-            const openedAt = entryStart(round.set)
-            const closedAt = entryEnd(round.set)
-            const validationEndedAt = round.set.validation_ended_at
-            const holdingEndedAt = validationEndedAt + election.stake_held_for
-            const phases = [
-              {name: "Election", className: styles.timelineEntry, start: openedAt, end: closedAt},
-              {
-                name: "Selection",
-                className: styles.timelineSelection,
-                start: closedAt,
-                end: round.set.validation_started_at,
-              },
-              {
-                name: "Validation",
-                className: styles.timelineValidation,
-                start: round.set.validation_started_at,
-                end: validationEndedAt,
-              },
-              {
-                name: "Stake hold",
-                className: styles.timelineHolding,
-                start: validationEndedAt,
-                end: holdingEndedAt,
-              },
-            ]
-            const activePhase = phases.find(phase => phase.start <= now && now < phase.end)
-
-            return (
-              <div
-                className={styles.electionRound}
-                data-active={activePhase !== undefined}
-                data-current={round.kind === "current"}
-                key={round.set.round_id}
-              >
-                <div className={styles.electionRoundHeading}>
-                  <strong>{round.label}</strong>
-                  <span>#{round.set.round_id.toLocaleString()}</span>
-                  <span>
-                    {round.available
-                      ? formatValidators(round.set.validators)
-                      : round.unavailableLabel}
-                  </span>
-                </div>
-                <div className={styles.electionRoundTrack}>
-                  {phases.map(phase => {
-                    const tooltip = `${phase.name} · ${formatTimestamp(phase.start)}–${formatTimestamp(phase.end)}`
-
-                    return (
-                      <Tooltip content={tooltip} delay={0} key={phase.name}>
-                        <span
-                          aria-current={phase === activePhase ? "true" : undefined}
-                          aria-label={tooltip}
-                          className={`${styles.timelineSegment} ${phase.className}`}
-                          data-active={phase === activePhase}
-                          style={{
-                            left: `${position(phase.start)}%`,
-                            width: `${width(phase.start, phase.end)}%`,
-                          }}
-                        />
-                      </Tooltip>
-                    )
-                  })}
-                  {activePhase ? (
-                    <span
-                      className={styles.timelineNowDot}
-                      style={{left: `${nowPosition}%`}}
-                      aria-hidden="true"
-                    />
-                  ) : null}
-                </div>
-                <div className={styles.electionRoundPhases} aria-hidden="true">
-                  <span style={{left: `${position((openedAt + closedAt) / 2)}%`}}>Election</span>
-                  <span
-                    style={{
-                      left: `${position((closedAt + round.set.validation_started_at) / 2)}%`,
-                    }}
-                  >
-                    Selection
-                  </span>
-                  <span
-                    style={{
-                      left: `${position((round.set.validation_started_at + validationEndedAt) / 2)}%`,
-                    }}
-                  >
-                    Validation
-                  </span>
-                  <span style={{left: `${position((validationEndedAt + holdingEndedAt) / 2)}%`}}>
-                    Holding
-                  </span>
-                </div>
-              </div>
-            )
-          })}
+    <div className={styles.electionChart} data-stage={election.stage}>
+      <div
+        aria-label="Validator election timeline"
+        className={styles.electionTimeline}
+        data-rollover={rollingOver}
+        role="img"
+      >
+        <div className={styles.timelineNow} style={{left: `${nowPosition}%`}}>
+          <strong>NOW</strong>
         </div>
+        {rounds.map(round => {
+          const openedAt = entryStart(round.set)
+          const closedAt = entryEnd(round.set)
+          const validationEndedAt = round.set.validation_ended_at
+          const holdingEndedAt = validationEndedAt + election.stake_held_for
+          const phases = [
+            {name: "Election", className: styles.timelineEntry, start: openedAt, end: closedAt},
+            {
+              name: "Selection",
+              className: styles.timelineSelection,
+              start: closedAt,
+              end: round.set.validation_started_at,
+            },
+            {
+              name: "Validation",
+              className: styles.timelineValidation,
+              start: round.set.validation_started_at,
+              end: validationEndedAt,
+            },
+            {
+              name: "Stake hold",
+              className: styles.timelineHolding,
+              start: validationEndedAt,
+              end: holdingEndedAt,
+            },
+          ]
+          const activePhase = phases.find(phase => phase.start <= now && now < phase.end)
+
+          return (
+            <div
+              className={styles.electionRound}
+              data-active={activePhase !== undefined}
+              data-current={round.kind === "current"}
+              key={round.set.round_id}
+            >
+              <div className={styles.electionRoundHeading}>
+                <strong>{round.label}</strong>
+                <span>#{round.set.round_id.toLocaleString()}</span>
+                <span>
+                  {round.available
+                    ? formatValidators(round.set.validators)
+                    : round.unavailableLabel}
+                </span>
+              </div>
+              <div className={styles.electionRoundTrack}>
+                {phases.map(phase => {
+                  const tooltip = `${phase.name} · ${formatTimestamp(phase.start)}–${formatTimestamp(phase.end)}`
+
+                  return (
+                    <Tooltip content={tooltip} delay={0} key={phase.name}>
+                      <span
+                        aria-current={phase === activePhase ? "true" : undefined}
+                        aria-label={tooltip}
+                        className={`${styles.timelineSegment} ${phase.className}`}
+                        data-active={phase === activePhase}
+                        style={{
+                          left: `${position(phase.start)}%`,
+                          width: `${width(phase.start, phase.end)}%`,
+                        }}
+                      />
+                    </Tooltip>
+                  )
+                })}
+                {activePhase ? (
+                  <span
+                    className={styles.timelineNowDot}
+                    style={{left: `${nowPosition}%`}}
+                    aria-hidden="true"
+                  />
+                ) : null}
+              </div>
+              <div className={styles.electionRoundPhases} aria-hidden="true">
+                <span style={{left: `${position((openedAt + closedAt) / 2)}%`}}>Election</span>
+                <span
+                  style={{
+                    left: `${position((closedAt + round.set.validation_started_at) / 2)}%`,
+                  }}
+                >
+                  Selection
+                </span>
+                <span
+                  style={{
+                    left: `${position((round.set.validation_started_at + validationEndedAt) / 2)}%`,
+                  }}
+                >
+                  Validation
+                </span>
+                <span style={{left: `${position((validationEndedAt + holdingEndedAt) / 2)}%`}}>
+                  Holding
+                </span>
+              </div>
+            </div>
+          )
+        })}
       </div>
-      <ValidatorSetTables election={election} />
     </div>
+  )
+}
+
+function ValidationRoundDetails({
+  election,
+  nodes = [],
+  now = 0,
+}: {
+  readonly election?: ElectionObservation
+  readonly nodes?: readonly NodeView[]
+  readonly now?: number
+}) {
+  const members = election?.current.members ?? []
+  const stakes = members.flatMap(validator => {
+    const stake = nodeForValidator(nodes, validator)?.validator_stake_nano
+
+    return stake ? [BigInt(stake)] : []
+  })
+
+  // Partial local-node reports cannot describe the whole validator set's stake range.
+  const completeStakeSet = members.length > 0 && stakes.length === members.length
+  const reportedStake = election?.current.stake
+  const totalStake =
+    reportedStake?.total_nano ??
+    (completeStakeSet ? stakes.reduce((total, stake) => total + stake, 0n).toString() : undefined)
+  const minimumStake =
+    reportedStake?.minimum_nano ??
+    (completeStakeSet
+      ? stakes.reduce((minimum, stake) => (stake < minimum ? stake : minimum)).toString()
+      : undefined)
+  const maximumStake =
+    reportedStake?.maximum_nano ??
+    (completeStakeSet
+      ? stakes.reduce((maximum, stake) => (stake > maximum ? stake : maximum)).toString()
+      : undefined)
+
+  const groups = [
+    {
+      label: "Round",
+      metrics: [
+        {label: "Number", value: election?.current.round_id.toLocaleString()},
+        {
+          label: "Start",
+          value: election && (
+            <ValidationRoundTime now={now} timestamp={election.current.validation_started_at} />
+          ),
+        },
+        {
+          label: "End",
+          value: election && (
+            <ValidationRoundTime now={now} timestamp={election.current.validation_ended_at} />
+          ),
+        },
+        {
+          label: "Unfreezing stakes",
+          value: election && (
+            <ValidationRoundTime
+              now={now}
+              timestamp={election.current.validation_ended_at + election.stake_held_for}
+            />
+          ),
+        },
+      ],
+    },
+    {
+      label: "Stake",
+      metrics: [
+        {
+          label: "Validators",
+          value:
+            election &&
+            `${election.current.validators.toLocaleString()} / ${election.max_validators.toLocaleString()}`,
+        },
+        {label: "Total", value: <GramAmount value={totalStake} />},
+        {label: "Actual min", value: <GramAmount value={minimumStake} />},
+        {label: "Actual max", value: <GramAmount value={maximumStake} />},
+      ],
+    },
+    {
+      label: "Network config",
+      metrics: [
+        {label: "Min stake", value: <GramAmount value={election?.min_stake_nano} />},
+        {label: "Max stake", value: <GramAmount value={election?.max_stake_nano} />},
+        {label: "Min validators", value: election?.min_validators.toLocaleString()},
+        {label: "Max validators", value: election?.max_validators.toLocaleString()},
+        {
+          label: "Max masterchain validators",
+          value: election?.max_main_validators.toLocaleString(),
+        },
+      ],
+    },
+  ]
+
+  return (
+    <div className={styles.validationRoundPanel} aria-label="Current validation round">
+      {groups.map(group => (
+        <div className={styles.validationRoundGroup} key={group.label}>
+          <div className={styles.validationRoundGroupLabel}>{group.label}</div>
+          <div className={styles.validationRoundGrid}>
+            {group.metrics.map(({label, value}) => (
+              <div className={styles.validationRoundMetric} key={label}>
+                <span className={styles.validationRoundMetricLabel}>{label}</span>
+                <span className={styles.validationRoundMetricValue}>
+                  {election ? value : <Skeleton width="7rem" height="1.178125rem" />}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function ValidationRoundTime({now, timestamp}: {readonly now: number; readonly timestamp: number}) {
+  return (
+    <span className={styles.validationRoundTime}>
+      <DateTime display="date-time-numeric-seconds" unit="seconds" value={timestamp} />
+      <span className={styles.validationRoundRelativeTime}>
+        (<RelativeTime mode="relative" now={now} unit="seconds" value={timestamp} />)
+      </span>
+    </span>
   )
 }
 
@@ -416,4 +619,18 @@ function formatTimestamp(value: number) {
 
 function formatValidators(count: number) {
   return `${count.toLocaleString()} ${count === 1 ? "validator" : "validators"}`
+}
+
+/** Matches current and rotated validator keys to the node reporting its stake and performance */
+export function nodeForValidator(
+  nodes: readonly NodeView[],
+  validator: ValidatorObservation,
+): NodeView | undefined {
+  const publicKey = validator.public_key.toLowerCase()
+
+  return nodes.find(
+    node =>
+      node.validator_public_key?.toLowerCase() === publicKey ||
+      node.validator_public_keys.some(key => key.toLowerCase() === publicKey),
+  )
 }

@@ -10,7 +10,7 @@
   border-right: 0;
 }
 
-.metric span {
+.metric > span {
   color: var(--acton-color-text-muted);
   font-size: var(--acton-font-size-xs);
 }
