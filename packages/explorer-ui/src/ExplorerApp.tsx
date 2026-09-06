@@ -905,7 +905,7 @@ const DesktopMoreMenu: FC = () => {
           </Link>
           <Link className={styles.desktopMoreItem} to={routes.configPath()} onClick={closeMenu}>
             <span className={styles.desktopMoreItemCopy}>
-              <span className={styles.desktopMoreItemTitle}>Network config</span>
+              <span className={styles.desktopMoreItemTitle}>Config</span>
               <span className={styles.desktopMoreItemDescription}>
                 Read protocol parameters and limits
               </span>
@@ -1367,7 +1367,7 @@ export const ExplorerApp: FC = () => {
                                 Tokens
                               </Link>
                               <Link to="/config" onClick={closeMobileHeaderPanels}>
-                                Network config
+                                Config
                               </Link>
                               <Link to="/elections" onClick={closeMobileHeaderPanels}>
                                 Elections
