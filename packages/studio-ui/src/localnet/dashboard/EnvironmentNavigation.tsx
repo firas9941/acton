@@ -80,6 +80,7 @@ const networkItems: NestedSidebarItem[] = [
   {label: "Validators", path: "/network/validators"},
   {label: "Stats", path: "/network/stats"},
   {label: "Config", path: "/network/config"},
+  {label: "Activity", path: "/network/activity"},
   {label: "Health", path: "/network/health"},
 ]
 
