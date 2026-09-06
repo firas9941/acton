@@ -225,6 +225,7 @@ export const LocalnetRuntimeProvider: FC<LocalnetRuntimeProviderProps> = ({
           basePath={localnetPath(basePath, "/explorer")}
           cellPath={localnetPath(basePath, "/cell-inspector")}
           contractsPath={localnetPath(basePath, "/contracts")}
+          electionsPath={localnetPath(basePath, "/network/validators")}
           emulatePath={localnetPath(basePath, "/simulator")}
           localnetBasePath={basePath}
           sourcesPath={localnetPath(basePath, "/contracts/sources")}

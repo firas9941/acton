@@ -255,6 +255,8 @@ function ConfigContent({
   readonly navigationPosition: "left" | "right"
 }) {
   const {activeId, contentRef, indexRef} = useConfigNavigation(visibleParameters)
+  const routes = useExplorerRoutePaths()
+  const {search} = useLocation()
 
   return (
     <>
@@ -293,6 +295,16 @@ function ConfigContent({
               <ConfigParameterCard
                 key={parameter.id}
                 parameter={parameter}
+                descriptionExtra={
+                  parameter.id === 15 ? (
+                    <Link
+                      className={styles.electionsLink}
+                      to={{pathname: routes.electionsPath, search}}
+                    >
+                      View current elections
+                    </Link>
+                  ) : undefined
+                }
                 actions={
                   onEdit && parameter.id === 0 ? (
                     <span className={styles.immutableLabel}>
@@ -331,9 +343,11 @@ function ConfigContent({
 export function ConfigParameterCard({
   parameter,
   actions,
+  descriptionExtra,
 }: {
   readonly parameter: NetworkConfigParameter
   readonly actions?: ReactNode
+  readonly descriptionExtra?: ReactNode
 }) {
   const hasValueTab =
     parameter.parsedValue !== undefined || parameter.contractBytecode !== undefined
@@ -377,7 +391,10 @@ export function ConfigParameterCard({
           </InfoPopover>
         </div>
         {actions && <div className={styles.parameterActions}>{actions}</div>}
-        <p className={styles.parameterDescription}>{parameter.description}</p>
+        <p className={styles.parameterDescription}>
+          {parameter.description}
+          {descriptionExtra ? <>. {descriptionExtra}</> : null}
+        </p>
       </header>
 
       <ContentTabs

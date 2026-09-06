@@ -137,6 +137,22 @@
   justify-self: end;
 }
 
+.electionsLink {
+  color: var(--acton-color-accent);
+  font-weight: var(--acton-font-weight-medium);
+  text-decoration: none;
+}
+
+.electionsLink:hover {
+  text-decoration: underline;
+}
+
+.electionsLink:focus-visible {
+  border-radius: var(--acton-radius-control-sm);
+  outline: 2px solid var(--acton-color-focus-ring);
+  outline-offset: 2px;
+}
+
 .immutableLabel {
   display: inline-flex;
   min-height: 1.5rem;

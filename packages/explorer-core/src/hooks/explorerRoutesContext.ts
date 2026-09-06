@@ -6,6 +6,7 @@ export interface ExplorerRoutes {
   readonly rootPath: string
   readonly blocksPath: string
   readonly configPath: (seqno?: number) => string
+  readonly electionsPath: string
   readonly abiPath: string
   readonly contractsPath?: string
   readonly cellPath: string
@@ -24,6 +25,7 @@ export interface ExplorerRouteOverrides {
   readonly abiPath?: string
   readonly cellPath?: string
   readonly contractsPath?: string
+  readonly electionsPath?: string
   readonly emulatePath?: string
   readonly sourcesPath?: string
 }
@@ -44,6 +46,7 @@ export const createExplorerRoutes = (
     rootPath: path(),
     blocksPath: path("/blocks"),
     configPath: seqno => path(seqno === undefined ? "/config" : `/config/${seqno}`),
+    electionsPath: overrides.electionsPath ?? path("/elections"),
     abiPath,
     contractsPath: overrides.contractsPath,
     cellPath: overrides.cellPath ?? path("/cell"),

@@ -15,6 +15,7 @@ describe("explorer account routes", () => {
 
     expect({
       config: mainnetRoutes.configPath(),
+      elections: mainnetRoutes.electionsPath,
       historicalConfig: testnetRoutes.configPath(123),
       mainnet: mainnetRoutes.addressPath(RAW_ADDRESS),
       testnet: testnetRoutes.addressPath(RAW_ADDRESS),
@@ -24,6 +25,7 @@ describe("explorer account routes", () => {
     }).toMatchInlineSnapshot(`
       {
         "config": "/config",
+        "elections": "/elections",
         "historicalConfig": "/explorer/config/123",
         "invalidPreserved": "/address/not%20an%20address",
         "mainnet": "/address/Ef9VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVbxn",
