@@ -177,6 +177,19 @@ impl EnvironmentRuntime for EnvironmentCatalogRuntime {
         self.managed.add_full_ton_node(environment_id, request)
     }
 
+    fn set_full_ton_node_running(
+        &self,
+        environment_id: &str,
+        node_id: &str,
+        running: bool,
+    ) -> EnvironmentRuntimeFuture<'_, StudioEnvironment> {
+        if let Some(error) = lifecycle_unavailable(environment_id, "changed") {
+            return error;
+        }
+        self.managed
+            .set_full_ton_node_running(environment_id, node_id, running)
+    }
+
     fn remove_full_ton_node(
         &self,
         environment_id: &str,

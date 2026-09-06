@@ -26,6 +26,8 @@ pub(super) fn router() -> Router<ApiState> {
         .route("/v1/network/logs", get(logs))
         .route("/v1/network/nodes", post(add_node))
         .route("/v1/network/nodes/{node}", delete(remove_node))
+        .route("/v1/network/nodes/{node}/start", post(start_node))
+        .route("/v1/network/nodes/{node}/stop", post(stop_node))
         .route(
             "/v1/network/nodes/{node}/enter-validation",
             post(enter_validation),
@@ -133,6 +135,20 @@ async fn remove_node(
         },
     )
     .await
+}
+
+async fn start_node(
+    State(state): State<ApiState>,
+    Path(id): Path<String>,
+) -> Result<(StatusCode, Json<Operation>), Error> {
+    accepted(state, Action::NodeRunning { id, running: true }).await
+}
+
+async fn stop_node(
+    State(state): State<ApiState>,
+    Path(id): Path<String>,
+) -> Result<(StatusCode, Json<Operation>), Error> {
+    accepted(state, Action::NodeRunning { id, running: false }).await
 }
 
 async fn enter_validation(

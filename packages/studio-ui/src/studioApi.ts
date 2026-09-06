@@ -47,6 +47,7 @@ export interface FullTonNode {
   readonly name: string
   readonly validator: boolean
   readonly portBase: number
+  readonly stopped: boolean
 }
 
 export interface FullTonAccountImport {
@@ -477,6 +478,19 @@ export function addStudioFullTonNode(
       },
       body: JSON.stringify(request),
     },
+  )
+}
+
+/** Starts or stops the same managed node without replacing its persistent state */
+export function setStudioFullTonNodeRunning(
+  environmentId: string,
+  nodeId: string,
+  running: boolean,
+): Promise<StudioEnvironment> {
+  const action = running ? "start" : "stop"
+  return requestJson<StudioEnvironment>(
+    `/api/v1/environments/${encodeURIComponent(environmentId)}/nodes/${encodeURIComponent(nodeId)}/${action}`,
+    {method: "POST", headers: {accept: "application/json"}},
   )
 }
 

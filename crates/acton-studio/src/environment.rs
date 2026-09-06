@@ -622,6 +622,23 @@ pub trait EnvironmentRuntime: Send + Sync {
         })
     }
 
+    /// Starts or stops one joined node without removing its identity or persistent state.
+    /// The network owner stays online; explicit stop intent survives environment restarts.
+    fn set_full_ton_node_running(
+        &self,
+        _environment_id: &str,
+        _node_id: &str,
+        _running: bool,
+    ) -> EnvironmentRuntimeFuture<'_, StudioEnvironment> {
+        Box::pin(async {
+            Err(EnvironmentRuntimeError::Conflict {
+                code: "environment_nodes_unavailable",
+                message: "Nodes can only be started or stopped in a managed full TON network"
+                    .to_owned(),
+            })
+        })
+    }
+
     fn remove_full_ton_node(
         &self,
         _environment_id: &str,

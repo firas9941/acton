@@ -32,6 +32,8 @@ export type NetworkDashboardView = "all" | "overview" | "nodes" | "validators"
 
 export interface NetworkDashboardProps {
   readonly client: ObservabilityClient
+  /** Keeps host-managed offline nodes accessible before the collector has a report */
+  readonly fallbackNodes?: readonly NodeView[]
   /** Host-owned controls rendered after the node table without coupling them to Localton */
   readonly nodesFooter?: ReactNode
   readonly onNetworkChange?: (network: NetworkView) => void
@@ -43,6 +45,7 @@ export interface NetworkDashboardProps {
 /** Renders collector-backed network pages without owning product navigation or page chrome */
 export function NetworkDashboard({
   client,
+  fallbackNodes = [],
   nodesFooter,
   onNetworkChange,
   renderNodeActions,
@@ -60,7 +63,18 @@ export function NetworkDashboard({
 
   return (
     <NetworkDashboardContent
-      network={network}
+      network={{
+        ...network,
+        nodes: [
+          ...network.nodes,
+          ...fallbackNodes.filter(
+            node =>
+              !network.nodes.some(
+                observed => observed.name.toLowerCase() === node.name.toLowerCase(),
+              ),
+          ),
+        ],
+      }}
       nodesFooter={nodesFooter}
       now={now}
       renderNodeActions={renderNodeActions}
@@ -124,10 +138,9 @@ function NetworkDashboardSkeleton({
               {label: "Roles", width: "5rem"},
               {label: "MC blocks", align: "right", width: "4rem"},
               {label: "Shard blocks", align: "right", width: "4rem"},
-              {label: "Observer", width: "9rem"},
             ]}
             footer={nodesFooter}
-            minWidth="60rem"
+            minWidth="50rem"
             rows={1}
             rowSize="node"
             showTitle={view === "all"}

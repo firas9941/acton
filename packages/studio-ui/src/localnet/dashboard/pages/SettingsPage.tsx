@@ -64,7 +64,10 @@ export const SettingsPage: FC<SettingsPageProps> = ({
   const [isContainerLoading, setIsContainerLoading] = useState(true)
 
   useEffect(() => {
-    if (!fullLocalnet || !environment?.id) return
+    // Deletion tears down the process that serves Docker diagnostics
+    if (!fullLocalnet || !environment?.id || isDeleting || environment.status === "stopping") {
+      return
+    }
 
     const controller = new AbortController()
     setContainerHealth(undefined)
@@ -93,7 +96,7 @@ export const SettingsPage: FC<SettingsPageProps> = ({
     void loadContainer()
 
     return () => controller.abort()
-  }, [environment?.id, environment?.status, fullLocalnet, showToast])
+  }, [environment?.id, environment?.status, fullLocalnet, isDeleting, showToast])
 
   const loadRuntimeSettings = useCallback(async () => {
     if (!hasControlApi) {

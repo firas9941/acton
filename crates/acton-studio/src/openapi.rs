@@ -55,6 +55,8 @@ pub fn openapi() -> utoipa::openapi::OpenApi {
         crate::enter_full_ton_validation,
         crate::leave_full_ton_validation,
         crate::remove_full_ton_node,
+        crate::start_full_ton_node,
+        crate::stop_full_ton_node,
         crate::get_environment,
         crate::update_environment,
         crate::delete_environment,

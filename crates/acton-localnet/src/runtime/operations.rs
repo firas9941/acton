@@ -13,6 +13,7 @@ pub(crate) enum Action {
     Delete,
     AddNode { name: String, validator: bool },
     RemoveNode { id: String, force: bool },
+    NodeRunning { id: String, running: bool },
     Validation { id: String, enabled: bool },
     CreateSnapshot { name: Option<String> },
     RestoreSnapshot { id: String },
@@ -28,6 +29,8 @@ impl Action {
             Self::Delete => "delete",
             Self::AddNode { .. } => "addNode",
             Self::RemoveNode { .. } => "removeNode",
+            Self::NodeRunning { running: true, .. } => "startNode",
+            Self::NodeRunning { running: false, .. } => "stopNode",
             Self::Validation { enabled: true, .. } => "enterValidation",
             Self::Validation { enabled: false, .. } => "leaveValidation",
             Self::CreateSnapshot { .. } => "createSnapshot",
@@ -278,6 +281,7 @@ impl Context {
                 return self.add_node(&driver, name, validator).await;
             }
             Action::RemoveNode { id, force } => self.remove_node(&driver, &id, force).await?,
+            Action::NodeRunning { id, running } => self.node_running(&driver, &id, running).await?,
             Action::Validation { id, enabled } => self.validation(&driver, &id, enabled).await?,
             Action::CreateSnapshot { name } => {
                 let restart = self.entry.record.read().await.status == Status::Running;

@@ -395,6 +395,11 @@ impl EnvironmentRuntime for LocalProcessEnvironmentRuntime {
         Box::pin(async move {
             let environment = find_environment(&self.inner, &environment_id).await?;
 
+            // Diagnostics can start an auxiliary service for a stopped network.
+            // Serialize that with deletion so a read cannot recreate its storage.
+            let _lifecycle_guard = environment.lifecycle.lock().await;
+            ensure_environment_not_deleted(&environment).await?;
+
             match &environment.driver {
                 EnvironmentDriver::FullTonNetwork(driver) => driver.health().await,
                 EnvironmentDriver::ActonSimulatedLocalnet { .. } => {
@@ -544,6 +549,34 @@ impl EnvironmentRuntime for LocalProcessEnvironmentRuntime {
             let client = driver.client().await?;
             let operation = client
                 .add_node(&request.name, request.validator)
+                .await
+                .map_err(localnet::error)?;
+            client.wait(operation).await.map_err(localnet::error)?;
+            refresh_full_localnet(
+                &environment,
+                client.network().await.map_err(localnet::error)?,
+            )
+            .await;
+            Ok(environment.details.read().await.clone())
+        })
+    }
+
+    fn set_full_ton_node_running(
+        &self,
+        environment_id: &str,
+        node_id: &str,
+        running: bool,
+    ) -> EnvironmentRuntimeFuture<'_, StudioEnvironment> {
+        let environment_id = environment_id.to_owned();
+        let node_id = node_id.to_owned();
+        Box::pin(async move {
+            let environment = find_environment(&self.inner, &environment_id).await?;
+            let _guard = environment.lifecycle.lock().await;
+            ensure_environment_not_deleted(&environment).await?;
+            let driver = full_localnet(&environment)?;
+            let client = driver.client().await?;
+            let operation = client
+                .node_running(&node_id, running)
                 .await
                 .map_err(localnet::error)?;
             client.wait(operation).await.map_err(localnet::error)?;

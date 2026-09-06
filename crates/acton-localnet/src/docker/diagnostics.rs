@@ -155,7 +155,8 @@ impl DockerNetwork {
             .chain(nodes.iter().map(|node| node.id.as_str()))
         {
             let state = states.iter().find(|state| state.service == service);
-            let ready = if stopping {
+            let explicitly_stopped = nodes.iter().any(|node| node.id == service && node.stopped);
+            let ready = if stopping || explicitly_stopped {
                 state.is_none_or(|state| matches!(state.state.as_str(), "exited" | "dead"))
             } else {
                 state.is_some_and(|state| {
@@ -249,14 +250,22 @@ impl DockerNetwork {
                             exit_code: None,
                             container: None,
                         },
-                        |state| state.health(ONE_SHOT_SERVICES.contains(&service)),
+                        |state| {
+                            let mut health = state.health(ONE_SHOT_SERVICES.contains(&service));
+                            if nodes.iter().any(|node| node.id == service && node.stopped)
+                                && matches!(state.state.as_str(), "exited" | "dead" | "created")
+                            {
+                                health.status = ServiceHealthStatus::Stopped;
+                            }
+                            health
+                        },
                     )
             })
             .collect())
     }
 
     /// Classifies the Compose deployment while ignoring successful one-shot jobs.
-    pub(crate) async fn status(&self) -> Result<crate::Status, Error> {
+    pub(crate) async fn status(&self, nodes: &[Node]) -> Result<crate::Status, Error> {
         let mut command = self.compose_command();
         command.args(["ps", "--all", "--format", "json"]);
         let output = self
@@ -280,13 +289,18 @@ impl DockerNetwork {
             "v3-api",
             "v3-classifier",
         ];
-        if states.iter().any(ComposeContainerState::failed)
-            || required.iter().any(|name| {
-                !states
-                    .iter()
-                    .any(|s| s.service == *name && s.state == "running")
-            })
-        {
+        if states.iter().any(|state| {
+            state.failed()
+                && !nodes.iter().any(|node| {
+                    node.id == state.service
+                        && node.stopped
+                        && matches!(state.state.as_str(), "exited" | "dead" | "created")
+                })
+        }) || required.iter().any(|name| {
+            !states
+                .iter()
+                .any(|s| s.service == *name && s.state == "running")
+        }) {
             return Ok(crate::Status::Failed);
         }
 

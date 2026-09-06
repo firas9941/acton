@@ -319,7 +319,6 @@ async fn cli_and_http_share_lifecycle_snapshots_and_persisted_state() {
         snapshot-restore
         down
         up
-        up
         stop
     "]]
     .assert_eq(

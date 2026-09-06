@@ -117,6 +117,9 @@ pub struct Node {
     pub name: String,
     pub validator: bool,
     pub port_base: u16,
+    /// Explicit stop intent survives network restarts without removing the node's state.
+    #[serde(default)]
+    pub stopped: bool,
 }
 
 /// Observed lifecycle state. `Unknown` means Docker state has not been confirmed.
