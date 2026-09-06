@@ -116,6 +116,12 @@ export function ElectionSkeleton() {
 }
 
 function ElectionSummary({election}: {readonly election?: ElectionObservation}) {
+  const roundDuration =
+    election &&
+    election.current.validation_ended_at -
+      election.elections_open_at +
+      election.validators_elected_for +
+      election.stake_held_for
   const metrics = [
     {label: "Round ID", value: election?.current.round_id.toLocaleString()},
     {
@@ -129,6 +135,12 @@ function ElectionSummary({election}: {readonly election?: ElectionObservation}) 
     {
       label: "Next set",
       value: election?.next ? formatValidators(election.next.validators) : "Pending",
+    },
+    {
+      label: "Round duration",
+      value: election && (
+        <Duration display="parts" largestUnit="hour" maxParts={2} value={roundDuration} />
+      ),
     },
   ]
 

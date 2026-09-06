@@ -19,9 +19,11 @@ export type DurationDisplay =
   | "startup"
 
 export type DurationSign = "auto" | "always" | "never"
+export type DurationPartUnit = "year" | "month" | "week" | "day" | "hour" | "minute" | "second"
 
 export interface DurationFormatOptions {
   readonly display?: DurationDisplay
+  readonly largestUnit?: DurationPartUnit
   readonly locale?: string
   readonly maxParts?: number
   readonly sign?: DurationSign
@@ -62,6 +64,7 @@ export function Duration({
   value,
   fallback = "—",
   display,
+  largestUnit,
   locale,
   maxParts,
   sign,
@@ -85,7 +88,7 @@ export function Duration({
       }
       tabIndex={tooltip ? (tabIndex ?? 0) : tabIndex}
     >
-      {formatDuration(value, {display, locale, maxParts, sign, unit})}
+      {formatDuration(value, {display, largestUnit, locale, maxParts, sign, unit})}
     </span>
   )
 
@@ -156,6 +159,7 @@ export function formatDuration(
   if (display === "parts") {
     return formatParts(seconds, {
       compact: true,
+      largestUnit: options.largestUnit,
       maxParts: options.maxParts,
       sign: options.sign,
     })
@@ -163,6 +167,7 @@ export function formatDuration(
   if (display === "readable") {
     return formatParts(seconds, {
       compact: false,
+      largestUnit: options.largestUnit,
       maxParts: options.maxParts,
       sign: options.sign,
     })
@@ -320,6 +325,7 @@ function formatParts(
   seconds: number,
   options: {
     readonly compact: boolean
+    readonly largestUnit?: DurationPartUnit
     readonly maxParts?: number
     readonly sign?: DurationSign
   },
@@ -327,8 +333,12 @@ function formatParts(
   const prefix = durationSign(seconds, options.sign)
   let remainingSeconds = Math.abs(seconds)
   const parts: string[] = []
+  const largestUnitIndex =
+    options.largestUnit === undefined
+      ? 0
+      : DURATION_PARTS.findIndex(unit => unit.name === options.largestUnit)
 
-  for (const unit of DURATION_PARTS) {
+  for (const unit of DURATION_PARTS.slice(largestUnitIndex)) {
     const value = Math.floor(remainingSeconds / unit.seconds)
     if (value === 0) continue
 
