@@ -130,10 +130,6 @@ function ElectionSummary({election}: {readonly election?: ElectionObservation}) 
       label: "Next set",
       value: election?.next ? formatValidators(election.next.validators) : "Pending",
     },
-    {
-      label: "Stake hold",
-      value: election && <Duration display="parts" maxParts={3} value={election.stake_held_for} />,
-    },
   ]
 
   return (
@@ -329,7 +325,7 @@ function ElectionDiagram({
                   Validation
                 </span>
                 <span style={{left: `${position((validationEndedAt + holdingEndedAt) / 2)}%`}}>
-                  Holding
+                  Stake hold
                 </span>
               </div>
             </div>
@@ -372,6 +368,41 @@ function ValidationRoundDetails({
     (completeStakeSet
       ? stakes.reduce((maximum, stake) => (stake > maximum ? stake : maximum)).toString()
       : undefined)
+  const timingGroup =
+    election &&
+    ({
+      label: "Timing",
+      metrics: [
+        {
+          label: "Election",
+          value: (
+            <Duration
+              display="parts"
+              maxParts={3}
+              value={election.elections_close_at - election.elections_open_at}
+            />
+          ),
+        },
+        {
+          label: "Selection",
+          value: (
+            <Duration
+              display="parts"
+              maxParts={3}
+              value={election.current.validation_ended_at - election.elections_close_at}
+            />
+          ),
+        },
+        {
+          label: "Validation",
+          value: <Duration display="parts" maxParts={3} value={election.validators_elected_for} />,
+        },
+        {
+          label: "Stake hold",
+          value: <Duration display="parts" maxParts={3} value={election.stake_held_for} />,
+        },
+      ],
+    } as const)
 
   const groups = [
     {
@@ -428,7 +459,8 @@ function ValidationRoundDetails({
         },
       ],
     },
-  ]
+    timingGroup,
+  ].filter(group => group !== undefined)
 
   return (
     <div className={styles.validationRoundPanel} aria-label="Current validation round">
