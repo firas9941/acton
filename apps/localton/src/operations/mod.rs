@@ -3,6 +3,7 @@
 //! Node management, validator elections, wallets, and hardfork creation are
 //! shared by CLI commands, HTTP handlers, and periodic runtime maintenance.
 
+pub(crate) mod godmode;
 pub(crate) mod hardfork;
 pub(crate) mod indexer;
 pub(crate) mod nodes;

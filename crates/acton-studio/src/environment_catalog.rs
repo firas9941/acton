@@ -1,3 +1,4 @@
+use crate::{AdminOperation, AdminRequest};
 use std::sync::Arc;
 
 use toncenter_keys::{TONCENTER_MAINNET_API_KEY_ENV, TONCENTER_TESTNET_API_KEY_ENV};
@@ -237,6 +238,18 @@ impl EnvironmentRuntime for EnvironmentCatalogRuntime {
         }
         self.managed
             .enter_full_ton_validation(environment_id, node_id)
+    }
+
+    fn start_admin(
+        &self,
+        id: &str,
+        request: AdminRequest,
+    ) -> EnvironmentRuntimeFuture<'_, AdminOperation> {
+        self.managed.start_admin(id, request)
+    }
+
+    fn admin_operation(&self, id: &str) -> EnvironmentRuntimeFuture<'_, Option<AdminOperation>> {
+        self.managed.admin_operation(id)
     }
 
     fn list_snapshots(

@@ -118,7 +118,8 @@ export function NetworkConfigPage({
   useEffect(() => {
     if (!pendingId) return
     const controller = new AbortController()
-    let timer: ReturnType<typeof setTimeout>
+    let inFlight = false
+    let finished = false
     const toastId =
       operationToast.current ??
       showToast({
@@ -134,6 +135,8 @@ export function NetworkConfigPage({
     })
 
     const poll = async () => {
+      if (inFlight || finished || controller.signal.aborted) return
+      inFlight = true
       try {
         const current = await requestJson<LocalnetOperation>(
           `${base}/localnet-operations/${encodeURIComponent(pendingId)}`,
@@ -141,6 +144,7 @@ export function NetworkConfigPage({
         )
         if (controller.signal.aborted) return
         if (current.status !== "running") {
+          finished = true
           sessionStorage.removeItem(storageKey)
           setPendingId(undefined)
           if (current.status === "failed") {
@@ -173,13 +177,15 @@ export function NetworkConfigPage({
           variant: "error",
           durationMs: 0,
         })
+      } finally {
+        inFlight = false
       }
-      timer = setTimeout(() => void poll(), 750)
     }
+    const timer = setInterval(() => void poll(), 750)
     void poll()
     return () => {
       controller.abort()
-      clearTimeout(timer)
+      clearInterval(timer)
       if (operationToast.current === toastId) {
         dismissToast(toastId)
         operationToast.current = undefined

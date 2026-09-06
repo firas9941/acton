@@ -8,22 +8,24 @@ publish = false
 
 [dependencies]
 anyhow.workspace = true
-base64.workspace = true
-ed25519-dalek.workspace = true
-rand.workspace = true
-sha2.workspace = true
-ton.workspace = true
-tycho-types.workspace = true
 axum.workspace = true
+base64.workspace = true
+chrono.workspace = true
 dunce.workspace = true
+ed25519-dalek.workspace = true
 fs2.workspace = true
 log.workspace = true
+rand.workspace = true
 reqwest.workspace = true
 serde.workspace = true
 serde_json.workspace = true
+sha2.workspace = true
 thiserror.workspace = true
 tokio.workspace = true
+ton-hardfork.workspace = true
+ton.workspace = true
 tracing.workspace = true
+tycho-types.workspace = true
 utoipa.workspace = true
 uuid.workspace = true
 xxhash-rust.workspace = true
@@ -37,5 +39,4 @@ tower.workspace = true
 workspace = true
 
 [lib]
-test = false
 doctest = false

@@ -48,6 +48,10 @@ rustc-hash = { workspace = true }
 thiserror = { workspace = true }
 tempfile = { workspace = true }
 
+[dev-dependencies]
+ton-hardfork = { workspace = true }
+ton-fullnode-master = { workspace = true }
+
 [lints]
 workspace = true
 

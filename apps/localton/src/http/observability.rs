@@ -760,8 +760,7 @@ async fn publish_runtime_observation(
             .as_ref()
             .and_then(|wallet| Address::from_str(&wallet.address).ok())
             .map(|address| address.to_string(true, true, true, true)),
-        validator_wallet_version: validator_wallet
-            .map(|wallet| wallet.version.as_str().to_owned()),
+        validator_wallet_version: validator_wallet.map(|wallet| wallet.version.as_str().to_owned()),
     };
     let observation = store.write().await.publish(telemetry, now, ttl_seconds)?;
     Ok(observation)

@@ -1,10 +1,11 @@
 //! Thin HTTP adapters. All mutation ordering belongs to the runtime.
 
 use super::ApiState;
+use crate::{AdminOperation, AdminRequest};
 use crate::{Error, Operation, runtime::Action};
 use axum::{
     Json, Router,
-    extract::{Path, Query, State},
+    extract::{DefaultBodyLimit, Path, Query, State},
     http::StatusCode,
     routing::{delete, get, post},
 };
@@ -20,6 +21,12 @@ pub(super) fn router() -> Router<ApiState> {
         .route("/v1/shutdown", post(shutdown))
         .route("/v1/network", get(network).delete(remove))
         .route("/v1/network/health", get(network_health))
+        .route(
+            "/v1/network/admin",
+            get(admin_operation)
+                .post(start_admin)
+                .layer(DefaultBodyLimit::max(16 * 1024 * 1024)),
+        )
         .route("/v1/network/config", post(update_config))
         .route("/v1/network/activity", get(activity).put(save_activity))
         .route("/v1/network/activity/start", post(start_activity))
@@ -267,4 +274,21 @@ async fn shutdown(State(state): State<ApiState>) -> Result<StatusCode, Error> {
     state.runtime.prepare_shutdown().await?;
     state.shutdown.notify_one();
     Ok(StatusCode::ACCEPTED)
+}
+
+async fn admin_operation(
+    State(state): State<ApiState>,
+) -> Result<Json<Option<AdminOperation>>, Error> {
+    state.runtime.admin_operation().await.map(Json)
+}
+
+async fn start_admin(
+    State(state): State<ApiState>,
+    Json(request): Json<AdminRequest>,
+) -> Result<(StatusCode, Json<AdminOperation>), Error> {
+    state
+        .runtime
+        .start_admin(request)
+        .await
+        .map(|op| (StatusCode::ACCEPTED, Json(op)))
 }

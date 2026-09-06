@@ -143,14 +143,17 @@ async fn openapi_contract_lists_every_studio_operation_and_resolves_schema_refer
         openapi: 3.1.0
         title: Acton Studio API
         version: 1.0.0
-        operations: 60
+        operations: 70
         DELETE /api/v1/environments/{environment_id}
         DELETE /api/v1/environments/{environment_id}/nodes/{node_id}
         DELETE /api/v1/environments/{environment_id}/snapshots/{snapshot_id}
         GET /api/v1/environments
         GET /api/v1/environments/{environment_id}
+        GET /api/v1/environments/{environment_id}/admin
         GET /api/v1/environments/{environment_id}/api-calls
         GET /api/v1/environments/{environment_id}/health
+        GET /api/v1/environments/{environment_id}/localnet-operations/{operation_id}
+        GET /api/v1/environments/{environment_id}/network/activity
         GET /api/v1/environments/{environment_id}/observability/{path}
         GET /api/v1/environments/{environment_id}/rpc/acton_getAddressName
         GET /api/v1/environments/{environment_id}/rpc/acton_getCompilerAbi
@@ -181,9 +184,15 @@ async fn openapi_contract_lists_every_studio_operation_and_resolves_schema_refer
         GET /api/v1/testnet-faucet/auth/status
         PATCH /api/v1/environments/{environment_id}
         POST /api/v1/environments
+        POST /api/v1/environments/{environment_id}/admin
+        POST /api/v1/environments/{environment_id}/network/activity/start
+        POST /api/v1/environments/{environment_id}/network/activity/stop
+        POST /api/v1/environments/{environment_id}/network/config
         POST /api/v1/environments/{environment_id}/nodes
         POST /api/v1/environments/{environment_id}/nodes/{node_id}/enter-validation
         POST /api/v1/environments/{environment_id}/nodes/{node_id}/leave-validation
+        POST /api/v1/environments/{environment_id}/nodes/{node_id}/start
+        POST /api/v1/environments/{environment_id}/nodes/{node_id}/stop
         POST /api/v1/environments/{environment_id}/restart
         POST /api/v1/environments/{environment_id}/rpc
         POST /api/v1/environments/{environment_id}/rpc/acton_deleteCompilerAbi
@@ -204,7 +213,8 @@ async fn openapi_contract_lists_every_studio_operation_and_resolves_schema_refer
         POST /api/v1/test-runs/{run_id}/events
         POST /api/v1/testnet-faucet/challenge
         POST /api/v1/testnet-faucet/claim
-        schemas: 81
+        PUT /api/v1/environments/{environment_id}/network/activity
+        schemas: 98
         missing schema references: none"]]
     .assert_eq(&actual);
 }

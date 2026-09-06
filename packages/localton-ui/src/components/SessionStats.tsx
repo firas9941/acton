@@ -292,7 +292,9 @@ function SessionChart({
   const {theme} = useTheme()
   const hasDenseLegend = chart.metrics.length > 8
 
-  rangeCallbackRef.current = onRangeChange
+  useEffect(() => {
+    rangeCallbackRef.current = onRangeChange
+  }, [onRangeChange])
 
   useEffect(() => {
     const element = elementRef.current

@@ -1,3 +1,4 @@
+use crate::{AdminOperation, AdminRequest};
 use std::future::Future;
 use std::pin::Pin;
 
@@ -667,6 +668,29 @@ pub trait EnvironmentRuntime: Send + Sync {
                 message: "Nodes can only be removed from a managed full TON network".to_owned(),
             })
         })
+    }
+
+    /// Admits an edit in the owning localnet service. The request ID makes retries
+    /// safe after a lost response; the service continues work after callers disconnect.
+    fn start_admin(
+        &self,
+        _environment_id: &str,
+        _request: AdminRequest,
+    ) -> EnvironmentRuntimeFuture<'_, AdminOperation> {
+        Box::pin(async {
+            Err(EnvironmentRuntimeError::Conflict {
+                code: "admin_unavailable",
+                message: "Administrative edits require a managed full TON network".into(),
+            })
+        })
+    }
+
+    /// Reads the latest durable result without blocking on an in-progress edit.
+    fn admin_operation(
+        &self,
+        _environment_id: &str,
+    ) -> EnvironmentRuntimeFuture<'_, Option<AdminOperation>> {
+        Box::pin(async { Ok(None) })
     }
 
     fn list_snapshots(

@@ -76,6 +76,11 @@ pub enum Command {
     },
     /// Create and inspect a hardfork configuration.
     Hardfork(HardforkArgs),
+    /// Apply administrator-built hardfork blocks to this network.
+    Godmode {
+        #[command(subcommand)]
+        command: GodmodeCommand,
+    },
 }
 
 #[derive(Debug, Clone, Subcommand)]
@@ -364,12 +369,15 @@ pub enum LiteCommand {
     Account {
         #[command(flatten)]
         state: StateArgs,
+        // A raw masterchain address starts with `-1:`, not a CLI option.
+        #[arg(allow_hyphen_values = true)]
         address: String,
     },
     /// Execute a get method and print its TVM stack.
     RunMethod {
         #[command(flatten)]
         state: StateArgs,
+        #[arg(allow_hyphen_values = true)]
         address: String,
         method: String,
         /// Integer TVM stack arguments in decimal or `0x` hexadecimal form.
@@ -385,6 +393,7 @@ pub enum LiteCommand {
     Block {
         #[command(flatten)]
         state: StateArgs,
+        #[arg(allow_negative_numbers = true)]
         workchain: i32,
         shard: String,
         seqno: u32,
@@ -393,6 +402,7 @@ pub enum LiteCommand {
     Transactions {
         #[command(flatten)]
         state: StateArgs,
+        #[arg(allow_negative_numbers = true)]
         workchain: i32,
         shard: String,
         seqno: u32,
@@ -567,9 +577,81 @@ pub struct HardforkArgs {
     pub output: Option<PathBuf>,
 }
 
+/// Steps of one administrative graft, in the order they are performed.
+///
+/// A hardfork block only fits directly on top of the node's current top block,
+/// so production is suspended while that block is read and the new blocks are
+/// built. `install` publishes them, and `finish` restores normal networking once
+/// the node has applied them.
+#[derive(Debug, Clone, Subcommand)]
+pub enum GodmodeCommand {
+    /// Capture a stable head from a node restarted with suspended validator keys.
+    Observe(StateArgs),
+    /// Build an account-edit plan from JSON on stdin, while validation is suspended.
+    Prepare(StateArgs),
+    /// Verify that every planned block has been applied, while validation is suspended.
+    Verify(StateArgs),
+    /// Remove validator keys from a stopped node; restart it to observe the stable head.
+    Suspend(StateArgs),
+    /// Restore validator keys on a stopped node; restart it to resume production.
+    Resume(StateArgs),
+    /// Install one hardfork plan and publish its shard blocks.
+    Install {
+        #[command(flatten)]
+        state: StateArgs,
+        /// JSON hardfork plan produced by the block builder.
+        plan: PathBuf,
+    },
+    /// Restore networking on a stopped node after a verified graft.
+    Finish(StateArgs),
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn lite_queries_accept_raw_masterchain_addresses() {
+        let address = format!("-1:{}", "33".repeat(32));
+
+        for command in ["account", "run-method"] {
+            let mut args = vec!["localton", "lite", command, address.as_str()];
+            if command == "run-method" {
+                args.push("seqno");
+            }
+
+            let cli = Cli::try_parse_from(args).unwrap();
+            let parsed_address = match cli.command {
+                Command::Lite {
+                    command:
+                        LiteCommand::Account { address, .. } | LiteCommand::RunMethod { address, .. },
+                } => address,
+                _ => panic!("expected an account query"),
+            };
+
+            assert_eq!(parsed_address, address);
+        }
+    }
+
+    #[test]
+    fn lite_block_queries_accept_masterchain_id() {
+        for command in ["block", "transactions"] {
+            let cli =
+                Cli::try_parse_from(["localton", "lite", command, "-1", "8000000000000000", "42"])
+                    .unwrap();
+
+            let workchain = match cli.command {
+                Command::Lite {
+                    command:
+                        LiteCommand::Block { workchain, .. }
+                        | LiteCommand::Transactions { workchain, .. },
+                } => workchain,
+                _ => panic!("expected a block query"),
+            };
+
+            assert_eq!(workchain, -1);
+        }
+    }
 
     #[test]
     fn bootstrap_accepts_block_time_in_milliseconds() {

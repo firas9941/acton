@@ -709,16 +709,69 @@ export async function requestJson<T>(input: string, init?: RequestInit): Promise
   return (await response.json()) as T
 }
 
+export class StudioRequestError extends Error {
+  constructor(
+    message: string,
+    readonly status: number,
+  ) {
+    super(message)
+  }
+}
+
 async function request(input: string, init?: RequestInit): Promise<Response> {
   const response = await fetch(input, init)
   if (response.ok) return response
 
   const fallbackMessage = `Studio server returned ${response.status}`
-  let body: {readonly error?: {readonly message?: string}}
+  let body: {readonly error?: {readonly message?: unknown}} | null
   try {
     body = (await response.json()) as typeof body
-  } catch (error) {
-    throw new Error(fallbackMessage, {cause: error})
+  } catch {
+    throw new StudioRequestError(fallbackMessage, response.status)
   }
-  throw new Error(body.error?.message || fallbackMessage)
+
+  const message = body?.error?.message
+  throw new StudioRequestError(
+    typeof message === "string" && message ? message : fallbackMessage,
+    response.status,
+  )
+}
+
+export type AdminAccountChange =
+  | {readonly type: "balance"; readonly balance: string}
+  | {readonly type: "code" | "data" | "replace"; readonly boc: string}
+  | {readonly type: "freeze" | "delete"}
+  | {readonly type: "uninit"; readonly balance?: string}
+
+export interface AdminRequest {
+  readonly kind: "accounts"
+  readonly id: string
+  readonly edits: readonly ({readonly address: string} & AdminAccountChange)[]
+}
+
+export interface AdminOperation {
+  readonly id: string
+  readonly phase: string
+  readonly startedAt: string
+  readonly finishedAt: string | null
+  readonly error: string | null
+  readonly blockSeqno: number | null
+}
+
+export function fetchStudioAdminOperation(environmentId: string, signal?: AbortSignal) {
+  return requestJson<AdminOperation | null>(
+    `/api/v1/environments/${encodeURIComponent(environmentId)}/admin`,
+    {signal},
+  )
+}
+
+export function startStudioAdminOperation(environmentId: string, request: AdminRequest) {
+  return requestJson<AdminOperation>(
+    `/api/v1/environments/${encodeURIComponent(environmentId)}/admin`,
+    {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify(request),
+    },
+  )
 }

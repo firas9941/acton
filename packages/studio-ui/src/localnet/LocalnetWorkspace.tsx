@@ -43,6 +43,7 @@ import {NetworkPage} from "./dashboard/pages/NetworkPage"
 import {ActivityPage} from "./dashboard/pages/ActivityPage"
 import {StatsPage} from "./dashboard/pages/StatsPage"
 import {SettingsPage} from "./dashboard/pages/SettingsPage"
+import {AdminPage} from "./dashboard/pages/AdminPage"
 import {SnapshotsPage} from "./dashboard/pages/SnapshotsPage"
 import {SourceCatalogPage} from "./dashboard/pages/SourceCatalogPage"
 import {TokensPage} from "./dashboard/pages/TokensPage"
@@ -79,6 +80,7 @@ const LOCALNET_PAGE_TITLES: Readonly<Record<string, string>> = {
   "/explorer/config": "Network config",
   "/explorer/suspended": "Suspended addresses",
   "/settings": "Settings",
+  "/admin": "Admin actions",
   "/snapshots": "Snapshots",
   "/integrate": "Integrate",
   "/api-reference/v2": "API Reference v2",
@@ -110,6 +112,7 @@ const LOCALNET_PAGE_DESCRIPTIONS: Readonly<Record<string, string>> = {
   "/explorer/config": "Protocol parameters active in this network",
   "/explorer/suspended": "Addresses restricted by the network configuration",
   "/settings": "Manage environment identity, network behavior and mining",
+  "/admin": "Edit account balances, code and state",
   "/snapshots": "Create and restore persistent network snapshots",
   "/integrate": "Connect Acton projects, applications and TON-compatible tools to this network",
   "/api-reference/v2": "Explore the v2 API",
@@ -161,9 +164,10 @@ export const LocalnetWorkspace: FC<LocalnetWorkspaceProps> = ({
   return (
     <MetadataRegistryProvider registry={runtime.metadataRegistry}>
       <AddressBookProvider>
-        {environment?.status === "running" && supports(environment, "wallets") ? (
+        {environment && supports(environment, "wallets") ? (
           <WalletRuntimeProvider
             key={environment.id}
+            enabled={environment.status === "running"}
             apiBaseUrl={runtime.rpcBaseUrl}
             environmentId={environment.id}
             environmentKind={environment.config.kind}
@@ -492,6 +496,19 @@ const AppContent: FC<AppContentProps> = ({
                       onEnvironmentChange={onEnvironmentChange}
                       onEnvironmentDelete={onEnvironmentDelete}
                     />
+                  </DashboardPage>
+                ) : (
+                  fallback
+                )
+              }
+            />
+            <Route
+              path={path("/admin")}
+              element={
+                runtime.environment?.config.kind === "fullTonNetwork" &&
+                runtime.environment.lifecycle === "managed" ? (
+                  <DashboardPage>
+                    <AdminPage key={runtime.environment.id} environment={runtime.environment} />
                   </DashboardPage>
                 ) : (
                   fallback
