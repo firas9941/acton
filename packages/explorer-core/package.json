@@ -14,6 +14,7 @@
     "./api/jettonWallets": "./src/api/jettonWallets.ts",
     "./api/networkStats": "./src/api/networkStats.ts",
     "./api/types": "./src/api/types.ts",
+    "./api/validatorElections": "./src/api/validatorElections.ts",
     "./api/waitForTraceTransactionHash": "./src/api/waitForTraceTransactionHash.ts",
     "./components/DeveloperAccountList": "./src/components/DeveloperAccountList.tsx",
     "./components/DeveloperTransactionList": "./src/components/DeveloperTransactionList.tsx",

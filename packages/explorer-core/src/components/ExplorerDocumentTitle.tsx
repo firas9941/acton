@@ -31,6 +31,7 @@ export function useExplorerPageTitle(): string | undefined {
   if (!relativePath) return undefined
   if (relativePath === "/") return "Explore TON"
   if (relativePath === "/blocks") return "Blocks"
+  if (relativePath === "/elections") return "Elections"
   if (relativePath === "/tokens") return "Tokens"
   if (relativePath === "/abi") return "ABI"
   if (relativePath === "/cell") return "Cell Inspector"

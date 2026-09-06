@@ -7,6 +7,8 @@ describe("pageOgPreviewForPath", () => {
     ["/", "home"],
     ["/blocks", "blocks"],
     ["/blocks/", "blocks"],
+    ["/elections", "elections"],
+    ["/elections/", "elections"],
     ["/abi", "abi"],
     ["/sources", "sources"],
     ["/faucet", "faucet"],

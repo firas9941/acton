@@ -71,6 +71,19 @@ export interface ElectionTimingConfiguration {
   readonly stakeHeldFor: number
 }
 
+export interface ValidatorCountConfiguration {
+  readonly maxValidators: number
+  readonly maxMainValidators: number
+  readonly minValidators: number
+}
+
+export interface ValidatorStakeConfiguration {
+  readonly minStake: bigint
+  readonly maxStake: bigint
+  readonly minTotalStake: bigint
+  readonly maxStakeFactor: number
+}
+
 export interface SuspendedAddressesConfiguration {
   readonly suspendedUntil: number
   readonly addresses: readonly string[]
@@ -129,6 +142,8 @@ export interface NetworkConfigParameter {
   readonly validatorRegistry?: ValidatorRegistryConfiguration
   readonly validatorSet?: ValidatorSetConfiguration
   readonly electionTiming?: ElectionTimingConfiguration
+  readonly validatorCount?: ValidatorCountConfiguration
+  readonly validatorStake?: ValidatorStakeConfiguration
   readonly suspendedAddresses?: SuspendedAddressesConfiguration
   readonly bridgeConfiguration?: BridgeConfiguration
   readonly parseError?: string
@@ -629,6 +644,8 @@ export function parseConfigParameter(id: number, cell: Cell): NetworkConfigParam
     const validatorRegistry = id === 46 ? parseValidatorRegistry(parsed) : undefined
     const validatorSet = parseValidatorSet(id, parsed)
     const electionTiming = id === 15 ? parseElectionTiming(parsed) : undefined
+    const validatorCount = id === 16 ? parseValidatorCount(parsed) : undefined
+    const validatorStake = id === 17 ? parseValidatorStake(parsed) : undefined
     const suspendedAddresses = id === 44 ? parseSuspendedAddresses(parsed) : undefined
     const bridgeConfiguration = parseBridgeConfiguration(id, parsed)
 
@@ -647,6 +664,8 @@ export function parseConfigParameter(id: number, cell: Cell): NetworkConfigParam
       ...(validatorRegistry === undefined ? {} : {validatorRegistry}),
       ...(validatorSet === undefined ? {} : {validatorSet}),
       ...(electionTiming === undefined ? {} : {electionTiming}),
+      ...(validatorCount === undefined ? {} : {validatorCount}),
+      ...(validatorStake === undefined ? {} : {validatorStake}),
       ...(suspendedAddresses === undefined ? {} : {suspendedAddresses}),
       ...(bridgeConfiguration === undefined ? {} : {bridgeConfiguration}),
     }
@@ -1258,6 +1277,44 @@ function parseElectionTiming(value: unknown): ElectionTimingConfiguration | unde
     electionsStartBefore: timing.elections_start_before,
     electionsEndBefore: timing.elections_end_before,
     stakeHeldFor: timing.stake_held_for,
+  }
+}
+
+function parseValidatorCount(value: unknown): ValidatorCountConfiguration | undefined {
+  const count = unwrapAnonymousConfigValue(value)
+  if (
+    count?.kind !== "ConfigParam__16" ||
+    typeof count.max_validators !== "number" ||
+    typeof count.max_main_validators !== "number" ||
+    typeof count.min_validators !== "number"
+  ) {
+    return undefined
+  }
+
+  return {
+    maxValidators: count.max_validators,
+    maxMainValidators: count.max_main_validators,
+    minValidators: count.min_validators,
+  }
+}
+
+function parseValidatorStake(value: unknown): ValidatorStakeConfiguration | undefined {
+  const stake = unwrapAnonymousConfigValue(value)
+  if (
+    stake?.kind !== "ConfigParam__17" ||
+    typeof stake.min_stake !== "bigint" ||
+    typeof stake.max_stake !== "bigint" ||
+    typeof stake.min_total_stake !== "bigint" ||
+    typeof stake.max_stake_factor !== "number"
+  ) {
+    return undefined
+  }
+
+  return {
+    minStake: stake.min_stake,
+    maxStake: stake.max_stake,
+    minTotalStake: stake.min_total_stake,
+    maxStakeFactor: stake.max_stake_factor,
   }
 }
 

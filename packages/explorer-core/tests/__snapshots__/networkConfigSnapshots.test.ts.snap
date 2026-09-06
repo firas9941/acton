@@ -333,6 +333,11 @@ exports[`real network configuration snapshots parses mainnet config at mastercha
       "hasRawHex": true,
       "id": 16,
       "title": "Validator limits",
+      "validatorCount": {
+        "maxMainValidators": 100,
+        "maxValidators": 400,
+        "minValidators": 75,
+      },
     },
     {
       "configurationValues": [
@@ -361,6 +366,12 @@ exports[`real network configuration snapshots parses mainnet config at mastercha
       "hasRawHex": true,
       "id": 17,
       "title": "Stake limits",
+      "validatorStake": {
+        "maxStake": 10000000000000000n,
+        "maxStakeFactor": 294912,
+        "minStake": 300000000000000n,
+        "minTotalStake": 75000000000000000n,
+      },
     },
     {
       "configurationValues": [
@@ -6543,6 +6554,11 @@ exports[`real network configuration snapshots parses testnet config at mastercha
       "hasRawHex": true,
       "id": 16,
       "title": "Validator limits",
+      "validatorCount": {
+        "maxMainValidators": 15,
+        "maxValidators": 45,
+        "minValidators": 3,
+      },
     },
     {
       "configurationValues": [
@@ -6571,6 +6587,12 @@ exports[`real network configuration snapshots parses testnet config at mastercha
       "hasRawHex": true,
       "id": 17,
       "title": "Stake limits",
+      "validatorStake": {
+        "maxStake": 10000000000000000n,
+        "maxStakeFactor": 1966080,
+        "minStake": 2000000000000000n,
+        "minTotalStake": 2000000000000000n,
+      },
     },
     {
       "configurationValues": [

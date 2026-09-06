@@ -69,6 +69,7 @@ import {EXPLORER_NETWORK_QUERY_PARAM, explorerNetworkSearch} from "./explorerNet
 import {FaucetPage} from "./faucet/FaucetPage"
 import {AbiCatalogPage, AbiDetailsPage} from "./pages/abi-pages"
 import {SourceCatalogPage} from "./pages/SourceCatalogPage"
+import {ValidatorsPage} from "./pages/ValidatorsPage"
 import {CellInspectorExplorerPage, EmulateExplorerPage} from "./pages/explorer-tool-pages"
 import {loadNetworkTps} from "./actonscanBackend"
 import styles from "./ExplorerApp.module.css"
@@ -910,6 +911,14 @@ const DesktopMoreMenu: FC = () => {
               </span>
             </span>
           </Link>
+          <Link className={styles.desktopMoreItem} to="/elections" onClick={closeMenu}>
+            <span className={styles.desktopMoreItemCopy}>
+              <span className={styles.desktopMoreItemTitle}>Elections</span>
+              <span className={styles.desktopMoreItemDescription}>
+                Follow validator elections and rounds
+              </span>
+            </span>
+          </Link>
           <Link className={styles.desktopMoreItem} to="/faucet" onClick={closeMenu}>
             <span className={styles.desktopMoreItemCopy}>
               <span className={styles.desktopMoreItemTitle}>Faucet</span>
@@ -1360,6 +1369,9 @@ export const ExplorerApp: FC = () => {
                               <Link to="/config" onClick={closeMobileHeaderPanels}>
                                 Network config
                               </Link>
+                              <Link to="/elections" onClick={closeMobileHeaderPanels}>
+                                Elections
+                              </Link>
                               {networkId === "mainnet" && (
                                 <Link to="/suspended" onClick={closeMobileHeaderPanels}>
                                   Suspended addresses
@@ -1430,6 +1442,7 @@ export const ExplorerApp: FC = () => {
                       <Route path="/tokens" element={<TokenCatalogPage client={client} />} />
                       <Route path="/config/:seqno" element={<ConfigPage client={client} />} />
                       <Route path="/config" element={<ConfigPage client={client} />} />
+                      <Route path="/elections" element={<ValidatorsPage client={client} />} />
                       <Route path="/abi" element={<AbiCatalogPage />} />
                       <Route path="/abi/:slug" element={<AbiDetailsPage />} />
                       <Route path="/sources" element={<SourceCatalogPage client={client} />} />

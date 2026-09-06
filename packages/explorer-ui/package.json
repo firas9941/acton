@@ -23,6 +23,7 @@
   },
   "dependencies": {
     "@acton/explorer-core": "workspace:*",
+    "@acton/localton-ui": "workspace:*",
     "@acton/transaction-ui": "workspace:*",
     "@acton/ui": "workspace:*",
     "@acton/verifier-ui": "workspace:*",

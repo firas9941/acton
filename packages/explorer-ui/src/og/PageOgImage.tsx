@@ -3,6 +3,7 @@ import {AccountOgImage, type AccountOgPreview} from "./AccountOgImage"
 export type PageOgKey =
   | "home"
   | "config"
+  | "elections"
   | "blocks"
   | "block"
   | "abi"
@@ -45,6 +46,15 @@ const PAGE_OG_PREVIEWS: Record<PageOgKey, PageOgPreview> = {
     metadataTitle: "TON network configuration · actonscan",
     metadataDescription:
       "Browse readable TON network configuration parameters, validators, fees, bridges, and system contracts on actonscan.",
+  },
+  elections: {
+    key: "elections",
+    title: "Elections",
+    badge: "Validator elections",
+    description: "Follow election windows, validation rounds and validator sets",
+    metadataTitle: "TON validator elections · actonscan",
+    metadataDescription:
+      "Explore TON validator elections, round timing, and validator sets on actonscan.",
   },
   blocks: {
     key: "blocks",
@@ -164,19 +174,36 @@ export function pageOgPreviewForKey(key: string): PageOgPreview {
 
 export function pageOgPreviewForPath(pathname: string): PageOgPreview | undefined {
   const normalizedPath = normalizePath(pathname)
-  if (normalizedPath === "/") return PAGE_OG_PREVIEWS.home
+  switch (normalizedPath) {
+    case "/":
+      return PAGE_OG_PREVIEWS.home
+    case "/blocks":
+      return PAGE_OG_PREVIEWS.blocks
+    case "/elections":
+      return PAGE_OG_PREVIEWS.elections
+    case "/abi":
+      return PAGE_OG_PREVIEWS.abi
+    case "/sources":
+      return PAGE_OG_PREVIEWS.sources
+    case "/faucet":
+      return PAGE_OG_PREVIEWS.faucet
+    case "/verified":
+      return PAGE_OG_PREVIEWS.verified
+    case "/verified/statistics":
+      return PAGE_OG_PREVIEWS["verified-statistics"]
+    case "/cell":
+      return PAGE_OG_PREVIEWS.cell
+    case "/emulate":
+      return PAGE_OG_PREVIEWS.emulate
+    case "/favorites":
+      return PAGE_OG_PREVIEWS.favorites
+    case "/suspended":
+      return PAGE_OG_PREVIEWS.suspended
+    default:
+      break
+  }
   if (/^\/config(?:\/-?\d+)?$/.test(normalizedPath)) return PAGE_OG_PREVIEWS.config
-  if (normalizedPath === "/blocks") return PAGE_OG_PREVIEWS.blocks
-  if (normalizedPath === "/abi") return PAGE_OG_PREVIEWS.abi
-  if (normalizedPath === "/sources") return PAGE_OG_PREVIEWS.sources
-  if (normalizedPath === "/faucet") return PAGE_OG_PREVIEWS.faucet
-  if (normalizedPath === "/verified") return PAGE_OG_PREVIEWS.verified
-  if (normalizedPath === "/verified/statistics") return PAGE_OG_PREVIEWS["verified-statistics"]
   if (/^\/verified\/[^/]+$/.test(normalizedPath)) return PAGE_OG_PREVIEWS["verified-contract"]
-  if (normalizedPath === "/cell") return PAGE_OG_PREVIEWS.cell
-  if (normalizedPath === "/emulate") return PAGE_OG_PREVIEWS.emulate
-  if (normalizedPath === "/favorites") return PAGE_OG_PREVIEWS.favorites
-  if (normalizedPath === "/suspended") return PAGE_OG_PREVIEWS.suspended
   if (/^\/block\/-?\d+\/[^/]+\/\d+$/.test(normalizedPath)) return PAGE_OG_PREVIEWS.block
   if (/^\/tx\/[^/]+(?:\/trace)?$/.test(normalizedPath)) return PAGE_OG_PREVIEWS.transaction
   return undefined
