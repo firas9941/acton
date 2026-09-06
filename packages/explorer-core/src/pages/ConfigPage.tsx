@@ -67,6 +67,7 @@ import {ExplorerAddressChip} from "../components/ExplorerAddressChip"
 import {ExplorerBreadcrumbs} from "../components/ExplorerBreadcrumbs"
 import {GlobalCapabilities} from "../components/GlobalCapabilities"
 import type {TelegramWalletContractBytecode} from "../config/configParameterMinus123"
+import {useConfigNavigation} from "../hooks/useConfigNavigation"
 import {useExplorerRoutePaths} from "../hooks/useExplorerRoutePaths"
 import {useNetworkInfo} from "../hooks/useNetworkInfo"
 import {useOpenExplorerPath} from "../hooks/useOpenExplorerPath"
@@ -77,6 +78,8 @@ interface ConfigPageProps {
   readonly client: TonClient
   /** Lets the host page own width and padding when embedding the configuration */
   readonly embedded?: boolean
+  /** Keeps the index on the host application's preferred side of the parameter list */
+  readonly navigationPosition?: "left" | "right"
   readonly showBreadcrumbs?: boolean
   readonly onError?: (message: string) => void
   readonly toolbar?: ReactNode
@@ -109,6 +112,7 @@ function tonConfigDocsHref(id: number): string {
 export const ConfigPage: FC<ConfigPageProps> = ({
   client,
   embedded = false,
+  navigationPosition = "left",
   toolbar,
   reloadKey,
   onEdit,
@@ -167,21 +171,6 @@ export const ConfigPage: FC<ConfigPageProps> = ({
     )
   }, [config, query])
 
-  useEffect(() => {
-    if (!config || !globalThis.location.hash) return
-
-    const anchorId = decodeConfigAnchor(globalThis.location.hash)
-    if (!anchorId) return
-
-    const frame = globalThis.requestAnimationFrame(() => {
-      globalThis.document
-        .getElementById(anchorId)
-        ?.scrollIntoView({behavior: "smooth", block: "start"})
-    })
-
-    return () => globalThis.cancelAnimationFrame(frame)
-  }, [config, visibleParameters])
-
   return (
     <section className={`${styles.container} ${embedded ? styles.embedded : ""}`}>
       <header className={styles.header}>
@@ -208,7 +197,7 @@ export const ConfigPage: FC<ConfigPageProps> = ({
       {toolbar}
 
       {loadState.status === "loading" ? (
-        <ConfigPageSkeleton />
+        <ConfigPageSkeleton navigationPosition={navigationPosition} />
       ) : loadState.status === "error" ? (
         !onError && (
           <section className={styles.error} role="alert">
@@ -217,19 +206,14 @@ export const ConfigPage: FC<ConfigPageProps> = ({
           </section>
         )
       ) : (
-        <ConfigContent visibleParameters={visibleParameters} onEdit={onEdit} />
+        <ConfigContent
+          visibleParameters={visibleParameters}
+          onEdit={onEdit}
+          navigationPosition={navigationPosition}
+        />
       )}
     </section>
   )
-}
-
-function decodeConfigAnchor(hash: string): string | undefined {
-  try {
-    const anchorId = decodeURIComponent(hash.slice(1))
-    return anchorId || undefined
-  } catch {
-    return undefined
-  }
 }
 
 function scrollToConfigParameter(event: MouseEvent<HTMLAnchorElement>, id: number) {
@@ -243,7 +227,10 @@ function scrollToConfigParameter(event: MouseEvent<HTMLAnchorElement>, id: numbe
     globalThis.history.pushState(globalThis.history.state, "", hash)
   }
 
-  globalThis.document.getElementById(anchorId)?.scrollIntoView({behavior: "smooth", block: "start"})
+  globalThis.document.getElementById(anchorId)?.scrollIntoView({
+    behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth",
+    block: "start",
+  })
 }
 
 function parseConfigSeqno(value: string | undefined): number | undefined {
@@ -256,19 +243,31 @@ function parseConfigSeqno(value: string | undefined): number | undefined {
 function ConfigContent({
   visibleParameters,
   onEdit,
+  navigationPosition,
 }: {
   readonly onEdit?: (parameter: NetworkConfigParameter) => void
   readonly visibleParameters: readonly NetworkConfigParameter[]
+  readonly navigationPosition: "left" | "right"
 }) {
+  const {activeId, contentRef, indexRef} = useConfigNavigation(visibleParameters)
+
   return (
     <>
-      <div className={styles.configLayout}>
-        <aside className={styles.indexPanel} aria-label="Configuration parameter index">
+      <div
+        ref={contentRef}
+        className={`${styles.configLayout} ${navigationPosition === "right" ? styles.navigationRight : ""}`}
+      >
+        <aside
+          ref={indexRef}
+          className={styles.indexPanel}
+          aria-label="Configuration parameter index"
+        >
           <nav className={styles.indexList}>
             {visibleParameters.map(parameter => (
               <a
                 key={parameter.id}
                 className={styles.indexLink}
+                aria-current={activeId === parameter.id ? "location" : undefined}
                 href={`#config-parameter-${parameter.id}`}
                 onClick={event => scrollToConfigParameter(event, parameter.id)}
               >
@@ -360,23 +359,21 @@ export function ConfigParameterCard({
     <article id={`config-parameter-${parameter.id}`} className={styles.parameterCard}>
       <header className={styles.parameterHeader}>
         <ConfigParameterAnchor id={parameter.id} className={styles.parameterId} />
-        <div className={styles.parameterHeading}>
-          <div className={styles.parameterTitleRow}>
-            <h3 className={styles.parameterTitle}>{parameter.title}</h3>
-            <InfoPopover
-              ariaLabel={`About configuration parameter ${parameter.id}`}
-              contentClassName={styles.infoContent}
-            >
-              <p>{parameter.description}</p>
-              <a href={tonConfigDocsHref(parameter.id)} target="_blank" rel="noreferrer">
-                Read the TON configuration reference
-                <ExternalLink size={13} aria-hidden="true" />
-              </a>
-            </InfoPopover>
-          </div>
-          <p className={styles.parameterDescription}>{parameter.description}</p>
+        <div className={styles.parameterTitleRow}>
+          <h3 className={styles.parameterTitle}>{parameter.title}</h3>
+          <InfoPopover
+            ariaLabel={`About configuration parameter ${parameter.id}`}
+            contentClassName={styles.infoContent}
+          >
+            <p>{parameter.description}</p>
+            <a href={tonConfigDocsHref(parameter.id)} target="_blank" rel="noreferrer">
+              Read the TON configuration reference
+              <ExternalLink size={13} aria-hidden="true" />
+            </a>
+          </InfoPopover>
         </div>
         {actions && <div className={styles.parameterActions}>{actions}</div>}
+        <p className={styles.parameterDescription}>{parameter.description}</p>
       </header>
 
       <ContentTabs
@@ -1866,10 +1863,12 @@ function PrecompiledContractsTable({
   )
 }
 
-function ConfigPageSkeleton() {
+function ConfigPageSkeleton({navigationPosition}: {readonly navigationPosition: "left" | "right"}) {
   return (
     <div className={styles.loading} aria-busy="true">
-      <div className={styles.loadingLayout}>
+      <div
+        className={`${styles.loadingLayout} ${navigationPosition === "right" ? styles.navigationRight : ""}`}
+      >
         <div className={styles.loadingIndex}>
           <Skeleton height="12px" width="36%" />
           {Array.from({length: 10}).map((_, index) => (
@@ -1884,11 +1883,13 @@ function ConfigPageSkeleton() {
           {Array.from({length: 4}).map((_, index) => (
             <article key={index} className={styles.loadingParameterCard}>
               <div className={styles.loadingParameterHeader}>
-                <Skeleton height="30px" width="30px" radius="sm" />
-                <div className={styles.loadingParameterHeading}>
-                  <Skeleton height="18px" width={`${42 + (index % 3) * 12}%`} />
-                  <Skeleton height="13px" width="72%" />
-                </div>
+                <Skeleton height="26px" width="26px" radius="sm" />
+                <Skeleton height="18px" width={`${42 + (index % 3) * 12}%`} />
+                <Skeleton
+                  className={styles.loadingParameterDescription}
+                  height="13px"
+                  width="72%"
+                />
               </div>
               <div className={styles.loadingParameterBody}>
                 <Skeleton height="34px" width="239px" radius="sm" />

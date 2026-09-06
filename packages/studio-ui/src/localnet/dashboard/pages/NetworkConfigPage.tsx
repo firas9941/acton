@@ -211,6 +211,7 @@ export function NetworkConfigPage({
       <ConfigPage
         client={client}
         embedded
+        navigationPosition="right"
         showBreadcrumbs={false}
         onError={showLoadError}
         reloadKey={reloadKey}

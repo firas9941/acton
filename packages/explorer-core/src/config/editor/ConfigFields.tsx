@@ -142,8 +142,7 @@ export function ConfigFields({shape, value, context, onChange, label}: ConfigFie
   const semantics = fieldSemantics(context)
   const isAddress = semantics.format === "address" || semantics.format === "wide-address"
 
-  const technical =
-    isAddress || semantics.format === "hash" || resolved.type === "buffer"
+  const technical = isAddress || semantics.format === "hash" || resolved.type === "buffer"
   const input = (
     <Input
       fieldClassName={technical || context.field === "weight" ? styles.wideField : undefined}

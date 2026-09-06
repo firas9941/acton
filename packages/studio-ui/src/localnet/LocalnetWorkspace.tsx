@@ -413,7 +413,7 @@ const AppContent: FC<AppContentProps> = ({
                 element={withCapability(
                   "explorer",
                   <DashboardPage embedded>
-                    <ConfigPage client={client} />
+                    <ConfigPage client={client} navigationPosition="right" />
                   </DashboardPage>,
                 )}
               />
