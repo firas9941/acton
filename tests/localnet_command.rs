@@ -19,6 +19,9 @@ mod selection;
 #[path = "localnet_command/offline.rs"]
 mod offline;
 
+#[path = "localnet_command/network_config.rs"]
+mod network_config;
+
 #[path = "localnet_command/shutdown.rs"]
 mod shutdown;
 

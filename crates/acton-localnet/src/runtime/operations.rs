@@ -17,6 +17,7 @@ pub(crate) enum Action {
     CreateSnapshot { name: Option<String> },
     RestoreSnapshot { id: String },
     DeleteSnapshot { id: String },
+    UpdateConfig(crate::UpdateNetworkConfig),
 }
 
 impl Action {
@@ -32,6 +33,7 @@ impl Action {
             Self::CreateSnapshot { .. } => "createSnapshot",
             Self::RestoreSnapshot { .. } => "restoreSnapshot",
             Self::DeleteSnapshot { .. } => "deleteSnapshot",
+            Self::UpdateConfig(_) => "updateConfig",
         }
     }
 }
@@ -46,6 +48,14 @@ pub(super) struct Context {
 
 impl Runtime {
     pub(crate) async fn submit(&self, action: Action) -> Result<Operation, Error> {
+        if let Action::UpdateConfig(request) = &action
+            && (request.boc.is_empty() || request.boc.len() > 1_000_000)
+        {
+            return Err(Error::invalid(
+                "Parameter BoC must contain between 1 and 1000000 characters",
+            ));
+        }
+
         if let Action::CreateSnapshot { name: Some(name) } = &action
             && (name.trim().is_empty() || name.trim().chars().count() > 80)
         {
@@ -222,6 +232,10 @@ impl Context {
     async fn execute(&mut self, action: Action) -> Result<Value, Error> {
         self.phase("preparing").await?;
 
+        if let Action::UpdateConfig(request) = action {
+            return self.update_network_config(request).await;
+        }
+
         // Stopped definitions have no Docker resources until their first start.
         // Basic lifecycle commands must remain usable without materializing them.
         {
@@ -306,6 +320,9 @@ impl Context {
                 storage::validate_id(&id)?;
                 self.phase("deletingArchive").await?;
                 driver.delete_snapshot(&id).await?;
+            }
+            Action::UpdateConfig(_) => {
+                unreachable!("config updates are handled before materializing Docker")
             }
         }
 

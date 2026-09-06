@@ -2,6 +2,7 @@
 
 mod health;
 mod lifecycle;
+mod network_config;
 mod nodes;
 mod operations;
 mod progress;
