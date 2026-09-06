@@ -1,4 +1,8 @@
-export {NetworkDashboard, NetworkDashboardContent} from "./NetworkDashboard"
+export {
+  NetworkDashboard,
+  NetworkDashboardContent,
+  NetworkDashboardSkeleton,
+} from "./NetworkDashboard"
 export type {NetworkDashboardView} from "./NetworkDashboard"
 export {createObservabilityClient, useObservability} from "./observability"
 export type {ObservabilityClient, ObservabilitySnapshot} from "./observability"

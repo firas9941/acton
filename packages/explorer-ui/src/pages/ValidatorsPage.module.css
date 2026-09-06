@@ -10,11 +10,6 @@
   padding: 24px 32px 48px;
 }
 
-.loading {
-  display: grid;
-  gap: 24px;
-}
-
 .notice,
 .error {
   padding: 16px 20px;

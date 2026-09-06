@@ -53,6 +53,8 @@ export interface NetworkDashboardProps {
   readonly onNetworkChange?: (network: NetworkView) => void
   /** Host-owned row controls; standalone Localton omits this callback */
   readonly renderNodeActions?: (node: NodeView) => ReactNode
+  readonly showValidatorPerformance?: boolean
+  readonly showValidatorProduction?: boolean
   readonly view?: NetworkDashboardView
 }
 
@@ -64,6 +66,8 @@ export function NetworkDashboard({
   onAddressClick,
   onNetworkChange,
   renderNodeActions,
+  showValidatorPerformance = true,
+  showValidatorProduction = true,
   view = "all",
 }: NetworkDashboardProps) {
   const {network, now, tps} = useObservability(client)
@@ -73,7 +77,14 @@ export function NetworkDashboard({
   }, [network, onNetworkChange])
 
   if (!network) {
-    return <NetworkDashboardSkeleton nodesFooter={nodesFooter} view={view} />
+    return (
+      <NetworkDashboardSkeleton
+        nodesFooter={nodesFooter}
+        showValidatorPerformance={showValidatorPerformance}
+        showValidatorProduction={showValidatorProduction}
+        view={view}
+      />
+    )
   }
 
   return (
@@ -94,6 +105,8 @@ export function NetworkDashboard({
       now={now}
       onAddressClick={onAddressClick}
       renderNodeActions={renderNodeActions}
+      showValidatorPerformance={showValidatorPerformance}
+      showValidatorProduction={showValidatorProduction}
       tps={tps}
       view={view}
     />
@@ -106,11 +119,15 @@ interface LoadingTableColumn {
   readonly width?: string
 }
 
-function NetworkDashboardSkeleton({
+export function NetworkDashboardSkeleton({
   nodesFooter,
+  showValidatorPerformance = true,
+  showValidatorProduction = true,
   view,
 }: {
   readonly nodesFooter?: ReactNode
+  readonly showValidatorPerformance?: boolean
+  readonly showValidatorProduction?: boolean
   readonly view: NetworkDashboardView
 }) {
   return (
@@ -135,37 +152,41 @@ function NetworkDashboardSkeleton({
             title="Current validation round"
           />
           <ElectionSkeleton />
-          <LoadingTableSection
-            ariaLabel="Validator production"
-            columns={[
-              {label: "Validator", width: "8rem"},
-              {label: "Participation", width: "8rem"},
-              {label: "Production", width: "7rem"},
-              {label: "Public key", width: "9rem"},
-              {label: "MC blocks", align: "right", width: "4rem"},
-              {label: "Shard blocks", align: "right", width: "4rem"},
-              {label: "ADNL", width: "9rem"},
-            ]}
-            minWidth="68rem"
-            rows={1}
-            title="Validator production"
-          />
-          <LoadingTableSection
-            ariaLabel="Current round validator performance"
-            columns={[
-              {label: "#", width: "2rem"},
-              {label: "Validator", width: "7rem"},
-              {label: "Efficiency", align: "right", width: "6rem"},
-              {label: "Weight", align: "right", width: "5rem"},
-              {label: "Stake", align: "right", width: "8rem"},
-              {label: "Node version", width: "6rem"},
-              {label: "Wallet", width: "13rem"},
-              {label: "Type", width: "4rem"},
-            ]}
-            minWidth="56rem"
-            rows={1}
-            title="Current round validator performance"
-          />
+          {showValidatorProduction ? (
+            <LoadingTableSection
+              ariaLabel="Validator production"
+              columns={[
+                {label: "Validator", width: "8rem"},
+                {label: "Participation", width: "8rem"},
+                {label: "Production", width: "7rem"},
+                {label: "Public key", width: "9rem"},
+                {label: "MC blocks", align: "right", width: "4rem"},
+                {label: "Shard blocks", align: "right", width: "4rem"},
+                {label: "ADNL", width: "9rem"},
+              ]}
+              minWidth="68rem"
+              rows={1}
+              title="Validator production"
+            />
+          ) : null}
+          {showValidatorPerformance ? (
+            <LoadingTableSection
+              ariaLabel="Current round validator performance"
+              columns={[
+                {label: "#", width: "2rem"},
+                {label: "Validator", width: "7rem"},
+                {label: "Efficiency", align: "right", width: "6rem"},
+                {label: "Weight", align: "right", width: "5rem"},
+                {label: "Stake", align: "right", width: "8rem"},
+                {label: "Node version", width: "6rem"},
+                {label: "Wallet", width: "13rem"},
+                {label: "Type", width: "4rem"},
+              ]}
+              minWidth="56rem"
+              rows={1}
+              title="Current round validator performance"
+            />
+          ) : null}
         </>
       ) : null}
 
@@ -342,6 +363,8 @@ interface NetworkDashboardContentProps {
   readonly now: number
   readonly onAddressClick?: (address: string, event?: MouseEvent<HTMLElement>) => void
   readonly renderNodeActions?: (node: NodeView) => ReactNode
+  readonly showValidatorPerformance?: boolean
+  readonly showValidatorProduction?: boolean
   readonly tps: TpsView | undefined
   readonly view?: NetworkDashboardView
 }
@@ -353,6 +376,8 @@ export function NetworkDashboardContent({
   now,
   onAddressClick,
   renderNodeActions,
+  showValidatorPerformance = true,
+  showValidatorProduction = true,
   tps,
   view = "all",
 }: NetworkDashboardContentProps) {
@@ -369,8 +394,10 @@ export function NetworkDashboardContent({
         <>
           <ValidationRoundSection network={network} now={now} />
           <ElectionSection election={network.election} now={now} />
-          <ValidatorsSection nodes={network.nodes} />
-          <ValidatorPerformanceSection network={network} onAddressClick={onAddressClick} />
+          {showValidatorProduction ? <ValidatorsSection nodes={network.nodes} /> : null}
+          {showValidatorPerformance ? (
+            <ValidatorPerformanceSection network={network} onAddressClick={onAddressClick} />
+          ) : null}
         </>
       ) : null}
 

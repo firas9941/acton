@@ -1,9 +1,11 @@
-import {Button, Skeleton} from "@acton/ui"
+import {Button} from "@acton/ui"
 import {
-  ElectionSection,
+  NetworkDashboardContent,
+  NetworkDashboardSkeleton,
   type ElectionObservation,
+  type NetworkView,
   type ValidatorSetObservation,
-} from "@acton/localton-ui/ElectionSection"
+} from "@acton/localton-ui"
 import {Clock3} from "lucide-react"
 import {useEffect, useState, type FC} from "react"
 
@@ -30,7 +32,7 @@ type ValidatorsLoadState =
 const CLOCK_REFRESH_MS = 1000
 const CONFIG_REFRESH_MS = 30_000
 
-/** Connects Actonscan config data to Localton's shared Elector presentation. */
+/** Connects Actonscan config data to Localton's shared validator dashboard. */
 export const ValidatorsPage: FC<ValidatorsPageProps> = ({client}) => {
   const [loadState, setLoadState] = useState<ValidatorsLoadState>({status: "loading"})
   const [now, setNow] = useState(() => Math.floor(Date.now() / 1000))
@@ -94,7 +96,15 @@ function ValidatorsPageContent({
   readonly now: number
   readonly onRetry: () => void
 }) {
-  if (loadState.status === "loading") return <ValidatorsPageSkeleton />
+  if (loadState.status === "loading") {
+    return (
+      <NetworkDashboardSkeleton
+        showValidatorPerformance={false}
+        showValidatorProduction={false}
+        view="validators"
+      />
+    )
+  }
 
   if (loadState.status === "error") {
     return (
@@ -117,7 +127,43 @@ function ValidatorsPageContent({
     )
   }
 
-  return <ElectionSection election={toElectionObservation(loadState.election, now)} now={now} />
+  return (
+    <NetworkDashboardContent
+      network={toNetworkView(loadState.election, now)}
+      now={now}
+      showValidatorPerformance={false}
+      showValidatorProduction={false}
+      tps={undefined}
+      view="validators"
+    />
+  )
+}
+
+function toNetworkView(election: ValidatorElection, now: number): NetworkView {
+  return {
+    protocol_version: 1,
+    network_id: "actonscan",
+    generated_at: now,
+    chain: null,
+    shards: [],
+    election: toElectionObservation(election, now),
+    totals: {
+      observers: 0,
+      online_observers: 0,
+      nodes: 0,
+      online_nodes: 0,
+      synchronized_nodes: 0,
+      catching_up_nodes: 0,
+      configured_validators: election.current.total,
+      active_validators: election.current.total,
+      full_nodes: 0,
+      masterchain_blocks: 0,
+      shard_blocks: 0,
+    },
+    observers: [],
+    nodes: [],
+    production: [],
+  }
 }
 
 function toElectionObservation(election: ValidatorElection, now: number): ElectionObservation {
@@ -155,17 +201,4 @@ function toValidatorSetObservation(set: ValidatorSetConfiguration): ValidatorSet
       efficiency: null,
     })),
   }
-}
-
-function ValidatorsPageSkeleton() {
-  return (
-    <div
-      className={styles.loading}
-      aria-busy="true"
-      aria-label="Loading validator elections"
-      role="status"
-    >
-      <Skeleton height="19rem" width="100%" radius="md" />
-    </div>
-  )
 }
