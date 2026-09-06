@@ -78,6 +78,7 @@ const networkItems: NestedSidebarItem[] = [
   {label: "Overview", path: "/network"},
   {label: "Nodes", path: "/network/nodes"},
   {label: "Validators", path: "/network/validators"},
+  {label: "Stats", path: "/network/stats"},
   {label: "Config", path: "/network/config"},
   {label: "Health", path: "/network/health"},
 ]

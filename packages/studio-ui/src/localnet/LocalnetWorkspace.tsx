@@ -40,6 +40,7 @@ import {ContractPage} from "./dashboard/pages/ContractPage"
 import {ContractsPage} from "./dashboard/pages/ContractsPage"
 import {NftsPage} from "./dashboard/pages/NftsPage"
 import {NetworkPage} from "./dashboard/pages/NetworkPage"
+import {StatsPage} from "./dashboard/pages/StatsPage"
 import {SettingsPage} from "./dashboard/pages/SettingsPage"
 import {SnapshotsPage} from "./dashboard/pages/SnapshotsPage"
 import {SourceCatalogPage} from "./dashboard/pages/SourceCatalogPage"
@@ -63,6 +64,7 @@ const LOCALNET_PAGE_TITLES: Readonly<Record<string, string>> = {
   "/network": "Network overview",
   "/network/nodes": "Nodes and synchronization",
   "/network/validators": "Validators",
+  "/network/stats": "Stats",
   "/faucet": "Faucet",
   "/wallets": "Wallets",
   "/simulator": "Simulator",
@@ -92,6 +94,7 @@ const LOCALNET_PAGE_DESCRIPTIONS: Readonly<Record<string, string>> = {
   "/network": "Throughput, topology and consensus health",
   "/network/nodes": "Node availability, synchronization and diagnostics",
   "/network/validators": "Elections, validator sets and block production",
+  "/network/stats": "Validator session timing, block limits and message queues",
   "/faucet": "Fund accounts in this environment",
   "/wallets": "Project wallets available on this network, ready for TON Connect",
   "/simulator": "Build and replay messages against this network",
@@ -335,6 +338,15 @@ const AppContent: FC<AppContentProps> = ({
                 )}
               />
             ))}
+            <Route
+              path={path("/network/stats")}
+              element={withCapability(
+                "observability",
+                <DashboardPage>
+                  <StatsPage />
+                </DashboardPage>,
+              )}
+            />
             <Route
               path={path("/faucet")}
               element={

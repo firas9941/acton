@@ -11,7 +11,7 @@ use std::{
 use anyhow::{Context, Result};
 use axum::{
     Json, Router,
-    extract::{DefaultBodyLimit, Path as AxumPath, State},
+    extract::{DefaultBodyLimit, Path as AxumPath, Query, State},
     http::StatusCode,
     middleware,
     response::{IntoResponse, Response},
@@ -19,8 +19,13 @@ use axum::{
 };
 #[cfg(not(debug_assertions))]
 use include_dir::{Dir, include_dir};
-use localton_indexer::{TpsSeries, TpsStore};
-use serde::Serialize;
+use localton_indexer::{
+    TpsSeries, TpsStore,
+    session_stats::{
+        SessionStatBucket, SessionStatsSnapshot, SessionStatsStore, run_session_stats,
+    },
+};
+use serde::{Deserialize, Serialize};
 use tokio::{sync::RwLock, sync::watch, task::JoinHandle, time::MissedTickBehavior};
 #[cfg(debug_assertions)]
 use tower_http::services::{ServeDir, ServeFile};
@@ -69,6 +74,7 @@ struct ObservabilityState {
     local_node_is_network_source: bool,
     geoip: SharedGeoIp,
     tps: Option<TpsStore>,
+    session_stats: SessionStatsStore,
     block_time_target_ms: u32,
 }
 
@@ -161,6 +167,92 @@ impl TpsView {
     }
 }
 
+/// Dashboard state of the validator session-log indexer.
+#[derive(Clone, Copy, Serialize, ToSchema)]
+#[serde(rename_all = "snake_case")]
+enum SessionStatsIndexStatus {
+    /// The importer has not persisted a metric in the requested range yet.
+    Indexing,
+    /// At least one validator session metric is available.
+    Ready,
+}
+
+/// One aggregate used by the MLT-compatible chart configuration.
+#[derive(Serialize, ToSchema)]
+struct SessionStatBucketView {
+    /// Metric name emitted by validator-engine and normalized by Session Stats.
+    stat: String,
+    /// TON workchain ID.
+    workchain: i32,
+    /// Unix timestamp at the beginning of the aggregate window.
+    timestamp: u64,
+    /// Number of samples represented by the aggregate.
+    count: u64,
+    /// Sum of all samples represented by the aggregate.
+    sum: f64,
+    /// Minimum sample in the aggregate.
+    min: f64,
+    /// Maximum sample in the aggregate.
+    max: f64,
+}
+
+impl From<SessionStatBucket> for SessionStatBucketView {
+    fn from(bucket: SessionStatBucket) -> Self {
+        Self {
+            stat: bucket.stat,
+            workchain: bucket.workchain,
+            timestamp: bucket.timestamp,
+            count: bucket.count,
+            sum: bucket.sum,
+            min: bucket.min,
+            max: bucket.max,
+        }
+    }
+}
+
+/// Validator session metrics for the requested dashboard range.
+#[derive(Serialize, ToSchema)]
+struct SessionStatsView {
+    /// Current availability of persisted session metrics.
+    status: SessionStatsIndexStatus,
+    /// Effective duration represented by each aggregate.
+    bucket_seconds: u64,
+    /// Oldest persisted metric timestamp.
+    indexed_from: Option<u64>,
+    /// Newest persisted metric timestamp.
+    indexed_to: Option<u64>,
+    /// Validator labels available for source-specific collate charts.
+    sources: Vec<String>,
+    /// Chronologically ordered metric aggregates.
+    buckets: Vec<SessionStatBucketView>,
+}
+
+impl From<SessionStatsSnapshot> for SessionStatsView {
+    fn from(snapshot: SessionStatsSnapshot) -> Self {
+        let status = if snapshot.buckets.is_empty() {
+            SessionStatsIndexStatus::Indexing
+        } else {
+            SessionStatsIndexStatus::Ready
+        };
+
+        Self {
+            status,
+            bucket_seconds: snapshot.bucket_seconds,
+            indexed_from: snapshot.indexed_from,
+            indexed_to: snapshot.indexed_to,
+            sources: snapshot.sources,
+            buckets: snapshot.buckets.into_iter().map(Into::into).collect(),
+        }
+    }
+}
+
+#[derive(Deserialize)]
+struct SessionStatsQuery {
+    start: Option<u64>,
+    end: Option<u64>,
+    window_size: Option<u64>,
+}
+
 /// HTTP listener and background tasks that share one observation shutdown signal.
 pub(super) struct RunningObservability {
     pub service: RunningService,
@@ -176,6 +268,7 @@ pub(super) struct RunningObservability {
     paths(
         network_handler,
         tps_handler,
+        session_stats_handler,
         local_observation_handler,
         collect_handler,
         forget_observation_handler,
@@ -187,6 +280,9 @@ pub(super) struct RunningObservability {
         TpsIndexStatus,
         TpsPointView,
         TpsView,
+        SessionStatsIndexStatus,
+        SessionStatBucketView,
+        SessionStatsView,
         ErrorResponse
     )),
     tags((name = "observability", description = "TON network state and Localton host telemetry"))
@@ -235,6 +331,11 @@ pub(super) async fn start(
         .then(|| TpsStore::open(layout.observability.join("network-metrics.sqlite3")))
         .transpose()
         .context("failed to open the network metrics index")?;
+    let session_stats = SessionStatsStore::open(
+        layout.observability.join("session-stats.sqlite3"),
+        settings.node.name.clone(),
+    )
+    .context("failed to open the validator session metrics index")?;
 
     let state = ObservabilityState {
         store: Arc::clone(&store),
@@ -242,6 +343,7 @@ pub(super) async fn start(
         local_node_is_network_source,
         geoip: Arc::clone(&geoip),
         tps: tps.clone(),
+        session_stats: session_stats.clone(),
         block_time_target_ms: settings.network.simplex_target_rate_ms,
     };
 
@@ -249,6 +351,7 @@ pub(super) async fn start(
         .route("/openapi.json", get(openapi_handler))
         .route("/network", get(network_handler))
         .route("/stats/tps", get(tps_handler))
+        .route("/stats/session", get(session_stats_handler))
         .route("/observation", get(local_observation_handler))
         .route("/observations", post(collect_handler))
         .route(
@@ -308,6 +411,13 @@ pub(super) async fn start(
         }
     });
     let mut tasks = vec![publisher, network_reader, geoip_loader];
+    tasks.push(tokio::spawn(run_session_stats(
+        layout.node.logs.join("validator-session.jsonl"),
+        settings.node.name.clone(),
+        true,
+        session_stats,
+        shutdown.clone(),
+    )));
     if let Some(tps) = tps {
         tasks.push(tokio::spawn(localton_indexer::run(
             layout.node.global_config.clone(),
@@ -375,6 +485,37 @@ async fn tps_handler(State(state): State<ObservabilityState>) -> Result<Json<Tps
         series,
         state.block_time_target_ms,
     )))
+}
+
+#[utoipa::path(
+    get,
+    path = "/api/v1/stats/session",
+    tag = "observability",
+    params(
+        ("start" = Option<u64>, Query, description = "Unix timestamp at the beginning of the range"),
+        ("end" = Option<u64>, Query, description = "Unix timestamp at the end of the range"),
+        ("window_size" = Option<u64>, Query, description = "Requested aggregation window in seconds")
+    ),
+    responses((status = 200, description = "Validator session metrics", body = SessionStatsView))
+)]
+async fn session_stats_handler(
+    State(state): State<ObservabilityState>,
+    Query(query): Query<SessionStatsQuery>,
+) -> Result<Json<SessionStatsView>, HttpError> {
+    let end = query.end.unwrap_or_else(unix_time);
+    let start = query
+        .start
+        .unwrap_or_else(|| end.saturating_sub(2 * 60 * 60));
+    let window_size = query.window_size.unwrap_or(60);
+    if end <= start {
+        return Err(anyhow::anyhow!("session stats end must be greater than start").into());
+    }
+    if window_size == 0 {
+        return Err(anyhow::anyhow!("session stats window_size must be positive").into());
+    }
+
+    let snapshot = state.session_stats.snapshot(start, end, window_size)?;
+    Ok(Json(snapshot.into()))
 }
 
 #[utoipa::path(

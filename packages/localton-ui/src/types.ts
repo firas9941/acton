@@ -187,3 +187,22 @@ export interface TpsView {
   readonly block_time_target_ms: number
   readonly points: readonly TpsPoint[]
 }
+
+export interface SessionStatBucket {
+  readonly stat: string
+  readonly workchain: number
+  readonly timestamp: number
+  readonly count: number
+  readonly sum: number
+  readonly min: number
+  readonly max: number
+}
+
+export interface SessionStatsView {
+  readonly status: "indexing" | "ready"
+  readonly bucket_seconds: number
+  readonly indexed_from: number | null
+  readonly indexed_to: number | null
+  readonly sources: readonly string[]
+  readonly buckets: readonly SessionStatBucket[]
+}
