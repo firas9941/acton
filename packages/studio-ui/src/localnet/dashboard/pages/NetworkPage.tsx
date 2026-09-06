@@ -20,6 +20,8 @@ import {
   type NetworkView,
   type NodeView,
 } from "@acton/localton-ui"
+import {useExplorerRoutePaths} from "@acton/explorer-core/hooks/useExplorerRoutePaths"
+import {useOpenExplorerPath} from "@acton/explorer-core/hooks/useOpenExplorerPath"
 
 import type {FullTonNode, StudioEnvironment} from "../../../studioApi"
 import {
@@ -40,6 +42,8 @@ interface NetworkPageProps {
 /** Connects reusable Localton observability views to the selected Studio environment */
 export const NetworkPage: FC<NetworkPageProps> = ({onEnvironmentChange, view}) => {
   const {environment} = useLocalnetRuntime()
+  const explorerRoutes = useExplorerRoutePaths()
+  const openExplorerPath = useOpenExplorerPath()
   const {showToast, updateToast} = useToast()
   const [network, setNetwork] = useState<NetworkView>()
   const [addDialogOpen, setAddDialogOpen] = useState(false)
@@ -386,6 +390,9 @@ export const NetworkPage: FC<NetworkPageProps> = ({onEnvironmentChange, view}) =
             </Button>
           ) : undefined
         }
+        onAddressClick={(address, event) => {
+          openExplorerPath(explorerRoutes.addressPath(address), event)
+        }}
         onNetworkChange={setNetwork}
         renderNodeActions={nodesView ? renderNodeActions : undefined}
         view={view}
@@ -529,6 +536,7 @@ function unobservedNode(node: FullTonNode): NodeView {
     produced_masterchain_blocks: 0,
     produced_shard_blocks: 0,
     software: "",
+    ton_release: "",
     observability_endpoint: "",
     instance_started_at: null,
     public_ip: "—",
@@ -552,6 +560,9 @@ function unobservedNode(node: FullTonNode): NodeView {
     validator_public_key: null,
     validator_public_keys: [],
     validator_adnl: null,
+    validator_stake_nano: null,
+    validator_wallet_address: null,
+    validator_wallet_version: null,
   }
 }
 

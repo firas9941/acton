@@ -90,6 +90,7 @@ export interface NodeView {
   readonly produced_masterchain_blocks: number
   readonly produced_shard_blocks: number
   readonly software: string
+  readonly ton_release: string
   readonly observability_endpoint: string
   readonly instance_started_at: number | null
   readonly name: string
@@ -115,6 +116,9 @@ export interface NodeView {
   readonly validator_public_key: string | null
   readonly validator_public_keys: readonly string[]
   readonly validator_adnl: string | null
+  readonly validator_stake_nano: string | null
+  readonly validator_wallet_address: string | null
+  readonly validator_wallet_version: string | null
 }
 
 export interface ProductionView {
@@ -128,6 +132,15 @@ export interface ValidatorObservation {
   readonly public_key: string
   readonly adnl_address: string | null
   readonly weight: string
+  readonly efficiency: ValidatorEfficiencyObservation | null
+}
+
+export interface ValidatorEfficiencyObservation {
+  readonly percent: string
+  readonly masterchain_blocks_created: number
+  readonly masterchain_blocks_expected: string
+  readonly shard_blocks_created: number
+  readonly shard_blocks_expected: string
 }
 
 export interface ValidatorSetObservation {
@@ -152,6 +165,11 @@ export interface ElectionObservation {
   readonly elections_close_at: number
   readonly validators_elected_for: number
   readonly stake_held_for: number
+  readonly min_stake_nano: string
+  readonly max_stake_nano: string
+  readonly min_validators: number
+  readonly max_validators: number
+  readonly max_main_validators: number
   readonly previous: ValidatorSetObservation | null
   readonly current: ValidatorSetObservation
   readonly next: ValidatorSetObservation | null

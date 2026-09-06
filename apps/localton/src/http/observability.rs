@@ -27,6 +27,7 @@ use localton_indexer::{
 };
 use serde::{Deserialize, Serialize};
 use tokio::{sync::RwLock, sync::watch, task::JoinHandle, time::MissedTickBehavior};
+use tonutils::tvm::Address;
 #[cfg(debug_assertions)]
 use tower_http::services::{ServeDir, ServeFile};
 use tracing::{info, warn};
@@ -40,7 +41,8 @@ use crate::{
         NetworkView, NodeCapability, NodeTelemetry, ObservationStore, ObserverIdentity,
         SignedObservation, VerifiedNetworkState, network_id,
     },
-    storage::{Layout, NodeRole, RuntimeState, Settings, unix_time},
+    operations::{validators, wallets},
+    storage::{Layout, NodeRole, RuntimeState, Settings, TON_RELEASE, unix_time},
     ton::toolchain::Toolchain,
 };
 
@@ -706,6 +708,13 @@ async fn publish_runtime_observation(
     let runtime = RuntimeState::load(&layout.runtime)?;
     let node = settings.node;
     let node_runtime = runtime.node;
+    let validator_wallet = node
+        .validator
+        .then(|| validators::validator_wallet_name(&node))
+        .and_then(|name| wallets::wallet(layout, &name).ok());
+    let validator_stake_nano = node
+        .validator
+        .then(|| node.validator_stake_nano.to_string());
     let head_seqno = node_head
         .map(|sample| sample.seqno)
         .or(node_runtime.head_seqno);
@@ -719,6 +728,7 @@ async fn publish_runtime_observation(
     }
     let telemetry = NodeTelemetry {
         software: format!("localton/{}", env!("CARGO_PKG_VERSION")),
+        ton_release: TON_RELEASE.to_owned(),
         observability_endpoint: endpoint.to_owned(),
         instance_started_at: runtime.started_at,
         name: node.name,
@@ -745,6 +755,13 @@ async fn publish_runtime_observation(
             .map(|key| key.to_hex())
             .collect(),
         validator_adnl: node_runtime.validator_adnl.map(|key| key.to_hex()),
+        validator_stake_nano,
+        validator_wallet_address: validator_wallet
+            .as_ref()
+            .and_then(|wallet| Address::from_str(&wallet.address).ok())
+            .map(|address| address.to_string(true, true, true, true)),
+        validator_wallet_version: validator_wallet
+            .map(|wallet| wallet.version.as_str().to_owned()),
     };
     let observation = store.write().await.publish(telemetry, now, ttl_seconds)?;
     Ok(observation)
