@@ -224,21 +224,30 @@ function ElectionDiagram({
           const validationEndedAt = round.set.validation_ended_at
           const holdingEndedAt = validationEndedAt + election.stake_held_for
           const phases = [
-            {name: "Election", className: styles.timelineEntry, start: openedAt, end: closedAt},
+            {
+              name: "Election",
+              description: "Validator candidates submit stakes for the next validator set",
+              className: styles.timelineEntry,
+              start: openedAt,
+              end: closedAt,
+            },
             {
               name: "Selection",
+              description: "Entries are closed while the next validator set is finalized",
               className: styles.timelineSelection,
               start: closedAt,
               end: round.set.validation_started_at,
             },
             {
               name: "Validation",
+              description: "Selected validators produce and validate blocks",
               className: styles.timelineValidation,
               start: round.set.validation_started_at,
               end: validationEndedAt,
             },
             {
               name: "Stake hold",
+              description: "Validator stakes remain locked after validation before being returned",
               className: styles.timelineHolding,
               start: validationEndedAt,
               end: holdingEndedAt,
@@ -264,13 +273,27 @@ function ElectionDiagram({
               </div>
               <div className={styles.electionRoundTrack}>
                 {phases.map(phase => {
-                  const tooltip = `${phase.name} · ${formatTimestamp(phase.start)}–${formatTimestamp(phase.end)}`
+                  const timeRange = `${formatTimestamp(phase.start)} – ${formatTimestamp(phase.end)}`
+                  const tooltipLabel = `${phase.name}. ${phase.description}. ${timeRange}`
 
                   return (
-                    <Tooltip content={tooltip} delay={0} key={phase.name}>
+                    <Tooltip
+                      content={
+                        <span className={styles.phaseTooltip}>
+                          <span className={styles.phaseTooltipHeader}>
+                            <strong>{phase.name}</strong>
+                            <span className={styles.phaseTooltipTime}>{timeRange}</span>
+                          </span>
+                          <span>{phase.description}</span>
+                        </span>
+                      }
+                      delay={0}
+                      key={phase.name}
+                      width="wide"
+                    >
                       <span
                         aria-current={phase === activePhase ? "true" : undefined}
-                        aria-label={tooltip}
+                        aria-label={tooltipLabel}
                         className={`${styles.timelineSegment} ${phase.className}`}
                         data-active={phase === activePhase}
                         style={{

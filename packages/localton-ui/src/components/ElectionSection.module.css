@@ -176,6 +176,27 @@
   background: var(--timeline-segment-color);
 }
 
+.phaseTooltip {
+  display: grid;
+  gap: var(--acton-space-1);
+}
+
+.phaseTooltipHeader {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--acton-space-4);
+}
+
+.phaseTooltipHeader strong {
+  font-weight: var(--acton-font-weight-semibold);
+}
+
+.phaseTooltipTime {
+  color: var(--acton-color-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
 .timelineEntry {
   --timeline-segment-color: var(--acton-color-success);
 }
