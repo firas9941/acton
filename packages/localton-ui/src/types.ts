@@ -143,6 +143,12 @@ export interface ValidatorEfficiencyObservation {
   readonly shard_blocks_expected: string
 }
 
+export interface ValidatorStakeObservation {
+  readonly total_nano: string
+  readonly minimum_nano: string
+  readonly maximum_nano: string
+}
+
 export interface ValidatorSetObservation {
   readonly round_id: number
   readonly validation_started_at: number
@@ -150,6 +156,7 @@ export interface ValidatorSetObservation {
   readonly validators: number
   readonly main_validators: number
   readonly total_weight?: string
+  readonly stake?: ValidatorStakeObservation
   readonly members?: readonly ValidatorObservation[]
 }
 

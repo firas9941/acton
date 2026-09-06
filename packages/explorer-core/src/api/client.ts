@@ -235,6 +235,17 @@ interface V2ConfigInfo {
   }
 }
 
+export interface ValidatorCycle {
+  readonly cycle_start: number
+  readonly total_stake: string
+  readonly min_stake: string
+  readonly max_stake: string
+}
+
+interface ValidatorCyclesResponse {
+  readonly cycles: readonly ValidatorCycle[]
+}
+
 const IMAGE_CONTENT_KEYS = ["_image_small", "_image_medium", "_image_big", "image"] as const
 const JETTON_CONTENT_KEYS = [
   "uri",
@@ -570,6 +581,17 @@ export class TonClient {
 
     const response = await this.request<V2ConfigInfo>(url, "Failed to fetch network configuration")
     return parseNetworkConfig(response.config.bytes)
+  }
+
+  async getValidatorCycle(cycleStart: number): Promise<ValidatorCycle | undefined> {
+    const url = this.buildUrl(this.v3BaseUrl, "/validators/cycles")
+    url.searchParams.append("cycle_start", cycleStart.toString())
+    url.searchParams.append("limit", "1")
+    const response = await this.request<ValidatorCyclesResponse>(
+      url,
+      "Failed to fetch validator cycle",
+    )
+    return response.cycles.find(cycle => cycle.cycle_start === cycleStart)
   }
 
   async resolveDnsWalletAddress(domain: string): Promise<string | undefined> {

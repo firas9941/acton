@@ -9,7 +9,7 @@ import {
 import {Clock3} from "lucide-react"
 import {useEffect, useState, type FC} from "react"
 
-import type {TonClient} from "@acton/explorer-core/api/client"
+import type {TonClient, ValidatorCycle} from "@acton/explorer-core/api/client"
 import type {ValidatorSetConfiguration} from "@acton/explorer-core/api/config"
 import {
   validatorElectionFromConfig,
@@ -26,7 +26,11 @@ interface ValidatorsPageProps {
 
 type ValidatorsLoadState =
   | {readonly status: "loading"}
-  | {readonly status: "success"; readonly election?: ValidatorElection}
+  | {
+      readonly status: "success"
+      readonly cycle?: ValidatorCycle
+      readonly election?: ValidatorElection
+    }
   | {readonly status: "error"; readonly message: string}
 
 const CLOCK_REFRESH_MS = 1000
@@ -55,9 +59,11 @@ export const ValidatorsPage: FC<ValidatorsPageProps> = ({client}) => {
     const loadConfig = () => {
       void client
         .getNetworkConfig()
-        .then(config => {
+        .then(async config => {
+          const election = validatorElectionFromConfig(config)
+          const cycle = await loadValidatorCycle(client, election)
           if (!active) return
-          setLoadState({status: "success", election: validatorElectionFromConfig(config)})
+          setLoadState({status: "success", cycle, election})
         })
         .catch((error: unknown) => {
           if (!active) return
@@ -87,6 +93,19 @@ export const ValidatorsPage: FC<ValidatorsPageProps> = ({client}) => {
   )
 }
 
+async function loadValidatorCycle(
+  client: TonClient,
+  election: ValidatorElection | undefined,
+): Promise<ValidatorCycle | undefined> {
+  if (!election) return undefined
+
+  try {
+    return await client.getValidatorCycle(election.current.utimeSince)
+  } catch {
+    return undefined
+  }
+}
+
 function ValidatorsPageContent({
   loadState,
   now,
@@ -99,6 +118,7 @@ function ValidatorsPageContent({
   if (loadState.status === "loading") {
     return (
       <NetworkDashboardSkeleton
+        showValidationRoundTitle={false}
         showValidatorPerformance={false}
         showValidatorProduction={false}
         view="validators"
@@ -129,8 +149,9 @@ function ValidatorsPageContent({
 
   return (
     <NetworkDashboardContent
-      network={toNetworkView(loadState.election, now)}
+      network={toNetworkView(loadState.election, loadState.cycle, now)}
       now={now}
+      showValidationRoundTitle={false}
       showValidatorPerformance={false}
       showValidatorProduction={false}
       tps={undefined}
@@ -139,14 +160,18 @@ function ValidatorsPageContent({
   )
 }
 
-function toNetworkView(election: ValidatorElection, now: number): NetworkView {
+function toNetworkView(
+  election: ValidatorElection,
+  cycle: ValidatorCycle | undefined,
+  now: number,
+): NetworkView {
   return {
     protocol_version: 1,
     network_id: "actonscan",
     generated_at: now,
     chain: null,
     shards: [],
-    election: toElectionObservation(election, now),
+    election: toElectionObservation(election, cycle, now),
     totals: {
       observers: 0,
       online_observers: 0,
@@ -166,7 +191,11 @@ function toNetworkView(election: ValidatorElection, now: number): NetworkView {
   }
 }
 
-function toElectionObservation(election: ValidatorElection, now: number): ElectionObservation {
+function toElectionObservation(
+  election: ValidatorElection,
+  cycle: ValidatorCycle | undefined,
+  now: number,
+): ElectionObservation {
   return {
     stage: validatorElectionStage(election, now),
     elections_open_at: election.current.utimeUntil - election.timing.electionsStartBefore,
@@ -179,12 +208,15 @@ function toElectionObservation(election: ValidatorElection, now: number): Electi
     max_validators: election.count ? election.count.maxValidators : election.current.total,
     max_main_validators: election.count ? election.count.maxMainValidators : election.current.main,
     previous: election.previous ? toValidatorSetObservation(election.previous) : null,
-    current: toValidatorSetObservation(election.current),
+    current: toValidatorSetObservation(election.current, cycle),
     next: election.next ? toValidatorSetObservation(election.next) : null,
   }
 }
 
-function toValidatorSetObservation(set: ValidatorSetConfiguration): ValidatorSetObservation {
+function toValidatorSetObservation(
+  set: ValidatorSetConfiguration,
+  cycle?: ValidatorCycle,
+): ValidatorSetObservation {
   return {
     round_id: set.utimeSince,
     validation_started_at: set.utimeSince,
@@ -194,6 +226,15 @@ function toValidatorSetObservation(set: ValidatorSetConfiguration): ValidatorSet
     total_weight: (
       set.totalWeight ?? set.validators.reduce((total, validator) => total + validator.weight, 0n)
     ).toString(),
+    ...(cycle
+      ? {
+          stake: {
+            total_nano: cycle.total_stake,
+            minimum_nano: cycle.min_stake,
+            maximum_nano: cycle.max_stake,
+          },
+        }
+      : {}),
     members: set.validators.map(validator => ({
       public_key: validator.publicKey,
       adnl_address: validator.adnlAddress ?? null,

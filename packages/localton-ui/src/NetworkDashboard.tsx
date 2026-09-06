@@ -53,6 +53,7 @@ export interface NetworkDashboardProps {
   readonly onNetworkChange?: (network: NetworkView) => void
   /** Host-owned row controls; standalone Localton omits this callback */
   readonly renderNodeActions?: (node: NodeView) => ReactNode
+  readonly showValidationRoundTitle?: boolean
   readonly showValidatorPerformance?: boolean
   readonly showValidatorProduction?: boolean
   readonly view?: NetworkDashboardView
@@ -66,6 +67,7 @@ export function NetworkDashboard({
   onAddressClick,
   onNetworkChange,
   renderNodeActions,
+  showValidationRoundTitle = true,
   showValidatorPerformance = true,
   showValidatorProduction = true,
   view = "all",
@@ -80,6 +82,7 @@ export function NetworkDashboard({
     return (
       <NetworkDashboardSkeleton
         nodesFooter={nodesFooter}
+        showValidationRoundTitle={showValidationRoundTitle}
         showValidatorPerformance={showValidatorPerformance}
         showValidatorProduction={showValidatorProduction}
         view={view}
@@ -105,6 +108,7 @@ export function NetworkDashboard({
       now={now}
       onAddressClick={onAddressClick}
       renderNodeActions={renderNodeActions}
+      showValidationRoundTitle={showValidationRoundTitle}
       showValidatorPerformance={showValidatorPerformance}
       showValidatorProduction={showValidatorProduction}
       tps={tps}
@@ -121,11 +125,13 @@ interface LoadingTableColumn {
 
 export function NetworkDashboardSkeleton({
   nodesFooter,
+  showValidationRoundTitle = true,
   showValidatorPerformance = true,
   showValidatorProduction = true,
   view,
 }: {
   readonly nodesFooter?: ReactNode
+  readonly showValidationRoundTitle?: boolean
   readonly showValidatorPerformance?: boolean
   readonly showValidatorProduction?: boolean
   readonly view: NetworkDashboardView
@@ -149,6 +155,7 @@ export function NetworkDashboardSkeleton({
             ]}
             minWidth="36rem"
             rows={3}
+            showTitle={showValidationRoundTitle}
             title="Current validation round"
           />
           <ElectionSkeleton />
@@ -363,6 +370,7 @@ interface NetworkDashboardContentProps {
   readonly now: number
   readonly onAddressClick?: (address: string, event?: MouseEvent<HTMLElement>) => void
   readonly renderNodeActions?: (node: NodeView) => ReactNode
+  readonly showValidationRoundTitle?: boolean
   readonly showValidatorPerformance?: boolean
   readonly showValidatorProduction?: boolean
   readonly tps: TpsView | undefined
@@ -376,6 +384,7 @@ export function NetworkDashboardContent({
   now,
   onAddressClick,
   renderNodeActions,
+  showValidationRoundTitle = true,
   showValidatorPerformance = true,
   showValidatorProduction = true,
   tps,
@@ -392,7 +401,11 @@ export function NetworkDashboardContent({
 
       {view === "all" || view === "validators" ? (
         <>
-          <ValidationRoundSection network={network} now={now} />
+          <ValidationRoundSection
+            network={network}
+            now={now}
+            showTitle={showValidationRoundTitle}
+          />
           <ElectionSection election={network.election} now={now} />
           {showValidatorProduction ? <ValidatorsSection nodes={network.nodes} /> : null}
           {showValidatorPerformance ? (
@@ -638,9 +651,11 @@ function ValidatorsSection({nodes}: {readonly nodes: readonly NodeView[]}) {
 function ValidationRoundSection({
   network,
   now,
+  showTitle,
 }: {
   readonly network: NetworkView
   readonly now: number
+  readonly showTitle: boolean
 }) {
   const election = network.election
   const members = election?.current.members ?? []
@@ -650,21 +665,32 @@ function ValidationRoundSection({
     return stake ? [BigInt(stake)] : []
   })
   const completeStakeSet = members.length > 0 && stakes.length === members.length
-  const totalStake = completeStakeSet
-    ? stakes.reduce((total, stake) => total + stake, 0n).toString()
-    : undefined
-  const minimumStake = completeStakeSet
-    ? stakes.reduce((minimum, stake) => (stake < minimum ? stake : minimum)).toString()
-    : undefined
-  const maximumStake = completeStakeSet
-    ? stakes.reduce((maximum, stake) => (stake > maximum ? stake : maximum)).toString()
-    : undefined
+  const reportedStake = election?.current.stake
+  const totalStake =
+    reportedStake?.total_nano ??
+    (completeStakeSet ? stakes.reduce((total, stake) => total + stake, 0n).toString() : undefined)
+  const minimumStake =
+    reportedStake?.minimum_nano ??
+    (completeStakeSet
+      ? stakes.reduce((minimum, stake) => (stake < minimum ? stake : minimum)).toString()
+      : undefined)
+  const maximumStake =
+    reportedStake?.maximum_nano ??
+    (completeStakeSet
+      ? stakes.reduce((maximum, stake) => (stake > maximum ? stake : maximum)).toString()
+      : undefined)
 
   return (
-    <section className={styles.sectionStack} aria-labelledby="validation-round-title">
-      <div className={styles.sectionHeading}>
-        <h2 id="validation-round-title">Current validation round</h2>
-      </div>
+    <section
+      className={styles.sectionStack}
+      aria-label={showTitle ? undefined : "Current validation round"}
+      aria-labelledby={showTitle ? "validation-round-title" : undefined}
+    >
+      {showTitle ? (
+        <div className={styles.sectionHeading}>
+          <h2 id="validation-round-title">Current validation round</h2>
+        </div>
+      ) : null}
       {election ? (
         <div className={styles.validationRoundPanel} aria-label="Current validation round">
           <ValidationRoundGroup label="Round" columns={4}>

@@ -118,6 +118,51 @@ test("address information does not query the node when indexed state is present"
   }
 })
 
+test("validator cycle stake totals are loaded for the current validation round", async () => {
+  const originalFetch = globalThis.fetch
+  const requests: string[] = []
+  globalThis.fetch = mockFetch(async input => {
+    requests.push(input.toString())
+    return Response.json({
+      cycles: [
+        {
+          cycle_start: 1_788_694_280,
+          total_stake: "670111851505974505",
+          min_stake: "747019198470000",
+          max_stake: "2896908720650293",
+        },
+      ],
+    })
+  })
+
+  try {
+    const client = new TonClient({
+      v2BaseUrl: "https://toncenter.example/api/v2",
+      v3BaseUrl: "https://toncenter.example/api/v3",
+      addressNameBaseUrl: "https://toncenter.example/api",
+    })
+
+    expect({
+      result: await client.getValidatorCycle(1_788_694_280),
+      requests,
+    }).toMatchInlineSnapshot(`
+      {
+        "requests": [
+          "https://toncenter.example/api/v3/validators/cycles?cycle_start=1788694280&limit=1",
+        ],
+        "result": {
+          "cycle_start": 1788694280,
+          "max_stake": "2896908720650293",
+          "min_stake": "747019198470000",
+          "total_stake": "670111851505974505",
+        },
+      }
+    `)
+  } finally {
+    globalThis.fetch = originalFetch
+  }
+})
+
 test("raw testnet blocks are loaded from Toncenter getBlock", async () => {
   const originalFetch = globalThis.fetch
   const requests: URL[] = []
