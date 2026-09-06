@@ -2,8 +2,8 @@ use std::sync::Mutex;
 use std::sync::atomic::{AtomicU64, Ordering};
 
 use acton_localnet::{
-    ApiHealth, ApiHealthStatus, NetworkHealth, NetworkHealthSample, NetworkHealthStatus,
-    ServiceHealth, ServiceHealthStatus,
+    ApiHealth, ApiHealthStatus, DockerContainer, NetworkHealth, NetworkHealthSample,
+    NetworkHealthStatus, ServiceHealth, ServiceHealthStatus,
 };
 use acton_studio::{
     CreateEnvironmentConfig, CreateEnvironmentRequest, CreateEnvironmentSnapshotRequest,
@@ -285,6 +285,11 @@ impl EnvironmentRuntime for TestEnvironmentRuntime {
                     state: Some("running".to_owned()),
                     health: Some("healthy".to_owned()),
                     exit_code: Some(0),
+                    container: Some(DockerContainer {
+                        id: "0123456789abcdef".to_owned(),
+                        name: "protocol-network-v3-api-1".to_owned(),
+                        image: "toncenter/ton-indexer:latest".to_owned(),
+                    }),
                 }],
                 history: vec![NetworkHealthSample {
                     observed_at_ms: 1_000,
@@ -1297,7 +1302,7 @@ async fn full_ton_environment_health_is_forwarded_through_the_catalog_runtime() 
 
     expect![[r#"
         status: 200 OK
-        body: {"observedAtMs":1000,"status":"syncing","apiV2":{"status":"ready","endpoint":"http://127.0.0.1:18080/api/v2","latencyMs":3,"masterchainSeqno":42,"blockTimeUnix":1,"blockAgeMs":20,"error":null},"apiV3":{"status":"syncing","endpoint":"http://127.0.0.1:18081/api/v3","latencyMs":7,"masterchainSeqno":40,"blockTimeUnix":null,"blockAgeMs":null,"error":null},"indexerLagBlocks":2,"estimatedIndexerLagMs":800,"services":[{"name":"v3-api","status":"ready","state":"running","health":"healthy","exitCode":0}],"history":[{"observedAtMs":1000,"apiV2LatencyMs":3,"apiV3LatencyMs":7,"apiV2Seqno":42,"apiV3Seqno":40,"indexerLagBlocks":2,"blockAgeMs":20}],"infrastructureError":null}"#]]
+        body: {"observedAtMs":1000,"status":"syncing","apiV2":{"status":"ready","endpoint":"http://127.0.0.1:18080/api/v2","latencyMs":3,"masterchainSeqno":42,"blockTimeUnix":1,"blockAgeMs":20,"error":null},"apiV3":{"status":"syncing","endpoint":"http://127.0.0.1:18081/api/v3","latencyMs":7,"masterchainSeqno":40,"blockTimeUnix":null,"blockAgeMs":null,"error":null},"indexerLagBlocks":2,"estimatedIndexerLagMs":800,"services":[{"name":"v3-api","status":"ready","state":"running","health":"healthy","exitCode":0,"container":{"id":"0123456789abcdef","name":"protocol-network-v3-api-1","image":"toncenter/ton-indexer:latest"}}],"history":[{"observedAtMs":1000,"apiV2LatencyMs":3,"apiV3LatencyMs":7,"apiV2Seqno":42,"apiV3Seqno":40,"indexerLagBlocks":2,"blockAgeMs":20}],"infrastructureError":null}"#]]
     .assert_eq(&actual);
 }
 

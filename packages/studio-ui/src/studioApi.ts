@@ -141,6 +141,16 @@ export interface ServiceHealth {
   readonly state: string | null
   readonly health: string | null
   readonly exitCode: number | null
+  readonly container: DockerContainer | null
+}
+
+/**
+ * Docker identity observed with service health, refreshed when a container is recreated
+ */
+export interface DockerContainer {
+  readonly id: string
+  readonly name: string
+  readonly image: string
 }
 
 export interface NetworkHealthSample {
