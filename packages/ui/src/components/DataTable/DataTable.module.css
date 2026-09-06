@@ -11,7 +11,6 @@
 }
 
 .embedded {
-  overflow: visible;
   border: 0;
   border-radius: inherit;
   background: transparent;
@@ -25,14 +24,6 @@
 
 .inner {
   position: relative;
-  min-width: var(--acton-data-table-min-width);
-}
-
-.embedded .inner {
-  min-width: 0;
-}
-
-.nested .inner {
   min-width: var(--acton-data-table-min-width);
 }
 

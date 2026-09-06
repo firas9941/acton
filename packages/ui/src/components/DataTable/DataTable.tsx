@@ -116,7 +116,7 @@ export function DataTable({
   children,
   className,
   meta,
-  minWidth = "42rem",
+  minWidth,
   preview,
   ref,
   style,
@@ -130,12 +130,15 @@ export function DataTable({
   const hasActions = actions !== undefined && actions !== null
   const hasHeader = hasTitle || hasMeta || hasActions
 
+  // Embedded tables fit their parent unless the caller requests a scrollable minimum width.
+  const tableMinWidth = minWidth ?? (variant === "embedded" ? 0 : "42rem")
+
   return (
     <section
       {...props}
       ref={ref}
       className={cx(styles.dataTable, variantClassNames[variant], className)}
-      style={getDataTableStyle(style, minWidth)}
+      style={getDataTableStyle(style, tableMinWidth)}
     >
       <div className={styles.inner}>
         {hasHeader ? (
