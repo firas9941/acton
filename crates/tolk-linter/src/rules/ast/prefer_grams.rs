@@ -7,6 +7,8 @@ use tolk_resolver::{AstNodeSpanExt, FileId, FileResolveIndex, Symbol, SymbolKind
 use tolk_syntax::{Call, TryFromNode};
 use tree_sitter::Node;
 
+/// Available since Acton 1.2.
+///
 /// ### What it does
 /// Replaces the standard library's `ton()` alias with `grams()`.
 ///
@@ -30,7 +32,7 @@ use tree_sitter::Node;
 /// const amount = grams("0.1");
 /// ```
 #[derive(ViolationMetadata)]
-#[violation_metadata(stable_since = "v0.0.1")]
+#[violation_metadata(stable_since = "v1.2.0")]
 pub struct PreferGrams;
 
 impl Violation for PreferGrams {

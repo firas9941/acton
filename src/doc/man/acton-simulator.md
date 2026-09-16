@@ -10,6 +10,8 @@ acton-simulator --- Run Acton's simplified TON development environment
 
 ## Description
 
+Available since Acton 1.2.
+
 Acton Simulator is a fast, deterministic TON development environment
 for local execution, forked-state development, and faucet-based funding. It
 produces TON-compatible blocks and provides LiteAPI, TON Center v2/v3, Streaming

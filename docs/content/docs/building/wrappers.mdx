@@ -69,6 +69,22 @@ Fine tune wrapper generation with the `contract { ... }` header in the contract 
 - `incomingMessages: ...` enables typed `send{MessageName}` helpers; without it, only the generic `sendAny()` internal-message helper is generated.
 - `incomingExternal: ...` enables `sendExternal{MessageName}` helpers and `sendAnyExternal()`.
 
+### Storage aliases and workchains
+
+<AvailabilityBadge since="Acton 1.2" />
+
+Tolk wrappers accept union aliases as storage types. Generated test stubs use the
+corresponding storage types and imports.
+
+`fromStorage(storage, toShard, workchain)` accepts an optional workchain after
+`toShard`, defaulting to `BASECHAIN`. For masterchain deployment, use
+`Counter.fromStorage(storage, null, MASTERCHAIN)`. Deployments preserve the selected
+workchain and shard settings.
+
+Wrapper names and default filenames use the PascalCase contract ID from `Acton.toml`,
+independent of the source filename and `display-name`.
+See [wrapper upgrade steps](/docs/upgrade-to-1-2#regenerate-wrappers).
+
 ### Use a wrapper in a Tolk test
 
 Import the wrapper and any types it references, then create and deploy the contract:
@@ -162,6 +178,8 @@ test-output-dir = "tests"
 [wrappers.typescript]
 output-dir = "wrappers-ts"
 ```
+
+<AvailabilityBadge since="Acton 1.2" />
 
 Override any of these fields for one contract by nesting the same tables under
 its contract entry:

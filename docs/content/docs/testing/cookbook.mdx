@@ -35,6 +35,11 @@ fun setupCounter(): (Counter, Treasury, Treasury) {
 }
 ```
 
+<AvailabilityBadge since="Acton 1.2" />
+
+To create a treasury in another workchain, pass it as the second argument:
+`testing.treasury("owner", MASTERCHAIN)`. The default is `BASECHAIN`.
+
 Use the generated stub when starting a new test file:
 
 ```bash

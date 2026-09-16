@@ -1,0 +1,98 @@
+---
+title: "Upgrade to Acton 1.2"
+description: "Update commands, generated wrappers, and tests when upgrading from Acton 1.1"
+---
+
+<AvailabilityBadge since="Acton 1.2" />
+
+Install Acton 1.2 with `acton up --stable`. If the project pins Acton in
+`[toolchain]`, update that pin to `1.2.0`.
+
+## Local development commands
+
+The lightweight environment previously started with `acton localnet` is now
+[Simulator](/docs/simulator/overview). Use `acton simulator start` and the matching
+`acton simulator` subcommands. Its configuration remains in `[localnet]`, and
+scripts still connect with `--net localnet`.
+
+[`acton localnet`](/docs/commands/localnet) now runs real TON validators and
+indexers in Docker. It has separate network management commands and storage.
+
+Start [Acton Studio](/docs/studio/getting-started) with `acton studio` to manage
+environments and inspect project tests in the browser.
+
+## Regenerate wrappers
+
+Run `acton wrapper --all` to regenerate Tolk wrappers. For TypeScript wrappers,
+run `acton wrapper --all --ts`.
+
+Wrapper type names and default filenames now use the contract ID from
+`Acton.toml`, converted to PascalCase. They no longer use the source filename.
+For `[contracts.my_counter]`, the type is `MyCounter` and the default Tolk file
+is `MyCounter.gen.tolk`. Update imports and type references where the names differ.
+
+Per-contract [wrapper settings](/docs/building/wrappers#configure-wrapper-defaults)
+inherit individual fields from project defaults. CLI flags take priority.
+
+## Deterministic tests and scripts
+
+Local tests and scripts start with the current wall-clock time. Latest forks
+also use wall-clock time; forks with `--fork-block-number` use that block's timestamp.
+Use [`testing.setNow()`](/docs/standard_library/emulation/testing#testingsetnow)
+when a scenario requires a fixed time.
+
+`crypto.getFastRandomBytes(bytes)` now consumes the VM random state and no longer
+accepts a seed argument. Set the seed before the call:
+
+```tolk
+testing.setRandomSeed(42);
+val bytes = crypto.getFastRandomBytes(16);
+```
+
+[`testing.setRandomSeed()`](/docs/standard_library/emulation/testing#testingsetrandomseed)
+also sets the seed for subsequent emulated executions. `random.setSeed()` changes
+the current VM seed only.
+
+## Broadcast acceptance
+
+After a real-network broadcast, `ExternalSendResult.isAccepted()` fails because
+submission does not prove contract acceptance. Use `waitForFirstTransaction()`
+or `waitForTrace()` to inspect on-chain execution. `acceptanceKnown` indicates
+whether acceptance is known.
+
+Local emulation still supports `isAccepted()`. See
+[blockchain interaction](/docs/scripting/blockchain-interaction).
+
+## Wallets and verification
+
+TON Connect now uses native wallet selection, QR codes, and deep links.
+Remove `--tonconnect-port` from scripts; the browser bridge is no longer used.
+
+Custom networks default to global ID `-3` for Wallet V5 address derivation.
+For a custom mainnet endpoint, set `global-id = -239` in `[networks.<name>]`.
+
+[`acton verify`](/docs/verify) uses the new source verifier. Each new public
+verification attempt requires a testnet payment bound to the compiled code hash.
+Already verified code succeeds without another payment. Use `--payment-tx-hash`
+to resume an eligible paid attempt. The CLI supports Tolk uploads and testnet
+payments; the verifier service also supports FunC, Tact, and mainnet payments.
+
+## Currency names
+
+Output now uses GRAM and nanogram. Use `grams(...)`,
+`reserveGramsOnBalance(...)`, and `{:gram}` or `{:grams}` in new code.
+The `ton(...)`, `reserveToncoinsOnBalance(...)`, and `{:ton}` aliases remain supported.
+
+Serialized action failures use `not_enough_grams_to_send` and `cannot_reserve_grams`.
+Update tools that consume these values. The new
+[`S009` rule](/docs/rules/s009-prefer-grams) can replace standard-library `ton()`
+calls through `acton check --fix`.
+
+## New testing and inspection tools
+
+- [Source-level gas profiles and benchmarks](/docs/testing/gas-profiling-with-snapshots)
+- [External-message cursors](/docs/testing/step-by-step-execution#external-in-messages)
+- [Get-method results with gas and exit codes](/docs/standard_library/emulation/network#netrungetmethodext)
+- [Typed RPC calls](/docs/commands/rpc#acton-rpc-call) and [ABI lookup](/docs/commands/doc#acton-doc-abi)
+- [BoC encoding and decoding](/docs/standard_library/boc)
+- [Trace filtering](/docs/testing/saved-trace-bundles#skipping-traces)

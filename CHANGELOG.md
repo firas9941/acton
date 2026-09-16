@@ -30,13 +30,19 @@ and formatter fixes address cases where formatting lost code or broke syntax.
 - `crypto.getFastRandomBytes(bytes)` now consumes the VM random state and no
   longer accepts a seed. For repeatable results, set the seed with
   `testing.setRandomSeed(seed)` or `random.setSeed(seed)` before generating bytes.
-- Local tests and scripts start with the current wall-clock time. Forks use the
-  selected block timestamp. Set `testing.setNow(...)` explicitly when a test
+- Local tests and scripts start with the current wall-clock time. Forks with an explicit block number use the
+  selected block timestamp; latest forks use the current wall-clock time. Set `testing.setNow(...)` explicitly when a test
   requires a fixed time.
 - After a real-network broadcast, `ExternalSendResult.isAccepted()` reports an
   error because submission does not prove acceptance. Use
   `waitForFirstTransaction()` or `waitForTrace()` to inspect execution.
   `acceptanceKnown` indicates whether acceptance is known.
+
+#### Local development commands
+
+- Use `acton simulator` for the lightweight environment previously exposed as
+  `acton localnet`. Its configuration remains in `[localnet]`.
+  `acton localnet` now manages real TON validators in Docker.
 
 #### Wallets and verification
 
@@ -121,6 +127,8 @@ The new source verifier recompiles Tolk, FunC, and Tact contracts and checks the
 resulting code hash. Verified source bundles, compiler details, ABIs, and available
 source maps can be retrieved by code hash or contract address.
 
+- The verifier service supports testnet and mainnet payments and resolves
+  contract code hashes across both networks.
 - `acton verify` handles Tolk source uploads and testnet payments.
   Already verified code succeeds without another payment. Use
   `--payment-tx-hash` to resume an eligible paid attempt.
@@ -247,8 +255,9 @@ Actonscan. Clients solve a proof-of-work challenge before submitting a claim.
 
 ### Emulation and Forks
 
-- Forked tests and scripts resolve accounts, configuration, libraries, time,
-  and previous-block context from one pinned masterchain snapshot.
+- Forked tests and scripts resolve accounts, configuration, libraries,
+  and previous-block context from one pinned masterchain snapshot. Explicit
+  historical forks also use the block timestamp; latest forks use wall-clock time.
   Caches for the selected block are reused across runs.
 - Remote contracts that use on-chain libraries trigger automatic library
   discovery and registration during emulation and contract inspection.

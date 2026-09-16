@@ -3,6 +3,8 @@ title: "Environments"
 description: "Choose, create, start, stop, and connect Simulator, Localnet, Testnet, and Mainnet environments"
 ---
 
+<AvailabilityBadge since="Acton 1.2" />
+
 An environment is the network context behind Studio tools. Its state and capabilities determine
 what the explorer sees, where wallets send messages, what the simulator reads, and which endpoints
 are available to applications.
@@ -72,7 +74,8 @@ when Docker or one of the network services fails during startup.
 ### Testnet and Mainnet
 
 Testnet and Mainnet are external environments. They are always listed under **Networks**, cannot be
-stopped or deleted, and do not expose local mining, faucets, snapshots, or runtime settings.
+stopped or deleted, and do not expose local mining, snapshots, or runtime settings.
+Testnet provides a faucet action for testnet GRAM; Mainnet does not.
 
 Use them to inspect public network data, simulate against current network state, connect wallets,
 and route application requests through Studio. Requests sent through Studio can appear in **API
