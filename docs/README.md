@@ -77,6 +77,7 @@ Generated references use `Available since Acton 1.2.` in their source:
 
 - Add `/// Available since Acton 1.2.` to new public functions and types in `lib/`.
 - Put the version note first in a linter rule's doc comment and update its lifecycle version.
+- Use `v1.0.0` for linter rules released before Acton 1.0; preserve their stable or preview status.
 - Add a standalone version paragraph to the relevant command or option in `src/doc/man/`.
 
 `acton docgen` renders these notes as badges on the site and keeps plain text in

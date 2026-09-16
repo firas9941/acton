@@ -223,6 +223,8 @@ struct ExternalSendResult {
     /// Destination account extracted from the original external-in message.
     destination: address
     /// Whether Acton knows if the destination contract accepted the message.
+    ///
+    /// Available since Acton 1.2.
     acceptanceKnown: bool = true
 }
 
@@ -865,6 +867,8 @@ struct ExternalInMessage {
     /// Encoded external-in message cell.
     messageCell: cell
     /// Destination account address.
+    ///
+    /// Available since Acton 1.1.
     dest: address
 }
 
@@ -930,6 +934,7 @@ fun net.createExternalMessage<TBody>(
 ///
 /// If the external message is accepted, the returned [ExternalSendResult]
 /// contains the full transaction trace in `transactions`.
+/// The `ExternalSendResult` return type is available since Acton 1.1.
 ///
 /// If the external message is not accepted, the destination account does not
 /// exist, or emulation fails before a trace is produced, the returned result has

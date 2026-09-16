@@ -336,10 +336,16 @@ When using `.boc` files:
 - `--output-fift` only applies to compiled `.tolk` contracts. BoC contracts are
   already compiled, so Acton does not produce Fift for them.
 
+<AvailabilityBadge since="Acton 1.1" />
+
+The `types` interface and its ABI and wrapper support are available from Acton 1.1.
+
 This is useful for referencing third-party contracts.
 
 For the user-facing workflow, including interface files and wrapper generation,
 see [Precompiled BoC contracts](/docs/building/precompiled-boc).
+
+<AvailabilityBadge since="Acton 1.1" />
 
 This build mode is separate from TON network precompiled contracts configured
 through Param 45. During local emulation and tests, Acton honors Param 45

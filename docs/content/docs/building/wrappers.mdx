@@ -23,6 +23,8 @@ acton wrapper --all
 
 When generating all wrappers, use `--output-dir` to choose a directory. `--output` is only for a single contract because it names one file.
 
+<AvailabilityBadge since="Acton 1.1" />
+
 Precompiled `.boc` contracts can also have wrappers when their contract section
 points `types` to a Tolk interface file:
 
@@ -83,7 +85,6 @@ workchain and shard settings.
 
 Wrapper names and default filenames use the PascalCase contract ID from `Acton.toml`,
 independent of the source filename and `display-name`.
-See [wrapper upgrade steps](/docs/upgrade-to-1-2#regenerate-wrappers).
 
 ### Use a wrapper in a Tolk test
 

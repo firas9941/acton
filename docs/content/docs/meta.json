@@ -2,7 +2,6 @@
   "pages": [
     "welcome.mdx",
     "installation.mdx",
-    "upgrade-to-1-2",
     "quickstart.mdx",
     "walkthrough.mdx",
     "tutorial",

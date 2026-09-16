@@ -112,6 +112,8 @@ This section is a map where each key is a contract name and the value is a contr
 | `output`       | `string` | No       | Custom path where the compiled `.boc` should be saved.                  |
 | `wrappers`     | `table`  | No       | Per-contract overrides for the project-level `[wrappers]` settings.     |
 
+<AvailabilityBadge since="Acton 1.1" />
+
 For precompiled `.boc` contracts, `types` can point to a Tolk file that contains
 the contract header, message/storage types, and getters. Acton still loads code
 from `src`, but uses the `types` file to produce ABI and generate wrappers.
@@ -130,6 +132,8 @@ test-output-dir = "tests/generated/precompiled"
 [contracts.Precompiled.wrappers.typescript]
 output-dir = "app/src/wrappers/precompiled"
 ```
+
+<AvailabilityBadge since="Acton 1.2" />
 
 The nested `wrappers.tolk` and `wrappers.typescript` tables accept the same
 fields as their project-level counterparts. A field set for a contract

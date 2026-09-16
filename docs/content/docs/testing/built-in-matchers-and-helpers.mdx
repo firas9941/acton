@@ -38,6 +38,11 @@ Important matcher semantics:
 - Bounced-message opcode matching should be done with `toHaveBouncedTx()` or an explicit `bounced: true` filter.
 - Predicate functions can be useful for custom diagnostics, but runtime errors inside those predicates surface back to the test output.
 
+<AvailabilityBadge since="Acton 1.1" />
+
+The `sendMode` field filters child transactions by the parent send action's mode.
+It accepts an exact value or a predicate, like the other `SearchParams` fields.
+
 Go deeper in:
 
 - [SearchParams](/docs/standard_library/emulation/network#searchparams)
@@ -65,6 +70,8 @@ returns the saved stack with `meta.gasUsed` and `meta.exitCode`, including VM fa
 as `Ret`. `expect(result).toHaveExitCode(code)` checks the exit code without decoding.
 
 ## External message matchers
+
+<AvailabilityBadge since="Acton 1.1" />
 
 `net.sendExternal(...)` returns an `ExternalSendResult`. When the external-in
 message is accepted, `result.transactions` contains the produced transaction
