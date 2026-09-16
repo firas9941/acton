@@ -54,9 +54,7 @@ function sanitizeAmountInput(value: string): string {
   const digitsAndSeparators = value.replace(/[^0-9._]/g, "")
   const [integerPart, ...fractionParts] = digitsAndSeparators.split(".")
 
-  return fractionParts.length === 0
-    ? integerPart
-    : `${integerPart}.${fractionParts.join("")}`
+  return fractionParts.length === 0 ? integerPart : `${integerPart}.${fractionParts.join("")}`
 }
 
 function normalizeAmountInput(value: string): string {
