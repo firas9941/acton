@@ -210,6 +210,8 @@ Actonscan. Clients solve a proof-of-work challenge before submitting a claim.
 
 ### Testing Helpers
 
+- `SendResultList.getUsedGas<Msg>(params)` returns the gas used by the first matching
+  transaction. If none matches, the error shows the search parameters and transaction tree.
 - `testing.createExternalTraceIterationCursor()` executes an external-in
   message and its descendants step by step.
 - `testing.treasury(name, workchain)` can create treasuries outside the basechain,

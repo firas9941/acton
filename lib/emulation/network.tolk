@@ -775,6 +775,38 @@ fun SendResultList.findTransaction<Msg = unknown>(
     return (tx as Cell<TlbTransaction>).load();
 }
 
+/// Returns the gas used by the first transaction matching `params`.
+///
+/// If `Msg` has a declared serialization prefix, it overrides `params.opcode`.
+/// Fails if no transaction matches, showing the search parameters and available transactions.
+/// The matched transaction must have an ordinary VM compute phase; see [TlbTransaction.getUsedGas].
+///
+/// The `location` parameter is filled automatically for diagnostics.
+///
+/// Example:
+/// ```tolk
+/// val gas = txs.getUsedGas<IncreaseCounter>({ to: counter.address });
+/// expect(gas).toBeLess(10000);
+/// ```
+fun SendResultList.getUsedGas<Msg = unknown>(
+    self,
+    params: SearchParams = {},
+    location: string = reflect.sourceLocationAsString(),
+): int {
+    val declaredPrefix = Msg.__getDeclaredPackPrefix();
+    if (declaredPrefix != -1) {
+        params.opcode = declaredPrefix;
+    }
+
+    val tx = impl.findTransactionOrFail(
+        self,
+        params,
+        "SendResultList.getUsedGas(<expected>)",
+        location,
+    );
+    return (tx as Cell<TlbTransaction>).load().getUsedGas();
+}
+
 /// Send a message from a specified address.
 ///
 /// In broadcast mode (with `--net`), sending to the real network is attempted only when `from`
@@ -1620,12 +1652,13 @@ fun impl.findTransactionOrFail(
     params: SearchParams,
     message: string,
     location: string,
-): void {
+): cell {
     val tx = impl.findTransaction(txs, params);
     if (tx == null) {
         ffi.failToFindTransactionByParams(location, message, txs, params.__toPredicateFFITuple());
         throw ASSERTION_FAILED;
     }
+    return tx;
 }
 
 fun impl.findNoTransactionOrFail(
