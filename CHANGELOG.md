@@ -323,6 +323,8 @@ Actonscan. Clients solve a proof-of-work challenge before submitting a claim.
 
 ### Linter and Type Analysis
 
+- `S009`, `prefer-grams`, recommends `grams()` instead of standard-library `ton()`.
+  `acton check --fix` replaces calls when no local binding shadows `grams`.
 - `E031`, `unnecessary-not-null-assertion`, detects redundant `!` operators
   and provides an automatic fix.
 - `acton check` tracks mutations through generic method receivers, preventing
