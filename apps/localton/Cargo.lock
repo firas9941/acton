@@ -3375,7 +3375,7 @@ dependencies = [
 
 [[package]]
 name = "ton-fullnode-master"
-version = "1.1.0"
+version = "1.2.0"
 dependencies = [
  "anyhow",
  "futures",
@@ -3389,7 +3389,7 @@ dependencies = [
 
 [[package]]
 name = "ton-hardfork"
-version = "1.1.0"
+version = "1.2.0"
 dependencies = [
  "anyhow",
  "base64",
@@ -3402,7 +3402,7 @@ dependencies = [
 
 [[package]]
 name = "ton-indexer-core"
-version = "1.1.0"
+version = "1.2.0"
 dependencies = [
  "async-trait",
  "hex",
@@ -3415,7 +3415,7 @@ dependencies = [
 
 [[package]]
 name = "ton-indexer-liteserver"
-version = "1.1.0"
+version = "1.2.0"
 dependencies = [
  "async-trait",
  "futures",
@@ -3427,7 +3427,7 @@ dependencies = [
 
 [[package]]
 name = "ton-liteapi"
-version = "1.1.0"
+version = "1.2.0"
 dependencies = [
  "aes",
  "ctr",

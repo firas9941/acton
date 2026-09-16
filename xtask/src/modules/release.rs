@@ -10,7 +10,12 @@ pub(crate) const GITHUB_REPOSITORY_URL: &str = "https://github.com/ton-blockchai
 
 pub(crate) const ACTON_TOML_PATH: &str = "Acton.toml";
 pub(crate) const CARGO_TOML_PATH: &str = "Cargo.toml";
-pub(crate) const CARGO_LOCK_PATH: &str = "Cargo.lock";
+// These workspaces contain crates whose versions follow the Acton release.
+pub(crate) const CARGO_LOCK_PATHS: &[&str] = &[
+    "Cargo.lock",
+    "apps/localton/Cargo.lock",
+    "apps/actonscan-backend/Cargo.lock",
+];
 pub(crate) const DOCS_VERSIONS_PATH: &str = "docs/.versions";
 pub(crate) const PACKAGE_JSON_PATH: &str = "package.json";
 

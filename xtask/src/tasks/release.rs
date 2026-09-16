@@ -1,5 +1,5 @@
 use crate::modules::release::{
-    ACTON_TOML_PATH, CARGO_LOCK_PATH, CARGO_TOML_PATH, DEFAULT_BRANCH_NAME, DOCS_VERSIONS_PATH,
+    ACTON_TOML_PATH, CARGO_LOCK_PATHS, CARGO_TOML_PATH, DEFAULT_BRANCH_NAME, DOCS_VERSIONS_PATH,
     GITHUB_REPOSITORY_URL, PACKAGE_JSON_PATH, ReleaseContext, check_current_branch_is_master,
     check_local_master_matches_remote, check_master_github_build_succeeded,
     check_no_uncommitted_changes, check_release_tag_does_not_exist, check_release_version_format,
@@ -10,6 +10,7 @@ use crate::modules::workflow::{Workflow, WorkflowStep};
 use anyhow::{Context, Result, bail};
 use clap::Args;
 use std::fs;
+use std::path::Path;
 use std::process::Command;
 
 const CHANGELOG_PATH: &str = "CHANGELOG.md";
@@ -129,19 +130,21 @@ fn bump_versions_from_tag(context: &ReleaseContext) -> Result<()> {
         document["workspace"]["package"]["version"] = toml_edit::value(&context.version);
     })?;
     update_docs_versions_file(&context.version)?;
-    run_cargo_lock_update()?;
+    for path in CARGO_LOCK_PATHS {
+        run_cargo_lock_update(Path::new(path))?;
+    }
 
     Ok(())
 }
 
 fn create_version_bump_commit(context: &ReleaseContext) -> Result<()> {
-    let bump_files = [
+    let mut bump_files = vec![
         ACTON_TOML_PATH,
         CARGO_TOML_PATH,
-        CARGO_LOCK_PATH,
         DOCS_VERSIONS_PATH,
         PACKAGE_JSON_PATH,
     ];
+    bump_files.extend_from_slice(CARGO_LOCK_PATHS);
 
     context.git.add_files(&bump_files)?;
     context.git.commit(
@@ -206,16 +209,22 @@ fn run_yq_update(path: &str, field: &str, version: &str) -> Result<()> {
     Ok(())
 }
 
-fn run_cargo_lock_update() -> Result<()> {
+/// Refreshes each workspace's path dependency versions without upgrading registry dependencies.
+fn run_cargo_lock_update(lock_path: &Path) -> Result<()> {
+    let manifest_path = lock_path.with_extension("toml");
     let output = Command::new("cargo")
-        .args(["update", "--workspace"])
+        .args(["update", "--workspace", "--manifest-path"])
+        .arg(&manifest_path)
         .output()
-        .context("failed to run cargo update --workspace")?;
+        .with_context(|| format!("failed to update {}", lock_path.display()))?;
 
     if !output.status.success() {
         let stderr = String::from_utf8_lossy(&output.stderr).trim().to_owned();
 
-        bail!("cargo update --workspace failed: {stderr}");
+        bail!(
+            "cargo update --workspace --manifest-path {} failed: {stderr}",
+            manifest_path.display()
+        );
     }
 
     Ok(())
