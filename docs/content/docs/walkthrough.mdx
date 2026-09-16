@@ -50,8 +50,7 @@ Created Acton.toml with project configuration
 ```
 
 <Callout type="idea">
-  Pass `--agents` to add coding-agent guidance. See [`acton new`](/docs/commands/new) for all options.
-  When run without arguments, `acton new` prompts interactively.
+  Pass `--agents` to add coding-agent guidance. See [`acton new`](/docs/commands/new) for all options. When run without arguments, `acton new` prompts interactively.
 
   <AvailabilityBadge since="Acton 1.2" />
 
@@ -352,6 +351,12 @@ Filter tests and inspect the traces:
 Inspect the coverage:
 
 ![](ide-support/imgs/test-ui/coverage.png)
+
+<Callout type="tip">
+  <AvailabilityBadge since="Acton 1.2" />
+
+  Test UI's result and transaction inspector, as well as coverage and gas profiling, are included in Acton Studio's <kbd>[Local tests](/docs/studio#local-tests)</kbd>, alongside project-wide test run history.
+</Callout>
 
 ### Run mutation testing
 
@@ -809,8 +814,7 @@ Use [`acton rpc`](/docs/commands/rpc) to query remote blockchain account and con
 acton rpc info <CONTRACT_ADDRESS> --net testnet
 ```
 
-If automatic ABI matching is unavailable, pass compiler ABI JSON or a Tolk
-interface explicitly:
+If automatic ABI matching is unavailable, pass compiler ABI JSON or a Tolk interface explicitly:
 
 <AvailabilityBadge since="Acton 1.2" />
 
@@ -856,6 +860,12 @@ acton doctor
 Run this command and fix discovered issues before filing a bug report.
 
 ## Next steps
+
+Develop alongside [Acton Studio](/docs/studio). Use <kbd>Local tests</kbd> for inspecting test runs, a simulator network for application development, and the same UI and network tools on testnet and mainnet:
+
+```bash
+acton studio
+```
 
 - [Testing guide](/docs/testing/overview) — deep dive into writing comprehensive tests.
 - [Acton's Tolk libraries](/docs/standard_library/overview)

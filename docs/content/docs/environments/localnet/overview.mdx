@@ -1,0 +1,55 @@
+---
+title: "Localnet overview"
+sidebarTitle: "Overview"
+description: "Localnet behavior, prerequisites, node controls, and resource requirements"
+---
+
+<AvailabilityBadge since="Acton 1.2" />
+
+A localnet runs TON `validator-engine` nodes and TON Center v2/v3 services in Docker. It includes consensus and validator elections. Use it for tests that depend on validator, full-node, or indexer behavior without relying on testnet availability.
+
+## Requirements and startup
+
+### Prerequisites
+
+- [Acton](/docs/installation) 1.2 or later installed.
+- An [Acton project](/docs/projects#create-or-initialize-a-project) containing `Acton.toml`.
+- For startup accounts, [configured project wallets](/docs/wallets#create-a-wallet).
+- A running [Docker engine](https://docs.docker.com/engine/install/) with [Compose v2](https://docs.docker.com/compose/install/). Note that [Docker Desktop](https://docs.docker.com/desktop/setup/install/) includes both.
+
+### Verify Docker availability
+
+Check that the engine and Compose are available:
+
+```bash
+docker info
+docker compose version
+```
+
+### Startup and storage
+
+A full node can take about 20 seconds to start with images already available. Image downloads, additional nodes, and indexer initialization can make startup take longer, including several minutes on a first launch. Wait for node, API, and indexer readiness before sending requests.
+
+<Callout type="caution">
+  Insufficient Docker disk space can interrupt localnet operation. Each node can use up to about 9.3 GiB per day.
+
+  Allocate space for all nodes, indexers, snapshot archives, and temporary restore data before startup.
+</Callout>
+
+## Create and connect
+
+[Create a localnet](/docs/environments/how-to/create-network) and [connect clients](/docs/environments/how-to/connect) through Studio or the standalone CLI.
+
+## Localnet controls
+
+- [Manage nodes and validators](/docs/environments/localnet/nodes) to test synchronization and election participation.
+- [Inspect network health](/docs/environments/how-to/inspect-network) to diagnose node, API, and indexer failures.
+- [Change blockchain configuration](/docs/environments/how-to/change-config) and [generate test traffic](/docs/environments/localnet/activity).
+- [Import accounts](/docs/environments/how-to/fork-and-import) or [edit account state](/docs/environments/localnet/admin-actions).
+- [Save snapshots](/docs/environments/how-to/snapshots) and [manage lifecycle](/docs/environments/how-to/manage-lifecycle).
+
+## Timing and API conditions
+
+The [`--block-time-ms` option](/docs/commands/localnet#acton-localnet-start) sets an initial block-time target when creating a localnet. Actual timing depends on consensus and resources.
+
+A localnet has no virtual clock, manual mining, or synthetic API rate-limit and response-delay controls. Use simulator [time controls](/docs/environments/simulator/time) or [API conditions](/docs/environments/simulator/network-conditions) for those scenarios.

@@ -17,7 +17,7 @@ Studio provides test history, contract inspection, wallets, and local environmen
 It listens on `127.0.0.1:3015` by default. Keep the command running while using Studio.
 
 Workspace metadata, test history, and managed environment data are stored under
-`.studio/` in the project. Docker is required for Localnet environments;
+`.studio/` in the project. Docker is required for localnet environments;
 Simulator environments do not require Docker.
 
 ## Options
@@ -59,7 +59,7 @@ acton --project-root ../my-project studio
 
 ## See Also
 
-- [Studio guide](https://ton-blockchain.github.io/acton/docs/studio/getting-started)
+- [Studio guide](https://ton-blockchain.github.io/acton/docs/studio#get-started)
 - `acton help test`
 - `acton help simulator`
 - `acton help localnet`

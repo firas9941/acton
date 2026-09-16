@@ -1,0 +1,10 @@
+{
+  "title": "Virtual environments",
+  "icon": "Server",
+  "pages": [
+    "overview",
+    "how-to",
+    "simulator",
+    "localnet"
+  ]
+}

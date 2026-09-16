@@ -1,0 +1,11 @@
+{
+  "title": "Simulator",
+  "pages": [
+    "overview",
+    "time",
+    "network-conditions",
+    "api-compatibility",
+    "liteapi",
+    "control-api"
+  ]
+}

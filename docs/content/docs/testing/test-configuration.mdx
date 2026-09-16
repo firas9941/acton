@@ -5,6 +5,12 @@ description: "Learn how to configure test runner behavior through project settin
 
 Default test behavior is set in `Acton.toml`. Command-line flags override those defaults for a single run.
 
+<Callout type="note">
+  <AvailabilityBadge since="Acton 1.2" />
+
+  These settings apply to emulator tests, including runs inspected in [Acton Studio](/docs/studio#local-tests). Persistent [simulator networks](/docs/environments/simulator/overview) are configured separately before the workflow continues to testnet and mainnet.
+</Callout>
+
 ## Configuration methods
 
 Acton supports two methods for configuring test behavior:
@@ -114,7 +120,7 @@ fail-fast = true
 
 <AvailabilityBadge since="Acton 1.2" />
 
-Test runs report to [Studio](/docs/studio/tests) when it is running for the same
+Test runs report to [Studio](/docs/studio#local-tests) when it is running for the same
 project. Set `[test].studio-reporting = false` or pass `--no-studio-reporting`
 to disable reporting. Reporting failures do not change test results.
 
@@ -211,8 +217,7 @@ include-tests = true
 
 ### Fuzz options
 
-These defaults apply only to parameterized tests that explicitly opt in with `@test.fuzz`, `@test.fuzz(<runs>)`, or `@test.fuzz({ ... })`. Per-test annotations can override them with
-`@test.fuzz({ runs: ..., max_test_rejects: ..., seed: ... })`. When `max-test-rejects` is omitted, Acton uses `runs * 256`.
+These defaults apply only to parameterized tests that explicitly opt in with `@test.fuzz`, `@test.fuzz(<runs>)`, or `@test.fuzz({ ... })`. Per-test annotations can override them with `@test.fuzz({ runs: ..., max_test_rejects: ..., seed: ... })`. When `max-test-rejects` is omitted, Acton uses `runs * 256`.
 
 See the [fuzz testing](/docs/testing/fuzz-testing) guide for annotation syntax, helper APIs, supported parameter types, and failure reporting.
 
@@ -240,17 +245,13 @@ seed = 42
 | `gas-profile-format`        | `--gas-profile-format`        | String  | Gas profile output format (`cpuprofile`, `collapsed`)                 |
 | `gas-profile-include-tests` | `--gas-profile-include-tests` | Boolean | Include `.test.tolk` unit-test get-method execution in the profile    |
 
-`fail-on-diff` is applied when running baseline comparison mode with
-`--baseline-snapshot <FILE>`.
+`fail-on-diff` is applied when running baseline comparison mode with `--baseline-snapshot <FILE>`.
 
 <AvailabilityBadge since="Acton 1.2" />
 
 `gas-profile`, `gas-profile-format`, and `gas-profile-include-tests` are available from Acton 1.2.
 
-Gas profile options apply when `gas-profile` or `--gas-profile <FILE>` is set.
-Combine `--gas-profile <FILE>` with `--ui` to browse the profile as a
-flamegraph in Test UI. Add `--gas-profile-include-tests` when the expensive
-work is executed directly from `.test.tolk` unit-test get methods.
+Gas profile options apply when `gas-profile` or `--gas-profile <FILE>` is set. Combine `--gas-profile <FILE>` with `--ui` to browse the profile as a flamegraph in Test UI. Add `--gas-profile-include-tests` when the expensive work is executed directly from `.test.tolk` unit-test get methods.
 
 Examples:
 
@@ -333,12 +334,9 @@ ui-port = 23456
 
 <AvailabilityBadge since="Acton 1.2" />
 
-`--no-fork-cache` disables persistent account and library cache reads and writes.
-It does not disable the masterchain snapshot cache. See [fork caching](/docs/testing/fork-testing#cache-scope-and-refresh-behavior).
+`--no-fork-cache` disables persistent account and library cache reads and writes. It does not disable the masterchain snapshot cache. See [fork caching](/docs/testing/fork-testing#cache-scope-and-refresh-behavior).
 
-The fork uses state and network configuration from the same masterchain block.
-When `fork-block-number` is set, it also uses that block's Unix time; otherwise,
-it uses the current system Unix time.
+The fork uses state and network configuration from the same masterchain block. When `fork-block-number` is set, it also uses that block's Unix time; otherwise, it uses the current system Unix time.
 
 Examples:
 

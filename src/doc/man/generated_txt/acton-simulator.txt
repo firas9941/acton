@@ -9,7 +9,7 @@ SYNOPSIS
 DESCRIPTION
        Available since Acton 1.2.
 
-       Acton Simulator is a fast, deterministic TON development environment for
+       Acton simulator is a fast, deterministic TON development environment for
        local execution, forked-state development, and faucet-based funding. It
        produces TON-compatible blocks and provides LiteAPI, TON Center v2/v3,
        Streaming API, and Emulate API surfaces used by many contract and dApp
@@ -80,14 +80,14 @@ SUBCOMMANDS
 
           --liteapi
               Start the LiteAPI server on the TCP port immediately after the
-              Simulator HTTP port. LiteAPI is disabled by default.
+              simulator HTTP port. LiteAPI is disabled by default.
 
           --liteapi-port port
               Set the LiteAPI TCP port explicitly. Requires --liteapi;
-              otherwise LiteAPI uses the Simulator HTTP port plus one.
+              otherwise LiteAPI uses the simulator HTTP port plus one.
 
           --require-auth
-              Require a token for all Simulator HTTP API, control, emulate, and
+              Require a token for all simulator HTTP API, control, emulate, and
               streaming endpoints. The server prints the token on startup.
 
    acton simulator airdrop
@@ -111,7 +111,7 @@ SUBCOMMANDS
               omitted, Acton reads ACTON_LOCALNET_AUTH_TOKEN.
 
    acton simulator mine
-       Mine Simulator blocks manually. Empty blocks are skipped unless
+       Mine simulator blocks manually. Empty blocks are skipped unless
        --mine-empty-blocks was enabled at startup or the mining mode was
        changed through POST /acton_setMiningMode.
 
@@ -130,14 +130,14 @@ SUBCOMMANDS
               omitted, Acton reads ACTON_LOCALNET_AUTH_TOKEN.
 
    acton simulator increase-time
-       Increase the Simulator virtual clock.
+       Increase the simulator virtual clock.
 
       Synopsis
           acton simulator increase-time [options] seconds
 
       Options
           seconds
-              Seconds to add to the virtual Simulator clock.
+              Seconds to add to the virtual simulator clock.
 
           -p, --port port
               Simulator HTTP port.
@@ -147,7 +147,7 @@ SUBCOMMANDS
               omitted, Acton reads ACTON_LOCALNET_AUTH_TOKEN.
 
    acton simulator set-time
-       Set the Simulator virtual clock.
+       Set the simulator virtual clock.
 
       Synopsis
           acton simulator set-time [options] timestamp
@@ -165,7 +165,7 @@ SUBCOMMANDS
               omitted, Acton reads ACTON_LOCALNET_AUTH_TOKEN.
 
    acton simulator set-next-block-timestamp
-       Set a one-shot timestamp for the next Simulator block.
+       Set a one-shot timestamp for the next simulator block.
 
       Synopsis
           acton simulator set-next-block-timestamp [options] timestamp
@@ -184,7 +184,7 @@ SUBCOMMANDS
               omitted, Acton reads ACTON_LOCALNET_AUTH_TOKEN.
 
    acton simulator status
-       Inspect the current Simulator status.
+       Inspect the current simulator status.
 
       Synopsis
           acton simulator status [options]
@@ -201,7 +201,7 @@ SUBCOMMANDS
               omitted, Acton reads ACTON_LOCALNET_AUTH_TOKEN.
 
    acton simulator snapshot
-       Save and restore persistent JSON snapshots of a Simulator.
+       Save and restore persistent JSON snapshots of a simulator.
 
       Synopsis
           acton simulator snapshot [options] command
@@ -229,7 +229,7 @@ SUBCOMMANDS
           updates SQLite when persistence is enabled.
 
           Relative file paths resolve from the Acton project root. These
-          commands call the running Simulator control API. Pass --port or
+          commands call the running simulator control API. Pass --port or
           --auth-token when needed, and --json for structured output. Use the
           returned ID for restore, delete, and export.
 
@@ -254,11 +254,11 @@ CONFIGURATION
        resolves from the current working directory.
 
 TON CENTER API KEYS
-       When Simulator forks from the built-in mainnet/testnet backends,
+       When simulator forks from the built-in mainnet/testnet backends,
        authenticated requests read TONCENTER_MAINNET_API_KEY or
        TONCENTER_TESTNET_API_KEY.
 
-       When Simulator forks from custom:<name>, Acton reads
+       When simulator forks from custom:<name>, Acton reads
        <NORMALIZED_NAME>_API_KEY. Custom network names are uppercased and
        non-alphanumeric characters are replaced with _, so custom:mock-remote
        becomes MOCK_REMOTE_API_KEY.
@@ -268,7 +268,7 @@ TON CENTER API KEYS
        variables only for one-off overrides or CI.
 
 SIMULATOR API AUTH
-       acton simulator start --require-auth protects every Simulator HTTP route
+       acton simulator start --require-auth protects every simulator HTTP route
        under /api/*, /acton_*, /api/emulate/*, and /api/streaming/*. Static UI
        files remain public, but the bundled UI does not receive the token from
        the server. When a protected API request returns 401, the bundled UI
@@ -276,7 +276,7 @@ SIMULATOR API AUTH
        protected API views. The key button in the sidebar footer reopens the
        same overlay.
 
-       When auth is enabled, the server prints a Simulator API token. Pass it
+       When auth is enabled, the server prints a simulator API token. Pass it
        as either:
 
            Authorization: Bearer <TOKEN>
@@ -286,10 +286,10 @@ SIMULATOR API AUTH
        TON Center-compatible clients. Browser WebSocket clients can pass
        token=<TOKEN> only on /api/streaming/v2/ws.
 
-       For CLI subcommands that call Simulator control routes, pass
+       For CLI subcommands that call simulator control routes, pass
        --auth-token or set ACTON_LOCALNET_AUTH_TOKEN. If
        ACTON_LOCALNET_AUTH_TOKEN is set when starting with --require-auth,
-       Simulator uses that value; otherwise it generates and prints a fresh
+       simulator uses that value; otherwise it generates and prints a fresh
        token.
 
 RUNTIME MODEL
@@ -298,13 +298,13 @@ RUNTIME MODEL
        o  acton simulator start runs in the foreground until the process is
           stopped
 
-       o  Acton starts an HTTP server on 127.0.0.1:<port> for Simulator API,
-          control endpoints, and the bundled Simulator UI
+       o  Acton starts an HTTP server on 127.0.0.1:<port> for simulator API,
+          control endpoints, and the bundled simulator UI
 
        o  the server keeps running until the process is stopped, for example
           with Ctrl+C
 
-       o  the Simulator UI is available on the root path, for example
+       o  the simulator UI is available on the root path, for example
           http://127.0.0.1:<port>/
 
        o  the node checks for pending messages every --block-time-ms
@@ -352,7 +352,7 @@ RUNTIME MODEL
           value
 
 CONTROL ENDPOINTS
-       The Simulator server exposes acton_* control routes for local
+       The simulator server exposes acton_* control routes for local
        development tooling:
 
        o  GET /acton_nodeInfo returns uptime, latest block seqno, and the
@@ -402,7 +402,7 @@ CONTROL ENDPOINTS
           empty blocks for automatic and manual mining; use true to skip them
 
        o  POST /acton_increaseTime with {"seconds":3600} adds seconds to the
-          virtual Simulator clock
+          virtual simulator clock
 
        o  POST /acton_setTime with {"timestamp":1710000000} sets the current
           virtual Unix time
@@ -424,8 +424,8 @@ CONTROL ENDPOINTS
 
        Control endpoints are unauthenticated by default for local development.
        Use --require-auth when another local process, browser page, or test
-       harness should not be able to read or mutate the running Simulator
-       without the token. Do not expose the Simulator server publicly.
+       harness should not be able to read or mutate the running simulator
+       without the token. Do not expose the simulator server publicly.
 
 PERSISTENCE
        o  --db-path or [localnet].db-path enables persistent SQLite-backed node
@@ -490,7 +490,7 @@ EXAMPLES
 
               acton simulator start --accounts deployer,user --db-path build/localnet.db
 
-       6. Inspect a running Simulator:
+       6. Inspect a running simulator:
 
               acton simulator status --json
 
@@ -506,5 +506,5 @@ SEE ALSO
        o  acton help wallet
 
        o  Simulator guide
-          <https://ton-blockchain.github.io/acton/docs/simulator/overview>
+          <https://ton-blockchain.github.io/acton/docs/environments/simulator/overview>
 

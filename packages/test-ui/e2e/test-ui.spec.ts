@@ -322,7 +322,7 @@ const openOwnerCanSendJettonsTreasuryDeploys = async (page: Page) => {
 const openOwnerCanSendJettonsFeeSummaryTreasuryDeploys = async (page: Page) => {
   await openOwnerCanSendJettons(page)
   await expect(page.getByRole("tab", {name: "Info"})).toHaveAttribute("aria-selected", "true")
-  await expect(page.getByText("Fee Summary", {exact: true})).toBeVisible()
+  await expect(page.getByText("Fee summary", {exact: true})).toBeVisible()
 
   const treasuryDeployToggle = page.getByRole("button", {name: /\d+ treasury deploys?/}).first()
   await expect(treasuryDeployToggle).toBeVisible()
@@ -335,7 +335,7 @@ const openOwnerCanSendJettonsFeeSummaryTreasuryDeploys = async (page: Page) => {
 const openTrace4FromFeeSummary = async (page: Page) => {
   await openOwnerCanSendJettons(page)
   await expect(page.getByRole("tab", {name: "Info"})).toHaveAttribute("aria-selected", "true")
-  await expect(page.getByText("Fee Summary", {exact: true})).toBeVisible()
+  await expect(page.getByText("Fee summary", {exact: true})).toBeVisible()
 
   await page.getByRole("button", {name: /Trace 4/}).click()
   await expect(page.getByRole("tab", {name: "Transactions"})).toHaveAttribute(
@@ -722,7 +722,7 @@ test.describe("Test UI", () => {
 
       await page.getByRole("button", {name: /owner can send jettons/}).click()
       await expect(page.getByTestId("test-details-title")).toContainText("owner can send jettons")
-      await expect(page.getByText("Fee Summary", {exact: true})).toBeVisible()
+      await expect(page.getByText("Fee summary", {exact: true})).toBeVisible()
       await expectStableScreenshot(page, "test-ui-info.png")
 
       await page.getByPlaceholder("Filter tests...").fill("owner can send")
@@ -774,7 +774,7 @@ test.describe("Test UI", () => {
 
       await page.getByRole("tab", {name: "Tests"}).click()
       await page.getByRole("tab", {name: "Info"}).click()
-      await expect(page.getByText("Fee Summary", {exact: true})).toBeVisible()
+      await expect(page.getByText("Fee summary", {exact: true})).toBeVisible()
       await expectStableScreenshot(page, "test-ui-dark-info.png", {theme: "dark"})
 
       await page.getByRole("tab", {name: "Transactions"}).click()

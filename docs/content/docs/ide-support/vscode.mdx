@@ -7,6 +7,12 @@ import {LandingVideo} from "@/components/LandingVideo"
 
 The [TON extension for VS Code](https://marketplace.visualstudio.com/items?itemName=ton-core.vscode-ton) supports Acton development, providing intelligent features and toolchain integration.
 
+<Callout type="tip">
+  <AvailabilityBadge since="Acton 1.2" />
+
+  Keep [Acton Studio](/docs/studio) running alongside the editor for rebuilds and additional development tools.
+</Callout>
+
 For installation instructions, see the [official TON documentation](https://docs.ton.org/contracts/ide/vscode).
 
 ## Supported editors
@@ -45,9 +51,7 @@ See the [command reference](/docs/commands/ls) and
 
 ## Recommended TOML extension
 
-We recommend installing [Even Better TOML](https://marketplace.visualstudio.com/items?itemName=tamasfe.even-better-toml)
-as well. It ensures `Acton.toml` is treated as TOML, while the TON language server provides
-Acton schema completion and hover documentation for the file.
+We recommend installing [Even Better TOML](https://marketplace.visualstudio.com/items?itemName=tamasfe.even-better-toml) as well. It ensures `Acton.toml` is treated as TOML, while the TON language server provides Acton schema completion and hover documentation for the file.
 
 ## `Acton.toml` support
 
@@ -69,15 +73,13 @@ Code lenses allow running builds and tests directly from the `Acton.toml` file.
 
 ## Contract actions
 
-For contracts declared in Tolk files, the extension adds code lenses to build the contract and
-generate Tolk or TypeScript wrappers.
+For contracts declared in Tolk files, the extension adds code lenses to build the contract and generate Tolk or TypeScript wrappers.
 
 ![](imgs/vscode/contract-actions.png)
 
 ## Disassembly
 
-The extension can open an assembly preview for a Tolk contract, making it easier to inspect the
-compiled code without leaving the editor.
+The extension can open an assembly preview for a Tolk contract, making it easier to inspect the compiled code without leaving the editor.
 
 ![](imgs/vscode/disassembly.png)
 
@@ -87,8 +89,7 @@ compiled code without leaving the editor.
 
 Acton tests integrate with the IDE's native test runner, providing a hierarchical view and progress indicators.
 
-![](imgs/vscode/test-runner.png)
-![](imgs/vscode/test-runner-tree.png)
+![](imgs/vscode/test-runner.png) ![](imgs/vscode/test-runner-tree.png)
 
 For convenient execution, the extension provides a test run icon in the editor.
 
@@ -102,8 +103,7 @@ When a test fails, the extension highlights the specific `expect` call that fail
 
 ### Debugging
 
-Set breakpoints in Tolk tests and contracts, start
-debugging from the editor, and inspect stack frames, local values, and TVM registers.
+Set breakpoints in Tolk tests and contracts, start debugging from the editor, and inspect stack frames, local values, and TVM registers.
 
 ![](imgs/vscode/debug.png)
 
@@ -136,14 +136,12 @@ Scripts can be executed via code lenses:
 
 ### Terminal links
 
-TON addresses in Acton terminal output are converted into clickable links that open the configured
-block explorer.
+TON addresses in Acton terminal output are converted into clickable links that open the configured block explorer.
 
 ![](imgs/vscode/terminal-links.png)
 
 ### Linting
 
-The language server runs the Acton linter for Tolk files and reports diagnostics directly in the editor.
-Available fixes can be applied from the Problems panel or the inline quick-fix menu.
+The language server runs the Acton linter for Tolk files and reports diagnostics directly in the editor. Available fixes can be applied from the Problems panel or the inline quick-fix menu.
 
 ![](imgs/vscode/check.png)

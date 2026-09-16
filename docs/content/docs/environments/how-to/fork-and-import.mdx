@@ -1,0 +1,77 @@
+---
+title: "How to fork or import network state"
+sidebarTitle: "Fork or import state"
+description: "Learn how to fork public state into a simulator or copy account state into a localnet"
+---
+
+import {Tabs, Tab} from "fumadocs-ui/components/tabs";
+
+<AvailabilityBadge since="Acton 1.2" />
+
+[Fork a simulator](/docs/environments/simulator/overview) from a public-network block, or copy selected accounts into a localnet. Both execute locally without changing the source network or tracking its later state.
+
+<Callout type="caution">
+  Importing into an existing localnet pauses it for a hardfork and replaces accounts at the selected addresses. Save a [snapshot](/docs/environments/how-to/snapshots) first to recover overwritten state.
+</Callout>
+
+## Prerequisites
+
+- [Acton](/docs/installation) 1.2 or later installed.
+- An [Acton project](/docs/projects#create-or-initialize-a-project) containing `Acton.toml`.
+- A source remote procedure call (RPC) provider and any required API key. Historical forks require access to the selected block.
+- For localnet, a running Docker engine with [Compose v2](https://docs.docker.com/compose/install/), as specified in the [localnet requirements](/docs/environments/localnet/overview#requirements-and-startup).
+- For Studio imports, the target accounts' addresses.
+
+## Select the source state
+
+<Tabs items={["UI", "Simulator CLI", "Localnet CLI"]}>
+<Tab value="UI">
+
+For a simulator:
+
+1. Open <kbd>Create environment</kbd> and select <kbd>Simulator</kbd>.
+1. Set <kbd>Initial state</kbd> to <kbd>Fork testnet</kbd> or <kbd>Fork mainnet</kbd>.
+1. Optionally enter a masterchain sequence number in <kbd>Fork block</kbd>.
+1. Select startup accounts and create the environment.
+
+For localnet:
+
+1. Add account imports during creation or open <kbd>Import accounts</kbd> on an existing network.
+1. Select a source environment and enter each active account address. Optionally name the contract.
+1. Submit the imports to copy code, data, and balances.
+
+</Tab>
+<Tab value="Simulator CLI">
+
+Pin testnet state at a masterchain block served by the provider. Replace `<BLOCK_SEQNO>` with that block's sequence number:
+
+```bash
+acton simulator start --port 5411 --fork-net testnet --fork-block-number '<BLOCK_SEQNO>'
+```
+
+Omit [`--fork-block-number`](/docs/commands/simulator#acton-simulator-start) to resolve the latest block once during startup. Use `--fork-net mainnet` for mainnet, or `custom:<NAME>` for a network entry in `Acton.toml`, replacing `<NAME>` with its name. Use a fresh database when changing the fork origin.
+
+Acton loads matching provider keys from `.env`: `TONCENTER_TESTNET_API_KEY`, `TONCENTER_MAINNET_API_KEY`, or `<NORMALIZED_NAME>_API_KEY` for custom networks. Custom names are uppercased and non-alphanumeric characters become underscores.
+
+A historical fork uses the selected block's configuration and Unix time. A latest fork uses the pinned block's configuration and starts its clock from system time. Masterchain state is cached under `build/cache/masterchain-snapshots/` for 24 hours; a latest fork still resolves the latest block on startup. Pass the global `--clear-cache` flag to discard cached snapshots.
+
+</Tab>
+<Tab value="Localnet CLI">
+
+Prepare `accounts.json` as an array of hexadecimal bags of cells (BoCs) containing `ShardAccount` values. Each entry must contain a complete active basechain account with a distinct address. Plain addresses, base64 strings, and contract data cells alone are not valid imports.
+
+```bash
+acton localnet start imported --accounts-file accounts.json --detach
+```
+
+The [`--accounts-file`](/docs/commands/localnet#acton-localnet-start) applies only when creating a network. To replace accounts in an existing network, use Studio's import dialog or the [administrative API](/docs/environments/localnet/admin-actions).
+
+Imported dependencies must be included explicitly — localnet does not fetch missing accounts lazily.
+
+</Tab>
+</Tabs>
+
+## Verify the imported state
+
+- In a simulator, inspect the fork block on <kbd>Home</kbd> and open a source account in <kbd>Explorer</kbd>.
+- In localnet, inspect imported code, storage, and balance. Source transactions do not appear as local history. [Save a snapshot](/docs/environments/how-to/snapshots) before modifying the copied state.

@@ -611,7 +611,7 @@ export const TestDetails: React.FC<TestDetailsProps> = ({
           )}
           {!isSingleFailedMessage && (
             <div className={styles.txHeader}>
-              <span>Failed Message #{index + 1}</span>
+              <span>Failed message #{index + 1}</span>
             </div>
           )}
           <div className={styles.logSection}>
@@ -629,7 +629,7 @@ export const TestDetails: React.FC<TestDetailsProps> = ({
                 collapsible
                 copyLabel="VM exit code"
                 defaultExpanded={false}
-                title="VM Exit Code"
+                title="VM exit code"
                 value={failedMessage.vm_exit_code.toString()}
               />
             </div>
@@ -640,7 +640,7 @@ export const TestDetails: React.FC<TestDetailsProps> = ({
                 collapsible
                 copyLabel="Executor log"
                 defaultExpanded={false}
-                title="Executor Log"
+                title="Executor log"
                 value={failedMessage.executor_logs ?? ""}
               />
             </div>
@@ -650,7 +650,7 @@ export const TestDetails: React.FC<TestDetailsProps> = ({
               collapsible
               copyLabel="VM log"
               defaultExpanded={false}
-              title="VM Log"
+              title="VM log"
               empty={!hasVmLog}
               emptyContent={MISSING_VM_LOG_HINT}
               value={failedMessage.vm_log_diff ?? ""}
@@ -666,19 +666,19 @@ export const TestDetails: React.FC<TestDetailsProps> = ({
       {
         copyLabel: "Test stdout",
         emptyContent: "No test output was produced",
-        title: "Test Output",
+        title: "Test output",
         value: executionLogs?.stdout ?? "",
       },
       {
         copyLabel: "Test stderr",
         emptyContent: "No test error output was produced",
-        title: "Test Error Output",
+        title: "Test error output",
         value: executionLogs?.stderr ?? "",
       },
       {
         copyLabel: "Test VM log",
         emptyContent: "No test VM log was collected",
-        title: "Test VM Log",
+        title: "Test VM log",
         value: executionLogs?.vm_log ?? "",
       },
     ]
@@ -820,7 +820,7 @@ export const TestDetails: React.FC<TestDetailsProps> = ({
 
           {test.status === TestStatus.Failed && (
             <div className={styles.errorSection}>
-              <div className={styles.errorTitle}>Error Message</div>
+              <div className={styles.errorTitle}>Error message</div>
               <RawDataBlock
                 value={
                   test.failed_transaction_context
@@ -904,19 +904,19 @@ export const TestDetails: React.FC<TestDetailsProps> = ({
           )}
 
           <div className={styles.traceFeesSection}>
-            <div className={styles.traceFeesTitle}>Fee Summary</div>
+            <div className={styles.traceFeesTitle}>Fee summary</div>
             <DataTable aria-busy={isTraceLoading} minWidth="62rem">
               <DataTableTable aria-label="Trace fee summary">
                 <DataTableHead>
                   <DataTableRow>
                     <DataTableHeaderCell columnWidth="16rem">Trace</DataTableHeaderCell>
                     <DataTableHeaderCell align="center" columnWidth="8rem">
-                      Tx Count
+                      Tx count
                     </DataTableHeaderCell>
-                    <DataTableHeaderCell columnWidth="8rem">Gas Used</DataTableHeaderCell>
-                    <DataTableHeaderCell columnWidth="12rem">Gas Fee</DataTableHeaderCell>
-                    <DataTableHeaderCell columnWidth="13rem">Forward Fee</DataTableHeaderCell>
-                    <DataTableHeaderCell columnWidth="13rem">Total Fee</DataTableHeaderCell>
+                    <DataTableHeaderCell columnWidth="8rem">Gas used</DataTableHeaderCell>
+                    <DataTableHeaderCell columnWidth="12rem">Gas fee</DataTableHeaderCell>
+                    <DataTableHeaderCell columnWidth="13rem">Forward fee</DataTableHeaderCell>
+                    <DataTableHeaderCell columnWidth="13rem">Total fee</DataTableHeaderCell>
                   </DataTableRow>
                 </DataTableHead>
                 <DataTableBody>
@@ -1016,7 +1016,7 @@ export const TestDetails: React.FC<TestDetailsProps> = ({
                       collapsible
                       copyLabel="Executor log"
                       defaultExpanded={selectedLogLt === tx.lt && !hasVmLog}
-                      title="Executor Log"
+                      title="Executor log"
                       value={tx.executor_logs}
                       data-visual-dynamic="executor-log"
                       data-visual-placeholder="<executor log>"
@@ -1028,7 +1028,7 @@ export const TestDetails: React.FC<TestDetailsProps> = ({
                     collapsible
                     copyLabel="VM log"
                     defaultExpanded={selectedLogLt === tx.lt && hasVmLog}
-                    title="VM Log"
+                    title="VM log"
                     empty={!hasVmLog}
                     emptyContent={MISSING_VM_LOG_HINT}
                     value={tx.vm_log_diff}
@@ -1053,7 +1053,7 @@ export const TestDetails: React.FC<TestDetailsProps> = ({
                 collapsible
                 copyLabel="VM log"
                 defaultExpanded={false}
-                title="VM Log"
+                title="VM log"
                 empty
                 emptyContent={MISSING_VM_LOG_HINT}
                 value=""
@@ -1278,7 +1278,7 @@ export const TestDetails: React.FC<TestDetailsProps> = ({
               onClick={handleToggleValueFlow}
               aria-expanded={isValueFlowExpanded}
             >
-              <span>{isValueFlowExpanded ? "Hide" : "Show"} Value Flow</span>
+              <span>{isValueFlowExpanded ? "Hide" : "Show"} value flow</span>
               {isValueFlowExpanded ? <FiChevronUp /> : <FiChevronDown />}
             </button>
           )}

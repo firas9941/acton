@@ -6,7 +6,7 @@ All notable changes to this project will be documented in this file.
 
 This release introduces **Acton Studio**, a browser workspace for testing,
 deploying, and debugging TON applications. **Simulator** provides lightweight
-local execution and network forks, while **Localnet** runs real TON validators
+local execution and network forks, while **localnet** runs real TON validators
 in Docker. **Actonscan** and the new source verifier bring transaction inspection,
 verified contract code, and browser-based debugging into the same workflow.
 
@@ -57,19 +57,19 @@ and formatter fixes address cases where formatting lost code or broke syntax.
 
 ### Acton Studio
 
-[Acton Studio](docs/content/docs/studio/overview.mdx) is a local browser workspace
+[Acton Studio](docs/content/docs/studio.mdx) is a local browser workspace
 for an Acton project. Start it with `acton studio` at `127.0.0.1:3015`.
 
 - Run tests and inspect saved results, logs, traces, coverage, gas profiles,
   and mutation reports.
-- Manage Simulator and Localnet environments alongside mainnet and testnet.
+- Manage simulator and localnet environments alongside mainnet and testnet.
   Inspect contracts, deploy with project wallets, and review network API calls.
 - Control local environments from one workspace, with snapshots, wallet
   funding, configuration editing, and operation progress.
 
 ### Simulator
 
-[Acton Simulator](docs/content/docs/simulator/overview.mdx) runs a lightweight TON
+[Acton simulator](docs/content/docs/environments/simulator/overview.mdx) runs a lightweight TON
 simulation with `acton simulator`. It supports local development and forks of
 mainnet or testnet state without running validators.
 
@@ -84,8 +84,8 @@ mainnet or testnet state without running validators.
 ### Localnet
 
 [Localnet](docs/content/docs/commands/localnet.mdx) runs a real TON network in
-Docker, managed through `acton localnet` or Studio. The Localton runtime supplies
-validators, LiteServer, TON Center v2/v3, and indexers.
+Docker, managed through `acton localnet` or Studio. The `localton` runtime supplies
+validators, a liteserver, TON Center v2/v3 APIs, and indexers.
 
 - Manage named networks and nodes, validator elections, block and election
   timing, logs, and operation progress. Nodes can join from separate hosts.
@@ -267,7 +267,7 @@ Actonscan. Clients solve a proof-of-work challenge before submitting a claim.
 
 ### Retrace and Diagnostics
 
-- Retrace supports tick-tock transactions, Localnet, and custom networks through
+- Retrace supports tick-tock transactions, localnet, and custom networks through
   configured TON Center endpoints. Replay loads previous masterchain blocks
   and checks account-history continuity.
 - Failure backtraces filter internal `__` helper frames from call-site lists.
@@ -549,7 +549,7 @@ update, and a broad documentation refresh.
   styling, fixed play-button styling, corrected redirects, and updated Open
   Graph metadata.
 
-### Localnet Preview
+### Localnet preview
 
 > Warning: the localnet features listed in this section are still preview work
 > and are not available to end users yet. They are documented here so the
@@ -771,7 +771,7 @@ linter, formatter, docs, templates, and editor integrations.
   # before
   acton test -v
   acton script scripts/deploy.tolk -v
-  
+
   # after
   acton test --verbose
   acton script scripts/deploy.tolk --verbose
@@ -791,7 +791,7 @@ linter, formatter, docs, templates, and editor integrations.
   if (!ok) {
       return;
   }
-  
+
   // after
   val applied = txs.waitForFirstTransaction();
   if (applied == null) {
@@ -821,7 +821,7 @@ linter, formatter, docs, templates, and editor integrations.
   # before
   [wrappers.typescript]
   output-dir = "app/src/wrapper-ts"
-  
+
   # after
   [wrappers.typescript]
   output-dir = "app/src/wrappers-ts"
@@ -1220,7 +1220,7 @@ test-runner performance, Tolk 1.4 support, and a new NFT starter template.
   ```bash
   # before
   acton script scripts/deploy.tolk --broadcast --net testnet
-  
+
   # after
   acton script scripts/deploy.tolk --net testnet
   ```
@@ -1238,7 +1238,7 @@ test-runner performance, Tolk 1.4 support, and a new NFT starter template.
   # before
   acton test --fork-net testnet --api-key YOUR_API_KEY
   acton script scripts/deploy.tolk --net mainnet --api-key YOUR_API_KEY
-  
+
   # after
   TONCENTER_TESTNET_API_KEY=YOUR_API_KEY acton test --fork-net testnet
   TONCENTER_MAINNET_API_KEY=YOUR_API_KEY acton script scripts/deploy.tolk --net mainnet
@@ -1258,7 +1258,7 @@ test-runner performance, Tolk 1.4 support, and a new NFT starter template.
   [litenode]
   port = 3010
   fork-net = "testnet"
-  
+
   # after
   [localnet]
   port = 3010
@@ -1293,7 +1293,7 @@ test-runner performance, Tolk 1.4 support, and a new NFT starter template.
   [contracts.counter]
   name = "Counter"
   src = "contracts/counter.tolk"
-  
+
   # after
   [contracts.Counter]
   display-name = "Counter"
@@ -1317,7 +1317,7 @@ test-runner performance, Tolk 1.4 support, and a new NFT starter template.
   [wrappers.tolk]
   output-dir = "tests/wrappers"
   test-output-dir = "tests"
-  
+
   [import-mappings]
   wrappers = "tests/wrappers"
   ```
@@ -1339,7 +1339,7 @@ test-runner performance, Tolk 1.4 support, and a new NFT starter template.
   ```text
   # before
   gen/jetton-wallet_code.tolk
-  
+
   # after
   gen/JettonWallet.code.tolk
   ```
@@ -1357,7 +1357,7 @@ test-runner performance, Tolk 1.4 support, and a new NFT starter template.
   @test({ fail_with: 42 })
   @test({ gas_limit: 1000 })
   @test({ fuzz: { runs: 64, seed: 42 } })
-  
+
   // after
   @test.skip
   @test.todo("later")
@@ -1378,7 +1378,7 @@ test-runner performance, Tolk 1.4 support, and a new NFT starter template.
   # before
   acton test
   acton script scripts/debug.tolk
-  
+
   # after, to keep the old debug-log-heavy output
   acton test -v
   acton script scripts/debug.tolk --verbose
@@ -1394,7 +1394,7 @@ test-runner performance, Tolk 1.4 support, and a new NFT starter template.
   ```tolk
   // before
   // acton-disable-next-line unused-variable
-  
+
   // after
   // check-disable-next-line unused-variable
   ```
@@ -1440,7 +1440,7 @@ test-runner performance, Tolk 1.4 support, and a new NFT starter template.
   `acton build`, `acton wrapper`, or the bundled TypeScript generator, migrate
   your own tooling only where it reads the raw compiler payloads.
 
-### Localnet, CLI, and Project Workflows
+### Localnet, CLI, and project workflows
 
 - Replaced the old `litenode` surface with `localnet` across the CLI, docs,
   config schema, manpages, and internal crates, making the terminology match

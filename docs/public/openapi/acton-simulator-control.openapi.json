@@ -3,18 +3,18 @@
   "info": {
     "title": "Simulator control API",
     "version": "1.0.0",
-    "description": "Control endpoints for Acton's fast local TON development environment, which provides TON-compatible blocks and APIs for local tooling. The environment is Acton's custom simplified implementation, not a real TON network or validator cluster. When Simulator is started with --require-auth, pass the printed token as Authorization: Bearer <token> or X-API-Key: <token>."
+    "description": "Control endpoints for Acton's fast local TON development environment, which provides TON-compatible blocks and APIs for local tooling. The environment is Acton's custom simplified implementation, not a real TON network or validator cluster. When the simulator is started with --require-auth, pass the printed token as Authorization: Bearer <token> or X-API-Key: <token>."
   },
   "servers": [
     {
       "url": "http://127.0.0.1:5411",
-      "description": "Default Simulator server"
+      "description": "Default simulator server"
     }
   ],
   "tags": [
     {
       "name": "Localnet Control",
-      "description": "Acton-only control routes for local state, wallets, address names, compiler ABI metadata, simulated network conditions, and raw local message injection.\n\nThese routes are intended for local development tooling and should not be exposed publicly. When Simulator is started with --require-auth, these routes require the Simulator API token. Rate limiting applies only to /api routes, and response delay applies only to TON Center-compatible API routes; control routes remain available when --rate-limit or --response-delay-ms is enabled."
+      "description": "Acton-only control routes for local state, wallets, address names, compiler ABI metadata, simulated network conditions, and raw local message injection.\n\nThese routes are intended for local development tooling and should not be exposed publicly. When simulator is started with --require-auth, these routes require the simulator API token. Rate limiting applies only to /api routes, and response delay applies only to TON Center-compatible API routes; control routes remain available when --rate-limit or --response-delay-ms is enabled."
     }
   ],
   "security": [
@@ -58,7 +58,7 @@
         "tags": ["Localnet Control"],
         "operationId": "fundJetton",
         "summary": "Mint jettons to an account",
-        "description": "Finds the jetton master in Simulator state, verifies that it is mintable and has an admin, converts the display amount using the decimals from jetton metadata, preflights the legacy 0x15 and current 0x642b7d07 mint layouts, and queues the uniquely accepted message for the next block.",
+        "description": "Finds the jetton master in simulator state, verifies that it is mintable and has an admin, converts the display amount using the decimals from jetton metadata, preflights the legacy 0x15 and current 0x642b7d07 mint layouts, and queues the uniquely accepted message for the next block.",
         "requestBody": {
           "required": true,
           "content": {
@@ -149,7 +149,7 @@
         "tags": ["Localnet Control"],
         "operationId": "listCompilerAbis",
         "summary": "List registered compiler ABI metadata",
-        "description": "Returns compiler ABI metadata registered directly in the Simulator node.",
+        "description": "Returns compiler ABI metadata registered directly in the simulator node.",
         "responses": {
           "200": {
             "$ref": "#/components/responses/RegisteredCompilerAbisResponse"
@@ -219,7 +219,7 @@
         "tags": ["Localnet Control"],
         "operationId": "getRegisteredVerifiedSource",
         "summary": "Get registered contract source",
-        "description": "Returns the source bundle registered directly in the Simulator node for an address or code hash.",
+        "description": "Returns the source bundle registered directly in the simulator node for an address or code hash.",
         "parameters": [
           {
             "name": "address",
@@ -250,7 +250,7 @@
         "tags": ["Localnet Control"],
         "operationId": "listVerifiedSources",
         "summary": "List registered contract sources",
-        "description": "Returns source bundles registered directly in the Simulator node, one per code hash.",
+        "description": "Returns source bundles registered directly in the simulator node, one per code hash.",
         "responses": {
           "200": {
             "$ref": "#/components/responses/RegisteredVerifiedSourcesResponse"
@@ -654,10 +654,33 @@
         "tags": ["Localnet Control"],
         "operationId": "getStartupAccounts",
         "summary": "List startup accounts",
-        "description": "Returns public account descriptors selected when the Simulator server started.",
+        "description": "Returns public account descriptors selected when the simulator server started.",
         "responses": {
           "200": {
             "$ref": "#/components/responses/StartupAccountsResponse"
+          }
+        }
+      }
+    },
+    "/acton_setMiningMode": {
+      "post": {
+        "tags": ["Localnet Control"],
+        "operationId": "setMiningMode",
+        "summary": "Set empty-block mining mode",
+        "description": "Controls whether automatic and manual mining skip blocks with no pending messages. Set skip_empty_blocks to false to produce empty blocks. This does not enable or disable automatic mining.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MiningMode"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/MiningModeResponse"
           }
         }
       }
@@ -666,8 +689,8 @@
       "post": {
         "tags": ["Localnet Control"],
         "operationId": "mineBlocks",
-        "summary": "Mine Simulator blocks",
-        "description": "Attempts to mine the requested number of Simulator blocks. Empty blocks are skipped when skip_empty_blocks is true. When the request body is omitted or blocks is not provided, one mining attempt is made.",
+        "summary": "Mine simulator blocks",
+        "description": "Manually mines queued and/or empty simulator blocks. When the request body is omitted or blocks is not provided, one block is mined.",
         "requestBody": {
           "required": false,
           "content": {
@@ -693,7 +716,7 @@
         "tags": ["Localnet Control"],
         "operationId": "increaseTime",
         "summary": "Increase virtual time",
-        "description": "Adds seconds to the Simulator virtual clock. Future blocks use this adjusted time until it is changed again.",
+        "description": "Adds seconds to the simulator virtual clock. Future blocks use this adjusted time until it is changed again.",
         "requestBody": {
           "required": true,
           "content": {
@@ -719,7 +742,7 @@
         "tags": ["Localnet Control"],
         "operationId": "setTime",
         "summary": "Set virtual time",
-        "description": "Sets the Simulator virtual clock to a Unix timestamp. The timestamp must not be lower than the latest mined block time.",
+        "description": "Sets the simulator virtual clock to a Unix timestamp. The timestamp must not be lower than the latest mined block time.",
         "requestBody": {
           "required": true,
           "content": {
@@ -766,35 +789,12 @@
         }
       }
     },
-    "/acton_setMiningMode": {
-      "post": {
-        "tags": ["Localnet Control"],
-        "operationId": "setMiningMode",
-        "summary": "Set empty-block mining mode",
-        "description": "Controls whether automatic and manual mining skip blocks with no pending messages. Set skip_empty_blocks to false to produce empty blocks. This does not enable or disable automatic mining.",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/MiningMode"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "$ref": "#/components/responses/MiningModeResponse"
-          }
-        }
-      }
-    },
     "/acton_setNetworkConditions": {
       "post": {
         "tags": ["Localnet Control"],
         "operationId": "setNetworkConditions",
         "summary": "Set simulated network conditions",
-        "description": "Updates simulated network conditions while the Simulator server is running and returns the updated values. Set response_delay_ms to 0 to disable response delay. Current values are also available from /acton_nodeInfo.",
+        "description": "Updates simulated network conditions while the simulator server is running and returns the updated values. Set response_delay_ms to 0 to disable response delay. Current values are also available from /acton_nodeInfo.",
         "requestBody": {
           "required": true,
           "content": {
@@ -817,7 +817,7 @@
         "tags": ["Localnet Control"],
         "operationId": "nodeInfo",
         "summary": "Get node status",
-        "description": "Returns uptime, latest block seqno, local or remote state-source information, virtual time, mining settings, rate limit, and current simulated network conditions.",
+        "description": "Returns uptime, latest block seqno, local or remote state-source information, and current simulated network conditions.",
         "responses": {
           "200": {
             "$ref": "#/components/responses/NodeInfoResponse"
@@ -837,7 +837,7 @@
         "type": "apiKey",
         "in": "header",
         "name": "X-API-Key",
-        "description": "Alternative Simulator API token header for TON Center-compatible clients."
+        "description": "Alternative simulator API token header for TON Center-compatible clients."
       }
     },
     "parameters": {
@@ -1837,7 +1837,7 @@
             "type": "string",
             "pattern": "^[0-9]+$",
             "default": "0",
-            "description": "Optional nanogram balance for the uninitialized account. Defaults to 0."
+            "description": "Optional nanotons balance for the uninitialized account. Defaults to 0."
           }
         }
       },
@@ -1874,7 +1874,7 @@
             "type": "string",
             "pattern": "^[0-9]+$",
             "default": "0",
-            "description": "Optional nanogram balance for the frozen account. Defaults to 0."
+            "description": "Optional nanotons balance for the frozen account. Defaults to 0."
           }
         }
       },
@@ -1894,21 +1894,17 @@
             "type": "integer",
             "minimum": 1,
             "default": 1,
-            "description": "Number of mining attempts. Empty blocks follow the current mining mode."
+            "description": "Number of blocks to mine."
           }
         }
       },
       "MineBlocksResult": {
         "type": "object",
-        "required": ["blocks_mined", "skipped_empty_blocks", "last_block_seqno", "blocks"],
+        "required": ["blocks_mined", "last_block_seqno", "blocks"],
         "properties": {
           "blocks_mined": {
             "type": "integer",
-            "minimum": 0
-          },
-          "skipped_empty_blocks": {
-            "type": "integer",
-            "minimum": 0
+            "minimum": 1
           },
           "last_block_seqno": {
             "type": "integer",
@@ -1978,7 +1974,7 @@
           "seconds": {
             "type": "integer",
             "minimum": 1,
-            "description": "Seconds to add to the virtual Simulator clock."
+            "description": "Seconds to add to the virtual simulator clock."
           }
         }
       },
@@ -1989,7 +1985,7 @@
           "timestamp": {
             "type": "integer",
             "minimum": 0,
-            "description": "Unix timestamp to use for the current virtual Simulator time."
+            "description": "Unix timestamp to use for the current virtual simulator time."
           }
         }
       },
@@ -2010,7 +2006,7 @@
         "properties": {
           "current_unix_time": {
             "type": "integer",
-            "description": "Current virtual Unix timestamp used by Simulator."
+            "description": "Current virtual Unix timestamp used by simulator."
           },
           "time_offset_seconds": {
             "type": "integer",
@@ -2023,16 +2019,6 @@
           }
         }
       },
-      "MiningMode": {
-        "type": "object",
-        "required": ["skip_empty_blocks"],
-        "properties": {
-          "skip_empty_blocks": {
-            "type": "boolean",
-            "description": "Skip mining when no messages are pending. The startup default is true."
-          }
-        }
-      },
       "SetNetworkConditionsRequest": {
         "type": "object",
         "required": ["response_delay_ms"],
@@ -2041,6 +2027,16 @@
             "type": "integer",
             "minimum": 0,
             "description": "Response delay in milliseconds for /api/v2, /api/v3, and /api/emulate/v1 responses. Use 0 to disable."
+          }
+        }
+      },
+      "MiningMode": {
+        "type": "object",
+        "required": ["skip_empty_blocks"],
+        "properties": {
+          "skip_empty_blocks": {
+            "type": "boolean",
+            "description": "Skip mining when no messages are pending. The startup default is true."
           }
         }
       },
@@ -2100,10 +2096,6 @@
           "current_unix_time",
           "time_offset_seconds",
           "next_block_timestamp",
-          "auto_mining",
-          "block_time_ms",
-          "rate_limit_rps",
-          "mining_mode",
           "network_conditions"
         ],
         "properties": {
@@ -2129,7 +2121,7 @@
           },
           "current_unix_time": {
             "type": "integer",
-            "description": "Current virtual Unix timestamp used by Simulator."
+            "description": "Current virtual Unix timestamp used by simulator."
           },
           "time_offset_seconds": {
             "type": "integer",
@@ -2139,21 +2131,6 @@
             "type": "integer",
             "nullable": true,
             "description": "Pending one-shot timestamp for the next mined block, if configured."
-          },
-          "auto_mining": {
-            "type": "boolean"
-          },
-          "block_time_ms": {
-            "type": "integer",
-            "minimum": 1
-          },
-          "rate_limit_rps": {
-            "type": "integer",
-            "minimum": 1,
-            "nullable": true
-          },
-          "mining_mode": {
-            "$ref": "#/components/schemas/MiningMode"
           },
           "network_conditions": {
             "$ref": "#/components/schemas/NetworkConditions"
