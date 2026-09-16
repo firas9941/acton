@@ -4,9 +4,6 @@ description = "Acton workload generator for the localton network"
 version = "0.1.0"
 license = "MIT"
 
-[toolchain]
-acton = "1.1.0"
-
 [contracts.RecursiveDeployer]
 display-name = "Recursive deployer"
 src = "contracts/RecursiveDeployer.tolk"
