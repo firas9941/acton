@@ -2028,13 +2028,16 @@
   gap: 14px;
 }
 
-.timeModalContent input[type="number"] {
+.timeModalContent input[type="number"],
+.amountAssetInput[type="number"] {
   appearance: textfield;
   -moz-appearance: textfield;
 }
 
 .timeModalContent input[type="number"]::-webkit-inner-spin-button,
-.timeModalContent input[type="number"]::-webkit-outer-spin-button {
+.timeModalContent input[type="number"]::-webkit-outer-spin-button,
+.amountAssetInput::-webkit-inner-spin-button,
+.amountAssetInput::-webkit-outer-spin-button {
   margin: 0;
   -webkit-appearance: none;
 }

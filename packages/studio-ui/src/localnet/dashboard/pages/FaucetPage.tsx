@@ -50,17 +50,6 @@ const TOKEN_MINTER_NOT_MINTABLE_MESSAGE = "This token cannot be minted by the fa
 const FAUCET_TRACE_WAIT_ATTEMPTS = 60
 const FAUCET_AMOUNT_PRESETS = ["10", "100", "1000", "10000"] as const
 
-function sanitizeAmountInput(value: string): string {
-  const digitsAndSeparators = value.replace(/[^0-9._]/g, "")
-  const [integerPart, ...fractionParts] = digitsAndSeparators.split(".")
-
-  return fractionParts.length === 0 ? integerPart : `${integerPart}.${fractionParts.join("")}`
-}
-
-function normalizeAmountInput(value: string): string {
-  return value.replaceAll("_", "")
-}
-
 function usdtMinterAddressForFork(forkNetwork?: string): string | undefined {
   switch (forkNetwork?.trim().toLocaleLowerCase()) {
     case "mainnet":
@@ -116,7 +105,7 @@ export const FaucetPage: FC<FaucetPageProps> = ({
   const isSubmitDisabled =
     isSubmitting ||
     address.trim().length === 0 ||
-    normalizeAmountInput(amount).trim().length === 0 ||
+    amount.length === 0 ||
     (isJettonMode && jettonMinter.trim().length === 0)
 
   const selectMode = useCallback((nextMode: FaucetMode) => {
@@ -321,7 +310,7 @@ export const FaucetPage: FC<FaucetPageProps> = ({
 
     const trimmedAddress = address.trim()
     const parsedAddress = parseAddress(trimmedAddress)
-    const tonAmountNano = parseGramAmount(normalizeAmountInput(amount))
+    const tonAmountNano = parseGramAmount(amount)
     if (!parsedAddress) {
       showToast({
         variant: "error",
@@ -409,8 +398,7 @@ export const FaucetPage: FC<FaucetPageProps> = ({
 
     try {
       const master = jettonMasters.find(item => isSameAddress(item.address, normalizedMinter))
-      const normalizedAmount = normalizeAmountInput(amount)
-      const parsedAmount = parseTokenAmount(normalizedAmount, master?.jetton_content.decimals)
+      const parsedAmount = parseTokenAmount(amount, master?.jetton_content.decimals)
       if (parsedAmount === undefined || parsedAmount <= 0n) {
         updateToast(toastId, {
           variant: "error",
@@ -422,7 +410,7 @@ export const FaucetPage: FC<FaucetPageProps> = ({
       }
 
       const symbol = master ? jettonSymbol(master) : selectedAssetSymbol
-      const msgHash = await client.fundJetton(normalized, normalizedMinter, normalizedAmount.trim())
+      const msgHash = await client.fundJetton(normalized, normalizedMinter, amount)
       await updateFaucetResultToast({
         toastId,
         title: "Mint sent",
@@ -582,6 +570,9 @@ export const FaucetPage: FC<FaucetPageProps> = ({
               <Input
                 id="dashboard-amount"
                 aria-label="Amount"
+                type="number"
+                min={0}
+                step="any"
                 className={`${styles.fieldInput} ${styles.amountAssetInput} ${
                   canChooseAsset ? "" : styles.amountAssetInputStatic
                 }`}
@@ -591,7 +582,14 @@ export const FaucetPage: FC<FaucetPageProps> = ({
                 autoComplete="off"
                 autoCorrect="off"
                 spellCheck={false}
-                onChange={event => setAmount(sanitizeAmountInput(event.target.value))}
+                onChange={event => setAmount(event.target.value)}
+                onFocus={event => {
+                  // React wheel listeners are passive, so cancel the native event instead.
+                  event.currentTarget.onwheel = event => event.preventDefault()
+                }}
+                onBlur={event => {
+                  event.currentTarget.onwheel = null
+                }}
               />
               {canChooseAsset ? (
                 <button
@@ -658,7 +656,7 @@ export const FaucetPage: FC<FaucetPageProps> = ({
               <Button
                 key={value}
                 type="button"
-                variant={normalizeAmountInput(amount) === value ? "secondary" : "outline"}
+                variant={amount === value ? "secondary" : "outline"}
                 size="sm"
                 className={styles.quickActionButton}
                 onClick={() => setAmount(value)}
