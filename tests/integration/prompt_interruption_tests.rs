@@ -99,11 +99,11 @@ fn terminal_write_errors_stop_interactive_prompts() {
         let project = ProjectBuilder::new(&format!("prompt-io-error-{name}"))
             .script_file("prompt", &script(prompt))
             .build();
-        // Keep stdin attached to a terminal, but close the reader of inquire's
-        // output pipe so drawing the first prompt fails with BrokenPipe.
-        let mut command = Command::new("bash");
+        // Keep stdin attached to a terminal, but make inquire's output read-only
+        // so drawing the first prompt fails without an auxiliary shell process.
+        let mut command = Command::new("sh");
         command
-            .args(["-c", "exec 2> >(true); wait \"$!\"; exec \"$@\"", "bash"])
+            .args(["-c", "exec 2</dev/null; exec \"$@\"", "sh"])
             .arg(acton_exe())
             .args(["script", "scripts/prompt.tolk"])
             .current_dir(project.path())
@@ -118,8 +118,9 @@ fn terminal_write_errors_stop_interactive_prompts() {
         session
             .expect(Eof)
             .expect("script did not stop after I/O failure");
-        let WaitStatus::Exited(_, code) = session.get_process().wait().unwrap() else {
-            panic!("prompt process did not exit normally");
+        let status = session.get_process().wait().unwrap();
+        let WaitStatus::Exited(_, code) = status else {
+            panic!("{name}: prompt process did not exit normally: {status:?}");
         };
         writeln!(
             outcomes,
