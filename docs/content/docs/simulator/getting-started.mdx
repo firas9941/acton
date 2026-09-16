@@ -75,6 +75,13 @@ acton simulator mine
 acton simulator mine 5
 ```
 
+Empty blocks are skipped by default, including during manual mining. Add
+`--mine-empty-blocks` at startup when you need to advance the chain without messages:
+
+```bash
+acton simulator start --no-mining --mine-empty-blocks
+```
+
 You can also store the mode in `Acton.toml`:
 
 ```acton-toml title="Acton.toml"
@@ -84,7 +91,7 @@ no-mining = true
 
 ## Control Time
 
-Localnet uses a virtual clock for block and transaction timestamps. Move it
+Simulator uses a virtual clock for block and transaction timestamps. Move it
 forward without waiting for wall-clock time:
 
 ```bash

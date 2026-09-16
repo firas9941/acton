@@ -39,7 +39,8 @@ Acton stores masterchain snapshots for 24 hours under
 `build/cache/masterchain-snapshots/<network>/<seqno>.json`. An explicit block
 can start from a fresh cache entry without another network request. A latest
 fork still queries the network for the latest sequence number before it checks
-the matching cache entry. Use `--clear-cache` to remove these entries.
+the matching cache entry. Remove the corresponding cache file before startup
+to fetch that block's state again.
 
 ## API Key
 

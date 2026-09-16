@@ -56,7 +56,8 @@ Use a Localnet to run local TON validators, Localton services, Postgres, Redis, 
 indexers through Docker. It is closer to a full TON network but starts more slowly and consumes more
 CPU, memory, and disk space.
 
-Localnet supports one to seven validators. Each additional validator increases startup time.
+Localnet starts with one genesis validator. Add nodes and validators from the environment's
+**Nodes** page. Each additional validator increases resource use.
 The startup screen reports Docker Compose, TON node, API, and indexer readiness separately.
 
 Choose this type when you need:
@@ -100,12 +101,11 @@ This keeps debugging reproducible and prevents one experiment from changing anot
 1. Open **Virtual Environments** and select **Create environment**.
 2. Select **Simulator**.
 3. Enter a name used in navigation and history.
-4. Leave **Local port** empty for automatic selection or reserve a specific port.
-5. Choose **Clean network**, **Fork mainnet**, or **Fork testnet**.
-6. For a fork, optionally enter a masterchain block number; empty uses the latest available state.
-7. Select project wallets under **Startup accounts** to initialize and fund each with 100 GRAM.
-8. Expand **Network and mining** only when you need rate, latency, interval, or mining overrides.
-9. Select **Create environment**.
+4. Choose **Clean network**, **Fork mainnet**, or **Fork testnet**.
+5. For a fork, optionally enter a masterchain block number; empty uses the latest available state.
+6. Select project wallets under **Startup accounts** to initialize and fund each with 100 GRAM.
+7. Expand **Network and mining** only when you need rate, latency, interval, or mining overrides.
+8. Select **Create environment**. Studio selects an available runtime port automatically.
 
 The selected initial state and startup accounts are fixed when the environment is created. Use a new
 environment when a scenario needs a different fork point or bootstrap set.
