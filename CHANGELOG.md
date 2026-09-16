@@ -189,6 +189,8 @@ Actonscan. Clients solve a proof-of-work challenge before submitting a claim.
 - `rpc info` decodes union and nested storage, Jetton metadata and balances,
   and multisig participants and thresholds. The bundled ABI catalog recognizes
   more contracts and message opcodes.
+- Transaction trees preserve all branches when transactions in different accounts
+  share the same logical time, including in `acton rpc trace`.
 - `acton doc abi <contract-or-code-hash>` prints ABI JSON from the project,
   bundled catalog, or verifier. RPC commands also use verified ABIs when local
   metadata is unavailable.
