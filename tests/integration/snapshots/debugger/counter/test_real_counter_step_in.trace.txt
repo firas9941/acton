@@ -597,11 +597,11 @@ Step 35 (step_in):
 
 Step 36 (step_in):
   Code:
-    224| /// ```
-    225| fun testing.getAccountState(addr: address): TlbAccountInfo? {
-    226|     return impl.getAccountState(addr);
+    227| /// ```
+    228| fun testing.getAccountState(addr: address): TlbAccountInfo? {
+    229|     return impl.getAccountState(addr);
                     ^^^^^^^^^^^^^^^^^^^^^^^^^^
-    227| }
+    230| }
   Variables:
     addr: address = 0:d3ab4bf6769bc8a0888874041305a2d78c6335737e94e574f3a9589f3dc0e9d6
       raw = 0:d3ab4bf6769bc8a0888874041305a2d78c6335737e94e574f3a9589f3dc0e9d6
@@ -714,11 +714,11 @@ Step 42 (step_in):
 
 Step 43 (step_in):
   Code:
-    224| /// ```
-    225| fun testing.getAccountState(addr: address): TlbAccountInfo? {
-    226|     return impl.getAccountState(addr);
+    227| /// ```
+    228| fun testing.getAccountState(addr: address): TlbAccountInfo? {
+    229|     return impl.getAccountState(addr);
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    227| }
+    230| }
   Variables:
     addr: address = 0:d3ab4bf6769bc8a0888874041305a2d78c6335737e94e574f3a9589f3dc0e9d6
       raw = 0:d3ab4bf6769bc8a0888874041305a2d78c6335737e94e574f3a9589f3dc0e9d6

@@ -99,11 +99,23 @@ fn terminal_write_errors_stop_interactive_prompts() {
         let project = ProjectBuilder::new(&format!("prompt-io-error-{name}"))
             .script_file("prompt", &script(prompt))
             .build();
-        // Keep stdin attached to a terminal, but make inquire's output read-only
-        // so drawing the first prompt fails without an auxiliary shell process.
+        // Keep stdin on the terminal, but send stderr to a pipe without readers.
+        // Open it read/write to avoid blocking, then close that reader before
+        // starting Acton. Rust suppresses EBADF from read-only stderr, but it
+        // propagates BrokenPipe so drawing the first prompt fails.
         let mut command = Command::new("sh");
         command
-            .args(["-c", "exec 2</dev/null; exec \"$@\"", "sh"])
+            .args([
+                "-ec",
+                r#"
+mkfifo stderr.fifo
+exec 3<>stderr.fifo
+exec 2>stderr.fifo
+exec 3>&-
+exec "$@"
+"#,
+                "sh",
+            ])
             .arg(acton_exe())
             .args(["script", "scripts/prompt.tolk"])
             .current_dir(project.path())
