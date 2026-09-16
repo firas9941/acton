@@ -1,0 +1,2 @@
+Error: TON verifier is in read-only mode: verification of new contracts is disabled
+Try again later

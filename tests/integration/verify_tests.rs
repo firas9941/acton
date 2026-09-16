@@ -1173,6 +1173,50 @@ fn test_verify_mock_reads_a_fragmented_request_body() {
 
 #[allow(clippy::significant_drop_tightening)]
 #[test]
+fn test_verify_verifier_reports_read_only_when_requesting_ticket() {
+    let _guard = verify_backend_mock_guard();
+    let project = build_verify_backend_project("verify-verifier-read-only-ticket");
+    let (mock_url, mock_handle, captured) =
+        spawn_unverified_verifier_mock(vec![verifier_error_response(
+            503,
+            "verifier_read_only: verification of new contracts is disabled",
+        )]);
+
+    project
+        .acton()
+        .env("ACTON_VERIFY_BACKEND", &mock_url)
+        .verify()
+        .verify_contract("simple")
+        .run()
+        .failure()
+        .assert_stderr_snapshot_matches(
+            "integration/snapshots/verify/test_verify_verifier_reports_read_only.stderr.txt",
+        );
+
+    mock_handle.join().expect("mock verifier must finish");
+    let captured = captured
+        .lock()
+        .expect("captured verifier requests mutex poisoned");
+    assert_eq!(
+        captured.len(),
+        2,
+        "expected only status and ticket requests"
+    );
+    assert_eq!(captured[1].path, "/api/v1/take_ticket");
+}
+
+#[test]
+fn test_verify_verifier_reports_read_only_when_uploading_sources() {
+    assert_verifier_payment_error(
+        "verify-verifier-read-only-upload",
+        503,
+        "verifier_read_only: verification of new contracts is disabled",
+        "integration/snapshots/verify/test_verify_verifier_reports_read_only.stderr.txt",
+    );
+}
+
+#[allow(clippy::significant_drop_tightening)]
+#[test]
 fn test_verify_verifier_reports_payment_recovery() {
     let _guard = verify_backend_mock_guard();
     let project = build_verify_backend_project("verify-verifier-payment-recovery");

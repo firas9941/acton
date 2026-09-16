@@ -464,6 +464,7 @@ struct VerifierErrorResponse {
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 enum VerifierKnownError {
+    ReadOnly,
     RecoveryInProgress,
     VerificationRetryable,
     InvalidTransactionHash,
@@ -484,6 +485,7 @@ impl VerifierKnownError {
             .map_or(response.error.as_str(), |(code, _)| code);
 
         match code {
+            "verifier_read_only" => Some(Self::ReadOnly),
             "payment_recovery_in_progress" => Some(Self::RecoveryInProgress),
             "verification_retryable" => Some(Self::VerificationRetryable),
             "payment_tx_hash_invalid" => Some(Self::InvalidTransactionHash),
@@ -499,6 +501,9 @@ impl VerifierKnownError {
 
     const fn friendly_message(self) -> &'static str {
         match self {
+            Self::ReadOnly => {
+                "TON verifier is in read-only mode: verification of new contracts is disabled\nTry again later"
+            }
             Self::RecoveryInProgress => {
                 "TON verifier is rebuilding payment history. Try again shortly"
             }
