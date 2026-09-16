@@ -42,6 +42,7 @@ mod retrace_tests;
 mod rpc_call_tests;
 mod rpc_tests;
 mod run_tests;
+mod runtime_build_tests;
 mod scenarios;
 mod script_tests;
 mod stdlib_tests;

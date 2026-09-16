@@ -141,6 +141,9 @@ Actonscan. Clients solve a proof-of-work challenge before submitting a claim.
 
 ### Build Artifacts
 
+- `build("Contract")` updates generated dependency code before compilation, so
+  scripts use current sources after edits or branch changes without a separate
+  `acton build`.
 - `acton build --output-sources <DIR>` and `[build].output-sources` export
   `<contract>.source.json` bundles for source and ABI import into Explorer.
   Bundles include compiler and debug metadata. Precompiled BoC contracts do not

@@ -37,6 +37,10 @@ depends = []
 
 See how to [declare contract dependencies](/docs/projects#declare-contract-dependencies) in the project management guide.
 
+In scripts, [`build("Contract")`](/docs/standard_library/build) builds the requested contract and its dependencies, then returns its code cell.
+It updates generated dependency files and reuses the compilation cache for unchanged sources.
+Calls with an explicit source path compile that file without processing `depends` from `Acton.toml`.
+
 ### No circular dependencies
 
 Acton resolves the full dependency graph and compiles contracts in topological order. A circular dependency aborts the build before any contract is compiled:
