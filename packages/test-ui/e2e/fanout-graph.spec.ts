@@ -149,7 +149,7 @@ const openFanoutGraphScenario = async (
   const firstTransaction = page.getByRole("button", {name: /^Transaction /}).first()
   await expect(firstTransaction).toBeVisible()
   await firstTransaction.click()
-  await expect(page.getByText("Message Route", {exact: true})).toBeVisible()
+  await expect(page.getByText("Message route", {exact: true})).toBeVisible()
 }
 
 test("opens and scrolls to the fifth transaction logs in a twenty-transaction trace", async ({
@@ -183,7 +183,7 @@ test("opens and scrolls to the fifth transaction logs in a twenty-transaction tr
   const content = page.getByTestId("test-details-content")
   expect(await content.evaluate(element => element.scrollTop)).toBeGreaterThan(0)
   expect((await logs.boundingBox())?.y).toBeCloseTo((await content.boundingBox())?.y ?? -1, 0)
-  await expect(logs.getByRole("button", {name: "Collapse VM Log", exact: true})).toBeVisible()
+  await expect(logs.getByRole("button", {name: "Collapse VM log", exact: true})).toBeVisible()
   await expect(logs.locator("pre")).toHaveText(fifth.vm_log_diff)
 })
 
@@ -267,7 +267,7 @@ test("each external-out node opens its own body", async ({fanoutGraphUi, page}) 
   await expect(details.getByRole("button", {name: "Copy raw body", exact: true})).toBeVisible()
 
   await page.context().grantPermissions(["clipboard-read", "clipboard-write"])
-  await details.getByText("Message Data", {exact: true}).locator("..").hover()
+  await details.getByText("Message data", {exact: true}).locator("..").hover()
   await details.getByRole("button", {name: "Copy raw body", exact: true}).click()
   const bodyBoc = await page.evaluate(() => navigator.clipboard.readText())
   await details.getByRole("button", {name: "Copy raw message", exact: true}).click()

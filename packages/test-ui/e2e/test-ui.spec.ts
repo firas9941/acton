@@ -257,14 +257,14 @@ const openTrace4BodyAndActions = async (page: Page) => {
       await actionsToggle.first().click()
 
       const firstAction = page
-        .getByRole("button", {name: /Send Message|Reserve|Set Code|Change Library/})
+        .getByRole("button", {name: /Send message|Reserve|Set code|Change library/})
         .first()
       await expect(firstAction).toBeVisible()
       await firstAction.click()
 
       await expect(page.getByRole("button", {name: "Hide parsed body"})).toBeVisible()
       await expect(page.getByRole("button", {name: "Hide actions"})).toBeVisible()
-      await expect(page.getByText("Actions Details", {exact: true})).toBeVisible()
+      await expect(page.getByText("Actions details", {exact: true})).toBeVisible()
       await expect(page.getByText("Details", {exact: true})).toBeVisible()
       return
     }
@@ -274,11 +274,11 @@ const openTrace4BodyAndActions = async (page: Page) => {
 }
 
 const openTrace4SendMessageAction = async (page: Page) => {
-  const sendMessageAction = page.getByRole("button", {name: /Send Message/}).first()
+  const sendMessageAction = page.getByRole("button", {name: /Send message/}).first()
   await expect(sendMessageAction).toBeVisible()
   await sendMessageAction.click()
 
-  await expect(page.getByText("Message Data", {exact: true}).last()).toBeVisible()
+  await expect(page.getByText("Message data", {exact: true}).last()).toBeVisible()
   await expect(page.getByText("Mode:", {exact: true})).toBeVisible()
   await expect(page.getByText("To:", {exact: true})).toBeVisible()
 }
@@ -294,8 +294,8 @@ const openOwnerCanSendJettonsValueFlow = async (page: Page) => {
 
   await page.getByRole("button", {name: "Trace 4"}).click()
   await expect(page.getByRole("button", {name: "Trace 4"})).toBeVisible()
-  await page.getByRole("button", {name: "Show Value Flow"}).click()
-  await expect(page.getByRole("button", {name: "Hide Value Flow"})).toBeVisible()
+  await page.getByRole("button", {name: "Show value flow"}).click()
+  await expect(page.getByRole("button", {name: "Hide value flow"})).toBeVisible()
 
   const valueFlow = page.getByTestId("value-flow-section")
   await expect(valueFlow).toBeVisible()
@@ -443,8 +443,8 @@ test.describe("Test UI", () => {
     const firstTransaction = page.getByRole("button", {name: /^Transaction /}).first()
     await expect(firstTransaction).toBeVisible()
     await firstTransaction.click()
-    await expect(page.getByText("Message Route", {exact: true})).toBeVisible()
-    await expect(page.getByText("Compute Phase", {exact: true})).toBeVisible()
+    await expect(page.getByText("Message route", {exact: true})).toBeVisible()
+    await expect(page.getByText("Compute phase", {exact: true})).toBeVisible()
   })
 
   for (const logKind of ["both", "vm", "executor", "none"] as const) {
@@ -483,12 +483,12 @@ test.describe("Test UI", () => {
         const tx = transactions[index]
         const id = Cell.fromBase64(tx.raw_transaction).hash().toString("hex")
         await page.getByRole("button", {name: `Transaction ${id}`, exact: true}).click()
-        await expect(page.getByText("Message Route", {exact: true})).toBeVisible()
+        await expect(page.getByText("Message route", {exact: true})).toBeVisible()
 
         if (logKind === "none") {
           await expect(page.getByRole("button", {name: "View logs", exact: true})).toHaveCount(0)
           await page.getByRole("tab", {name: "Logs", exact: true}).click()
-          await page.getByRole("button", {name: "Expand VM Log", exact: true}).click()
+          await page.getByRole("button", {name: "Expand VM log", exact: true}).click()
           await expect(page.getByText("No VM logs were collected", {exact: false})).toBeVisible()
           await expect(page.getByTestId("test-details-content").locator("pre")).toHaveCount(0)
           await expect(page.getByRole("button", {name: "Copy VM log", exact: true})).toHaveCount(0)
@@ -511,24 +511,24 @@ test.describe("Test UI", () => {
         const vmLog = logs.locator('[data-visual-dynamic="vm-log"]')
 
         if (logKind === "executor") {
-          await logs.getByRole("button", {name: "Expand VM Log", exact: true}).click()
+          await logs.getByRole("button", {name: "Expand VM log", exact: true}).click()
           await expect(logs.getByText("No VM logs were collected", {exact: false})).toBeVisible()
           await expect(vmLog.locator("pre")).toHaveCount(0)
           await expect(logs.getByRole("button", {name: "Copy VM log", exact: true})).toHaveCount(0)
         } else {
           await expect(
-            logs.getByRole("button", {name: "Collapse VM Log", exact: true}),
+            logs.getByRole("button", {name: "Collapse VM log", exact: true}),
           ).toBeVisible()
           await expect(vmLog.locator("pre")).toHaveText(tx.vm_log_diff)
           await expect(logs.getByRole("button", {name: "Copy VM log", exact: true})).toBeVisible()
         }
 
         if (logKind === "both") {
-          await logs.getByRole("button", {name: "Expand Executor Log", exact: true}).click()
+          await logs.getByRole("button", {name: "Expand Executor log", exact: true}).click()
         }
         if (logKind !== "vm") {
           await expect(
-            logs.getByRole("button", {name: "Collapse Executor Log", exact: true}),
+            logs.getByRole("button", {name: "Collapse Executor log", exact: true}),
           ).toBeVisible()
           await expect(logs.locator('[data-visual-dynamic="executor-log"] pre')).toHaveText(
             tx.executor_logs,
@@ -546,8 +546,8 @@ test.describe("Test UI", () => {
 
     await page.getByRole("tab", {name: "Coverage"}).click()
     await expect(page.getByRole("tab", {name: "Coverage"})).toHaveAttribute("aria-selected", "true")
-    await expect(page.getByText("Overall Score")).toBeVisible()
-    await expect(page.getByText("Coverage Files")).toBeVisible()
+    await expect(page.getByText("Overall score")).toBeVisible()
+    await expect(page.getByText("Coverage files")).toBeVisible()
 
     await page.getByPlaceholder("Filter files...").fill("JettonWallet")
     const walletFile = page.getByRole("button", {name: /JettonWallet\.tolk/}).first()
@@ -634,8 +634,8 @@ test.describe("Test UI", () => {
     const valueFlow = await openOwnerCanSendJettonsValueFlow(page)
 
     await expect(valueFlow.getByText("Account", {exact: true})).toBeVisible()
-    await expect(valueFlow.getByText("Balance Change", {exact: true})).toBeVisible()
-    await expect(valueFlow.getByText("Network Fee", {exact: true})).toBeVisible()
+    await expect(valueFlow.getByText("Balance change", {exact: true})).toBeVisible()
+    await expect(valueFlow.getByText("Network fee", {exact: true})).toBeVisible()
     await expect(valueFlow.getByText(/GRAM/).first()).toBeVisible()
   })
 
@@ -734,7 +734,7 @@ test.describe("Test UI", () => {
       const firstTransaction = page.getByRole("button", {name: /^Transaction /}).first()
       await expect(firstTransaction).toBeVisible()
       await firstTransaction.click()
-      await expect(page.getByText("Compute Phase", {exact: true})).toBeVisible()
+      await expect(page.getByText("Compute phase", {exact: true})).toBeVisible()
       await expectStableScreenshot(page, "test-ui-transactions.png")
 
       await openTrace4BodyAndActions(page)
@@ -750,11 +750,11 @@ test.describe("Test UI", () => {
 
       await page.getByRole("button", {name: "Trace 4"}).click()
       await page.getByRole("tab", {name: "Logs"}).click()
-      await expect(page.getByText("VM Log", {exact: true}).first()).toBeVisible()
+      await expect(page.getByText("VM log", {exact: true}).first()).toBeVisible()
       await expectStableScreenshot(page, "test-ui-logs.png")
 
       await page.getByRole("tab", {name: "Coverage"}).click()
-      await expect(page.getByText("Coverage Files", {exact: true})).toBeVisible()
+      await expect(page.getByText("Coverage files", {exact: true})).toBeVisible()
       await page.getByPlaceholder("Filter files...").fill("JettonWallet")
       const walletFile = page.getByRole("button", {name: /JettonWallet\.tolk/}).first()
       await expect(walletFile).toBeVisible()
