@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [1.2.0] - 16.09.2026
+
 This release introduces **Acton Studio**, a browser workspace for testing,
 deploying, and debugging TON applications. **Simulator** provides lightweight
 local execution and network forks, while **localnet** runs real TON validators
