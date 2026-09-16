@@ -165,6 +165,8 @@ Actonscan. Clients solve a proof-of-work challenge before submitting a claim.
 
 ### Project Setup and Scripts
 
+- Cancelling a script prompt stops execution. Ctrl+C exits with code `130`;
+  Escape and terminal I/O errors exit with code `1` instead of accepting a default.
 - Commands load `.env` from the project selected by `--project-root` or
   `--manifest-path`, including RPC commands with an explicit project selection.
 - `acton new` and `acton hooks new` support `pre-push` and `pre-commit` checks.
