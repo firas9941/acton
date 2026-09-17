@@ -12,6 +12,7 @@ apps/verifier/*
 !apps/verifier/rust-toolchain.toml
 !apps/verifier/build.rs
 !apps/verifier/src/
+!apps/verifier/verifier-github-app-credential/
 !apps/verifier/compiler-worker/
 apps/verifier/compiler-worker/node_modules/
 !apps/verifier/docker/
