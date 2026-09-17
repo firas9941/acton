@@ -2,6 +2,7 @@ use std::{
     env,
     ffi::OsString,
     fs,
+    os::unix::fs::PermissionsExt as _,
     path::PathBuf,
     process::{Command, Output},
 };
@@ -157,6 +158,50 @@ fn rejects_unknown_authentication_mode() {
         "unknown mode",
         "SOURCE_REPOSITORY_AUTH_MODE must be one of: none, url, ssh, github_app",
         &[variable("SOURCE_REPOSITORY_AUTH_MODE", "unknown")],
+    );
+}
+
+#[test]
+fn dispatches_init_mode_without_starting_the_application() {
+    let temp_dir = tempfile::tempdir().expect("temporary directory should be created");
+    let bin_dir = temp_dir.path().join("bin");
+    fs::create_dir(&bin_dir).expect("temporary bin directory should be created");
+    let prepare = bin_dir.join("verifier-prepare-source-repository");
+    fs::write(&prepare, "#!/bin/sh\nprintf '%s\\n' \"$@\"\n")
+        .expect("prepare command fixture should be written");
+    let mut permissions = fs::metadata(&prepare)
+        .expect("prepare command fixture should exist")
+        .permissions();
+    permissions.set_mode(0o755);
+    fs::set_permissions(&prepare, permissions)
+        .expect("prepare command fixture should be executable");
+
+    let path = format!("{}:/usr/bin:/bin", bin_dir.display());
+    let output = run_entrypoint_with_command(
+        &temp_dir,
+        &[variable("VERIFIER_MODE", "init"), variable("PATH", path)],
+        &["false"],
+    );
+    assert!(
+        output.status.success(),
+        "expected init mode to succeed; stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    assert_eq!(
+        String::from_utf8_lossy(&output.stdout),
+        format!(
+            "--push\n{}\n",
+            temp_dir.path().join("config.toml").display()
+        )
+    );
+}
+
+#[test]
+fn rejects_unknown_verifier_mode() {
+    assert_failure(
+        "unknown verifier mode",
+        "VERIFIER_MODE must be one of: serve, init",
+        &[variable("VERIFIER_MODE", "unknown")],
     );
 }
 

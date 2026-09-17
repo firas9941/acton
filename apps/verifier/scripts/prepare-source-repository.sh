@@ -9,8 +9,14 @@ log() {
 }
 
 usage() {
-    echo "Usage: $0 [config-path]" >&2
+    echo "Usage: $0 [--push] [config-path]" >&2
 }
+
+push=false
+if [[ "${1:-}" == "--push" ]]; then
+    push=true
+    shift
+fi
 
 if [[ $# -gt 1 ]]; then
     usage
@@ -56,6 +62,14 @@ if ! git check-ref-format --branch "$branch" >/dev/null 2>&1; then
     exit 1
 fi
 
+remote="$(
+    yq -p=toml -o=json -r '.source_repository.remote // "origin"' "$config_path"
+)"
+if [[ -z "$remote" || "$remote" == "null" ]]; then
+    echo "source_repository.remote is missing in verifier config: $config_path" >&2
+    exit 1
+fi
+
 author_name="$(
     yq -p=toml -o=json -r '.source_repository.author_name' "$config_path"
 )"
@@ -98,31 +112,59 @@ if [[ "$git_root" != "$repo_root" ]]; then
     log "initialized Git repository on branch $branch: $repo_path"
 fi
 
-if git -C "$repo_path" rev-parse --verify HEAD >/dev/null 2>&1; then
-    echo "source repository already has commits: $repo_path" >&2
-    exit 1
-fi
-
 if [[ -n "$(git -C "$repo_path" status --porcelain --untracked-files=all)" ]]; then
     echo "source repository has uncommitted files: $repo_path" >&2
     exit 1
 fi
 
-git -C "$repo_path" symbolic-ref HEAD "refs/heads/$branch"
+if git -C "$repo_path" rev-parse --verify HEAD >/dev/null 2>&1; then
+    if [[ "$push" != true ]]; then
+        echo "source repository already has commits: $repo_path" >&2
+        exit 1
+    fi
 
-printf '%s\n' "$attributes_rule" > "$repo_path/.gitattributes"
-git -C "$repo_path" add -- .gitattributes
+    mapfile -t roots < <(git -C "$repo_path" rev-list --max-parents=0 HEAD)
+    if [[ ${#roots[@]} -ne 1 ]]; then
+        echo "source repository must have exactly one root commit: $repo_path" >&2
+        exit 1
+    fi
 
-GIT_AUTHOR_DATE="$init_commit_date" \
-GIT_COMMITTER_DATE="$init_commit_date" \
-git \
-    -C "$repo_path" \
-    -c "user.name=$author_name" \
-    -c "user.email=$author_email" \
-    commit \
-    --quiet \
-    --no-gpg-sign \
-    -m "$init_commit_message"
+    root="${roots[0]}"
+    root_files="$(git -C "$repo_path" ls-tree -r --name-only "$root")"
+    if [[ "$root_files" != ".gitattributes" ]]; then
+        echo "source repository root commit must contain only .gitattributes: $repo_path" >&2
+        exit 1
+    fi
 
-commit="$(git -C "$repo_path" rev-parse --short HEAD)"
-log "created root commit $commit on branch $branch: $init_commit_message"
+    root_attributes="$(git -C "$repo_path" show "$root:.gitattributes")"
+    if [[ "$root_attributes" != "$attributes_rule" ]]; then
+        echo "source repository root .gitattributes must contain exactly: $attributes_rule" >&2
+        exit 1
+    fi
+
+    log "source repository is already initialized: $repo_path"
+else
+    git -C "$repo_path" symbolic-ref HEAD "refs/heads/$branch"
+
+    printf '%s\n' "$attributes_rule" > "$repo_path/.gitattributes"
+    git -C "$repo_path" add -- .gitattributes
+
+    GIT_AUTHOR_DATE="$init_commit_date" \
+    GIT_COMMITTER_DATE="$init_commit_date" \
+    git \
+        -C "$repo_path" \
+        -c "user.name=$author_name" \
+        -c "user.email=$author_email" \
+        commit \
+        --quiet \
+        --no-gpg-sign \
+        -m "$init_commit_message"
+
+    commit="$(git -C "$repo_path" rev-parse --short HEAD)"
+    log "created root commit $commit on branch $branch: $init_commit_message"
+fi
+
+if [[ "$push" == true ]]; then
+    git -C "$repo_path" push "$remote" "HEAD:$branch"
+    log "pushed HEAD to $remote/$branch"
+fi

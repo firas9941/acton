@@ -2,6 +2,7 @@
 set -eu
 
 config_path="${VERIFIER_CONFIG:-/etc/verifier/config.toml}"
+mode="${VERIFIER_MODE:-serve}"
 
 toml_escape() {
     printf '%s' "$1" | sed 's/\\/\\\\/g; s/"/\\"/g'
@@ -223,6 +224,10 @@ write_generated_config() {
 
 validate_boolean SOURCE_REPOSITORY_COMMIT_ENABLED "${SOURCE_REPOSITORY_COMMIT_ENABLED:-true}"
 validate_boolean SOURCE_REPOSITORY_PUSH_ENABLED "${SOURCE_REPOSITORY_PUSH_ENABLED:-true}"
+case "$mode" in
+    serve|init) ;;
+    *) fail "VERIFIER_MODE must be one of: serve, init" ;;
+esac
 configure_git_auth
 ensure_source_repository
 
@@ -230,4 +235,7 @@ if [ ! -f "$config_path" ] || [ "${VERIFIER_FORCE_GENERATE_CONFIG:-0}" = "1" ]; 
     write_generated_config
 fi
 
-exec "$@"
+case "$mode" in
+    serve) exec "$@" ;;
+    init) exec verifier-prepare-source-repository --push "$config_path" ;;
+esac

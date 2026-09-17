@@ -1,5 +1,8 @@
 # syntax=docker/dockerfile:1
 
+# TODO: Remove yq from the runtime image once repository initialization no longer parses TOML in shell.
+FROM mikefarah/yq:4.53.6 AS yq
+
 FROM oven/bun:1.4.0-slim AS frontend-builder
 
 WORKDIR /workspace
@@ -62,11 +65,13 @@ WORKDIR /app
 
 COPY --from=rust-builder /build/apps/verifier/target/release/verifier /usr/local/bin/verifier
 COPY --from=rust-builder /build/apps/verifier/target/release/verifier-github-app-credential /usr/local/bin/verifier-github-app-credential
+COPY --from=yq /usr/bin/yq /usr/local/bin/yq
 COPY --chown=verifier:verifier --from=compiler-worker /compiler-worker /app/compiler-worker
 COPY apps/verifier/docker/entrypoint.sh /usr/local/bin/verifier-entrypoint
+COPY apps/verifier/scripts/prepare-source-repository.sh /usr/local/bin/verifier-prepare-source-repository
 
 RUN node /app/compiler-worker/scripts/check-runtime-symlinks.mjs /app/compiler-worker \
-    && chmod +x /usr/local/bin/verifier-entrypoint \
+    && chmod +x /usr/local/bin/verifier-entrypoint /usr/local/bin/verifier-prepare-source-repository \
     && mkdir -p /etc/verifier /var/lib/verifier/source-repo /var/lib/verifier/registry-index /var/lib/verifier/payment-ledger \
     && chmod 0700 /var/lib/verifier/source-repo /var/lib/verifier/registry-index /var/lib/verifier/payment-ledger \
     && chown -R verifier:verifier /etc/verifier /var/lib/verifier

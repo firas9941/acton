@@ -182,6 +182,18 @@ Set `source_repository.path` in `config.toml` to the cloned `source-repo`
 directory before you run the preparation script. The script creates the
 required root commit and `.gitattributes` rule.
 
+After the container environment, source repository credentials, and secret
+mounts are configured, the same initialization can run inside the image:
+
+```bash
+docker compose run --rm --no-deps -e VERIFIER_MODE=init verifier
+```
+
+Init mode prepares and pushes the configured branch, then exits without
+starting the verifier service. Run it as a one-off command; do not persist
+`VERIFIER_MODE=init` on a service with an automatic restart policy. When the
+variable is absent, the entrypoint starts the regular verifier service.
+
 Recommended authentication is an SSH deploy key with write access:
 
 ```bash

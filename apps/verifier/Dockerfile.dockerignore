@@ -13,6 +13,9 @@ apps/verifier/*
 !apps/verifier/build.rs
 !apps/verifier/src/
 !apps/verifier/verifier-github-app-credential/
+!apps/verifier/scripts/
+apps/verifier/scripts/*
+!apps/verifier/scripts/prepare-source-repository.sh
 !apps/verifier/compiler-worker/
 apps/verifier/compiler-worker/node_modules/
 !apps/verifier/docker/

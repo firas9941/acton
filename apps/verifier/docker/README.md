@@ -12,18 +12,18 @@ Local development can build the image:
 docker build -f apps/verifier/Dockerfile -t ton-verifier:local .
 ```
 
-Initialize an empty source repository before deploying the verifier:
+After configuring the source repository credentials and secret mounts,
+initialize an empty source repository with a one-off container:
 
 ```bash
-git clone <source-repository-url> source-repo
-# Set source_repository.path = "source-repo" in config.toml.
-apps/verifier/scripts/prepare-source-repository.sh config.toml
-git -C source-repo push origin HEAD:main
+docker compose run --rm --no-deps -e VERIFIER_MODE=init verifier
 ```
 
 The preparation script creates the required root commit with the source-storage
-Git attributes. The verifier refuses to start when this commit is missing or
-the current `.gitattributes` no longer contains
+Git attributes and pushes the configured branch. Init mode then exits without
+starting the backend. Do not persist `VERIFIER_MODE=init` on a service with an
+automatic restart policy. The verifier refuses to start when the root commit is
+missing or the current `.gitattributes` no longer contains
 `<source_repository.storage_root>/** -text`.
 
 Or use the local build override:
@@ -117,6 +117,7 @@ in the remote URL or look up the installation by repository.
 The image contains:
 
 - `verifier` Rust backend
+- `verifier-prepare-source-repository` initialization command and `yq`
 - Node.js runtime
 - `compiler-worker/compile.mjs`
 - Static NPM compiler packages for supported FunC, Tact, and Tolk versions
