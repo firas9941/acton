@@ -54,20 +54,24 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends ca-certificates git openssh-client tini \
     && rm -rf /var/lib/apt/lists/*
 
+RUN groupadd --gid 10002 verifier \
+    && useradd --uid 10002 --gid verifier --create-home --home-dir /var/lib/verifier \
+        --shell /usr/sbin/nologin --no-log-init verifier
+
 WORKDIR /app
 
 COPY --from=rust-builder /build/apps/verifier/target/release/verifier /usr/local/bin/verifier
 COPY --from=rust-builder /build/apps/verifier/target/release/verifier-github-app-credential /usr/local/bin/verifier-github-app-credential
-COPY --chown=node:node --from=compiler-worker /compiler-worker /app/compiler-worker
+COPY --chown=verifier:verifier --from=compiler-worker /compiler-worker /app/compiler-worker
 COPY apps/verifier/docker/entrypoint.sh /usr/local/bin/verifier-entrypoint
 
 RUN node /app/compiler-worker/scripts/check-runtime-symlinks.mjs /app/compiler-worker \
     && chmod +x /usr/local/bin/verifier-entrypoint \
     && mkdir -p /etc/verifier /var/lib/verifier/source-repo /var/lib/verifier/registry-index /var/lib/verifier/payment-ledger \
     && chmod 0700 /var/lib/verifier/source-repo /var/lib/verifier/registry-index /var/lib/verifier/payment-ledger \
-    && chown -R node:node /etc/verifier /var/lib/verifier
+    && chown -R verifier:verifier /etc/verifier /var/lib/verifier
 
-USER node
+USER verifier
 
 ENV VERIFIER_CONFIG=/etc/verifier/config.toml \
     VERIFIER_BIND_ADDR=0.0.0.0:3000 \

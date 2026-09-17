@@ -180,12 +180,12 @@ Recommended authentication is an SSH deploy key with write access:
 
 ```bash
 sudo install -m 700 -d /opt/ton-verifier/secrets
-sudo install -m 600 source_repo_key /opt/ton-verifier/secrets/source_repo_key
-sudo chown 1000:1000 /opt/ton-verifier/secrets/source_repo_key
+sudo install -o root -g 10002 -m 640 source_repo_key \
+  /opt/ton-verifier/secrets/source_repo_key
 ```
 
-The container runs as user ID `1000`. Make sure that this user can read the
-mounted key. Use the equivalent ownership rule for your secret manager.
+The container runs as user and group ID `10002`. Make sure that this group can
+read the mounted key. Use the equivalent ownership rule for your secret manager.
 
 The key must match:
 
@@ -209,7 +209,7 @@ For GitHub App authentication, install the App on the source repository with
 
 ```bash
 sudo install -m 700 -d /opt/ton-verifier/secrets
-sudo install -o 1000 -g 1000 -m 600 github-app.pem \
+sudo install -o root -g 10002 -m 640 github-app.pem \
   /opt/ton-verifier/secrets/github-app.pem
 ```
 
