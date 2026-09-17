@@ -21,7 +21,7 @@ use support::{
     app_state_with_api_key, blocking_verification_app_state, fail_once_source_storage_app_state,
     failing_compiler_app_state, failing_compiler_app_state_with_payment_outcomes,
     failing_source_storage_app_state, failing_source_storage_app_state_with_payment_outcomes,
-    file_part, get, mapped_compiler_app_state, owned_file_part, owned_text_part,
+    file_part, get, head, mapped_compiler_app_state, owned_file_part, owned_text_part,
     payment_error_app_state, payment_transaction, post_verify, post_verify_with_api_key,
     post_verify_without_payment, recording_app_state, recording_payment_app_state,
     recording_source_storage_app_state, recording_source_storage_app_state_with_generated_sources,
@@ -538,9 +538,11 @@ async fn openapi_json_documents_verifier_api() {
     assert!(body["paths"]["/api/v1/take_ticket"].is_object());
     assert!(body["paths"]["/api/v1/verify"].is_object());
     assert!(body["paths"]["/api/v1/last_verified"].is_object());
+    assert!(body["paths"]["/api/v1/last_verified"]["head"].is_object());
     assert!(body["paths"]["/api/v1/statistics"].is_object());
     assert!(body["paths"]["/api/v1/statistics/history"].is_object());
     assert!(body["paths"]["/api/v1/abi"].is_object());
+    assert!(body["paths"]["/api/v1/abi"]["head"].is_object());
     assert!(body["paths"]["/api/v1/verification/status"].is_object());
     assert!(body["paths"]["/api/v1/verification/source"].is_object());
     assert!(body["components"]["schemas"]["VerifyResponse"].is_object());
@@ -555,6 +557,9 @@ async fn openapi_json_documents_verifier_api() {
     let take_ticket = &body["paths"]["/api/v1/take_ticket"]["post"];
     let verify = &body["paths"]["/api/v1/verify"]["post"];
     let abi = &body["paths"]["/api/v1/abi"]["get"];
+    let abi_head = &body["paths"]["/api/v1/abi"]["head"];
+    let last_verified = &body["paths"]["/api/v1/last_verified"]["get"];
+    let last_verified_head = &body["paths"]["/api/v1/last_verified"]["head"];
     let source = &body["paths"]["/api/v1/verification/source"]["get"];
     assert_eq!(take_ticket["operationId"], "take_ticket");
     assert_eq!(verify["operationId"], "verify");
@@ -566,6 +571,11 @@ async fn openapi_json_documents_verifier_api() {
         ]
     );
     assert_eq!(response_statuses(abi), ["200", "400", "404", "502"]);
+    assert_eq!(response_statuses(abi_head), ["200", "400", "404", "502"]);
+    assert_eq!(response_statuses(last_verified), ["200", "502"]);
+    assert_eq!(response_statuses(last_verified_head), ["200", "502"]);
+    assert!(abi["responses"]["200"]["headers"]["Last-Modified"].is_object());
+    assert!(last_verified["responses"]["200"]["headers"]["Last-Modified"].is_object());
     assert_eq!(
         response_statuses(source),
         ["200", "400", "404", "409", "502"]
@@ -641,6 +651,12 @@ async fn last_verified_returns_latest_verified_contracts() {
     let response = get(state.clone(), "/api/v1/last_verified?limit=500&offset=0").await;
 
     assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(
+        response.headers().get(header::LAST_MODIFIED),
+        Some(&header::HeaderValue::from_static(
+            "Tue, 14 Nov 2023 22:13:20 GMT"
+        ))
+    );
 
     let body = response_json::<LastVerifiedResponse>(response).await;
     assert_eq!(body.total, 1);
@@ -653,8 +669,31 @@ async fn last_verified_returns_latest_verified_contracts() {
     assert!(!body.items[0].has_tolk_abi);
     assert_eq!(body.items[0].abi_name, None);
 
+    let response = head(state.clone(), "/api/v1/last_verified").await;
+    assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(
+        response.headers().get(header::LAST_MODIFIED),
+        Some(&header::HeaderValue::from_static(
+            "Tue, 14 Nov 2023 22:13:20 GMT"
+        ))
+    );
+    assert_eq!(
+        response.headers().get(header::CONTENT_TYPE),
+        Some(&header::HeaderValue::from_static("application/json"))
+    );
+    let body = to_bytes(response.into_body(), usize::MAX)
+        .await
+        .expect("HEAD response body should be readable");
+    assert!(body.is_empty());
+
     let response = get(state, "/api/v1/last_verified?offset=500").await;
     assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(
+        response.headers().get(header::LAST_MODIFIED),
+        Some(&header::HeaderValue::from_static(
+            "Tue, 14 Nov 2023 22:13:20 GMT"
+        ))
+    );
     let body = response_json::<LastVerifiedResponse>(response).await;
     assert_eq!(body.total, 1);
     assert!(body.items.is_empty());
@@ -814,11 +853,34 @@ async fn abi_returns_indexed_tolk_abi_records_with_code_hash() {
 
     let response = get(state.clone(), "/api/v1/abi").await;
     assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(
+        response.headers().get(header::LAST_MODIFIED),
+        Some(&header::HeaderValue::from_static(
+            "Tue, 14 Nov 2023 22:13:20 GMT"
+        ))
+    );
     let body = response_json::<AbiContractsResponse>(response).await;
     assert_eq!(body.total, 1);
     assert_eq!(body.items.len(), 1);
     assert_eq!(body.items[0].code_hash, CODE_HASH_ONE);
     assert_eq!(body.items[0].abi["contract_name"].as_str(), Some("Smoke"));
+
+    let response = head(state.clone(), "/api/v1/abi").await;
+    assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(
+        response.headers().get(header::LAST_MODIFIED),
+        Some(&header::HeaderValue::from_static(
+            "Tue, 14 Nov 2023 22:13:20 GMT"
+        ))
+    );
+    assert_eq!(
+        response.headers().get(header::CONTENT_TYPE),
+        Some(&header::HeaderValue::from_static("application/json"))
+    );
+    let body = to_bytes(response.into_body(), usize::MAX)
+        .await
+        .expect("HEAD response body should be readable");
+    assert!(body.is_empty());
 
     let response = get(
         state.clone(),
@@ -848,6 +910,12 @@ async fn abi_returns_indexed_tolk_abi_records_with_code_hash() {
 
     let response = get(state, "/api/v1/abi?offset=500").await;
     assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(
+        response.headers().get(header::LAST_MODIFIED),
+        Some(&header::HeaderValue::from_static(
+            "Tue, 14 Nov 2023 22:13:20 GMT"
+        ))
+    );
     let body = response_json::<AbiContractsResponse>(response).await;
     assert!(body.items.is_empty());
     assert_eq!(body.total, 1);
@@ -861,6 +929,9 @@ async fn abi_returns_not_found_when_contract_or_abi_is_missing() {
     let response = get(state.clone(), &path).await;
     assert_eq!(response.status(), StatusCode::NOT_FOUND);
     assert_error_contains(response, "ABI was not found").await;
+
+    let response = head(state.clone(), &path).await;
+    assert_eq!(response.status(), StatusCode::NOT_FOUND);
 
     let verify_response = post_verify(
         state.clone(),
@@ -879,11 +950,16 @@ async fn abi_returns_not_found_when_contract_or_abi_is_missing() {
     assert_eq!(response.status(), StatusCode::NOT_FOUND);
     assert_error_contains(response, "ABI was not found").await;
 
-    let response = get(state, "/api/v1/abi").await;
+    let response = get(state.clone(), "/api/v1/abi").await;
     assert_eq!(response.status(), StatusCode::OK);
+    assert!(response.headers().get(header::LAST_MODIFIED).is_none());
     let body = response_json::<AbiContractsResponse>(response).await;
     assert!(body.items.is_empty());
     assert_eq!(body.total, 0);
+
+    let response = head(state, "/api/v1/abi").await;
+    assert_eq!(response.status(), StatusCode::OK);
+    assert!(response.headers().get(header::LAST_MODIFIED).is_none());
 }
 
 #[tokio::test]

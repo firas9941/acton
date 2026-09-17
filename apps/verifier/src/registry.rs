@@ -103,6 +103,7 @@ pub struct VerifiedBundleReceipt {
 pub struct LastVerifiedReceipt {
     pub items: Vec<IndexedVerifiedBundleSummary>,
     pub total: usize,
+    pub last_modified: Option<u64>,
 }
 
 #[derive(Clone, Debug)]
@@ -120,6 +121,7 @@ pub struct VerificationStatisticsHistoryReceipt {
 pub struct AbiContractsReceipt {
     pub items: Vec<IndexedAbiContract>,
     pub total: usize,
+    pub last_modified: Option<u64>,
 }
 
 #[derive(Clone)]
@@ -251,6 +253,7 @@ impl VerificationRegistry for SourceVerificationRegistry {
         Ok(LastVerifiedReceipt {
             items: page.items,
             total: page.total,
+            last_modified: page.last_modified,
         })
     }
 
@@ -290,6 +293,7 @@ impl VerificationRegistry for SourceVerificationRegistry {
         Ok(AbiContractsReceipt {
             items: page.items,
             total: page.total,
+            last_modified: page.last_modified,
         })
     }
 

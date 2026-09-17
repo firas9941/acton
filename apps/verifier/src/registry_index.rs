@@ -76,6 +76,7 @@ pub struct IndexedVerificationStatus {
 pub struct IndexedLastVerifiedPage {
     pub items: Vec<IndexedVerifiedBundleSummary>,
     pub total: usize,
+    pub last_modified: Option<u64>,
 }
 
 #[derive(Clone, Debug)]
@@ -128,6 +129,7 @@ pub struct IndexedAbiContractsQuery {
 pub struct IndexedAbiContractsPage {
     pub items: Vec<IndexedAbiContract>,
     pub total: usize,
+    pub last_modified: Option<u64>,
 }
 
 #[derive(Clone, Debug)]
@@ -368,10 +370,15 @@ impl VerificationIndex for SqliteVerificationIndex {
         let limit_i64 = usize_to_i64("limit", limit)?;
         let offset_i64 = usize_to_i64("offset", offset)?;
         let connection = self.connection()?;
-        let total = connection.query_row("select count(*) from verified_bundles", [], |row| {
-            row.get::<_, i64>(0)
-        })?;
+        let (total, last_modified) = connection.query_row(
+            "select count(*), max(verified_at) from verified_bundles",
+            [],
+            |row| Ok((row.get::<_, i64>(0)?, row.get::<_, Option<i64>>(1)?)),
+        )?;
         let total = i64_to_usize("total", total)?;
+        let last_modified = last_modified
+            .map(|timestamp| i64_to_u64("last_modified", timestamp))
+            .transpose()?;
         let mut statement = connection.prepare(
             r"
             select
@@ -426,7 +433,11 @@ impl VerificationIndex for SqliteVerificationIndex {
         drop(statement);
         drop(connection);
 
-        Ok(IndexedLastVerifiedPage { items, total })
+        Ok(IndexedLastVerifiedPage {
+            items,
+            total,
+            last_modified,
+        })
     }
 
     async fn statistics(&self) -> Result<IndexedVerificationStatistics, VerificationIndexError> {
@@ -526,13 +537,14 @@ impl VerificationIndex for SqliteVerificationIndex {
         let limit_i64 = usize_to_i64("limit", query.limit)?;
         let offset_i64 = usize_to_i64("offset", query.offset)?;
         let connection = self.connection()?;
-        let total = connection.query_row(
+        let (total, last_modified) = connection.query_row(
             r"
-            select count(*)
+            select count(*), max(abi_contracts.verified_at)
             from (
               select
                 bundle_abis.code_hash,
-                bundle_abis.abi_json
+                bundle_abis.abi_json,
+                max(verified_bundles.verified_at) as verified_at
               from bundle_abis
               join verified_bundles
                 on verified_bundles.code_hash = bundle_abis.code_hash
@@ -541,9 +553,12 @@ impl VerificationIndex for SqliteVerificationIndex {
             ) as abi_contracts
             ",
             params![query.code_hash.as_deref()],
-            |row| row.get::<_, i64>(0),
+            |row| Ok((row.get::<_, i64>(0)?, row.get::<_, Option<i64>>(1)?)),
         )?;
         let total = i64_to_usize("total", total)?;
+        let last_modified = last_modified
+            .map(|timestamp| i64_to_u64("last_modified", timestamp))
+            .transpose()?;
         let mut statement = connection.prepare(
             r"
             select
@@ -575,7 +590,11 @@ impl VerificationIndex for SqliteVerificationIndex {
         drop(statement);
         drop(connection);
 
-        Ok(IndexedAbiContractsPage { items, total })
+        Ok(IndexedAbiContractsPage {
+            items,
+            total,
+            last_modified,
+        })
     }
 
     async fn payment_transaction_hashes(&self) -> Result<Vec<String>, VerificationIndexError> {

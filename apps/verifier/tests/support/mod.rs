@@ -415,6 +415,19 @@ pub async fn get(state: AppState, path: &str) -> Response {
         .expect("router should handle GET request")
 }
 
+pub async fn head(state: AppState, path: &str) -> Response {
+    let request = Request::builder()
+        .method(Method::HEAD)
+        .uri(path)
+        .body(Body::empty())
+        .expect("HEAD request should be valid");
+
+    app::router_with_state(state)
+        .oneshot(request)
+        .await
+        .expect("router should handle HEAD request")
+}
+
 fn app_state_from_parts(
     blockchain_client: Arc<dyn verifier::blockchain::BlockchainClient>,
     compiler_service: Arc<dyn verifier::compilers::CompilerService>,

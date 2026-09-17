@@ -386,7 +386,9 @@ GET /api/v1/verification/status?address=...
 GET /api/v1/verification/source?code_hash=...
 GET /api/v1/verification/source?address=...
 GET /api/v1/last_verified?limit=50&offset=0
+HEAD /api/v1/last_verified
 GET /api/v1/abi?code_hash=...
+HEAD /api/v1/abi?code_hash=...
 GET /api/v1/statistics
 GET /api/v1/statistics/history
 ```
@@ -412,6 +414,9 @@ optional `source_map`, and source `files`.
 `/api/v1/abi?code_hash=...` returns HTTP 404 when the requested contract has no
 indexed ABI. The unfiltered `/api/v1/abi` collection still returns an empty list.
 ABI GET responses include `total` before pagination.
+ABI and last-verified GET and HEAD responses include `Last-Modified` when their
+collection is non-empty. The value is the verification time of the most recent
+matching record, formatted as an HTTP date. HEAD responses have no body.
 
 `payment_tx_hash` is absent only for an authenticated administrative submission
 that sets `verified_at` and skips the public payment flow.

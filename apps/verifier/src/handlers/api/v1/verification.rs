@@ -1,6 +1,12 @@
+use std::time::{Duration, UNIX_EPOCH};
+
 use axum::{
     Json,
     extract::{Query, State},
+    http::{
+        HeaderMap, HeaderValue,
+        header::{CONTENT_TYPE, LAST_MODIFIED},
+    },
     response::IntoResponse,
 };
 use serde::{Deserialize, Serialize};
@@ -120,7 +126,11 @@ pub async fn source_handler(
         ("offset" = Option<usize>, Query, description = "Number of records to skip for pagination.")
     ),
     responses(
-        (status = 200, description = "Latest verified source bundles", body = LastVerifiedResponse),
+        (status = 200, description = "Latest verified source bundles", body = LastVerifiedResponse,
+            headers(
+                ("Last-Modified" = String, description = "Verification time of the most recently added source bundle, formatted as an HTTP date")
+            )
+        ),
         (status = 502, description = "Registry lookup failure", body = crate::error::ErrorResponse)
     ),
     tag = "verification"
@@ -136,15 +146,51 @@ pub async fn last_verified_handler(
             offset: query.offset.unwrap_or(0),
         })
         .await?;
+    let headers = collection_headers(receipt.last_modified)?;
 
-    Ok(Json(LastVerifiedResponse {
-        items: receipt
-            .items
-            .into_iter()
-            .map(LastVerifiedItemResponse::from)
-            .collect(),
-        total: receipt.total,
-    }))
+    Ok((
+        headers,
+        Json(LastVerifiedResponse {
+            items: receipt
+                .items
+                .into_iter()
+                .map(LastVerifiedItemResponse::from)
+                .collect(),
+            total: receipt.total,
+        }),
+    ))
+}
+
+#[utoipa::path(
+    head,
+    path = "/api/v1/last_verified",
+    params(
+        ("limit" = Option<usize>, Query, description = "Accepted for parity with GET; does not affect collection metadata."),
+        ("offset" = Option<usize>, Query, description = "Accepted for parity with GET; does not affect collection metadata.")
+    ),
+    responses(
+        (status = 200, description = "Latest verified source bundle metadata",
+            headers(
+                ("Last-Modified" = String, description = "Verification time of the most recently added source bundle, formatted as an HTTP date")
+            )
+        ),
+        (status = 502, description = "Registry lookup failure", body = crate::error::ErrorResponse)
+    ),
+    tag = "verification"
+)]
+pub async fn last_verified_head_handler(
+    State(state): State<AppState>,
+    Query(_query): Query<PaginationQuery>,
+) -> Result<impl IntoResponse, ApiError> {
+    let receipt = state
+        .verification_registry()
+        .last_verified(LastVerifiedRequest {
+            limit: 0,
+            offset: 0,
+        })
+        .await?;
+
+    Ok((collection_headers(receipt.last_modified)?, ()))
 }
 
 #[utoipa::path(
@@ -190,7 +236,11 @@ pub async fn statistics_history_handler(
         ("offset" = Option<usize>, Query, description = "Number of records to skip for pagination.")
     ),
     responses(
-        (status = 200, description = "Tolk ABI records indexed from verified contracts", body = AbiContractsResponse),
+        (status = 200, description = "Tolk ABI records indexed from verified contracts", body = AbiContractsResponse,
+            headers(
+                ("Last-Modified" = String, description = "Verification time of the most recently added matching ABI, formatted as an HTTP date")
+            )
+        ),
         (status = 400, description = "Invalid code hash", body = crate::error::ErrorResponse),
         (status = 404, description = "ABI was not found for the requested code hash", body = crate::error::ErrorResponse),
         (status = 502, description = "Registry lookup failure", body = crate::error::ErrorResponse)
@@ -211,7 +261,63 @@ pub async fn abi_handler(
         })
         .await?;
 
-    if receipt.items.is_empty()
+    if receipt.total == 0
+        && let Some(code_hash) = code_hash
+    {
+        return Err(ApiError::not_found(format!(
+            "ABI was not found for code_hash {code_hash}"
+        )));
+    }
+    let headers = collection_headers(receipt.last_modified)?;
+
+    Ok((
+        headers,
+        Json(AbiContractsResponse {
+            items: receipt
+                .items
+                .into_iter()
+                .map(AbiContractResponse::from)
+                .collect(),
+            total: receipt.total,
+        }),
+    ))
+}
+
+#[utoipa::path(
+    head,
+    path = "/api/v1/abi",
+    params(
+        ("code_hash" = Option<String>, Query, description = "Optional code hash filter."),
+        ("limit" = Option<usize>, Query, description = "Accepted for parity with GET; does not affect collection metadata."),
+        ("offset" = Option<usize>, Query, description = "Accepted for parity with GET; does not affect collection metadata.")
+    ),
+    responses(
+        (status = 200, description = "ABI collection metadata",
+            headers(
+                ("Last-Modified" = String, description = "Verification time of the most recently added matching ABI, formatted as an HTTP date")
+            )
+        ),
+        (status = 400, description = "Invalid code hash", body = crate::error::ErrorResponse),
+        (status = 404, description = "ABI was not found for the requested code hash", body = crate::error::ErrorResponse),
+        (status = 502, description = "Registry lookup failure", body = crate::error::ErrorResponse)
+    ),
+    tag = "verification"
+)]
+pub async fn abi_head_handler(
+    State(state): State<AppState>,
+    Query(query): Query<AbiQuery>,
+) -> Result<impl IntoResponse, ApiError> {
+    let code_hash = validation::optional_code_hash(query.code_hash)?;
+    let receipt = state
+        .verification_registry()
+        .abi_contracts(AbiContractsRequest {
+            code_hash: code_hash.clone(),
+            limit: 0,
+            offset: 0,
+        })
+        .await?;
+
+    if receipt.total == 0
         && let Some(code_hash) = code_hash
     {
         return Err(ApiError::not_found(format!(
@@ -219,14 +325,27 @@ pub async fn abi_handler(
         )));
     }
 
-    Ok(Json(AbiContractsResponse {
-        items: receipt
-            .items
-            .into_iter()
-            .map(AbiContractResponse::from)
-            .collect(),
-        total: receipt.total,
-    }))
+    Ok((collection_headers(receipt.last_modified)?, ()))
+}
+
+fn collection_headers(last_modified: Option<u64>) -> Result<HeaderMap, ApiError> {
+    let mut headers = HeaderMap::new();
+    headers.insert(CONTENT_TYPE, HeaderValue::from_static("application/json"));
+
+    if let Some(last_modified) = last_modified {
+        let timestamp = UNIX_EPOCH
+            .checked_add(Duration::from_secs(last_modified))
+            .ok_or_else(|| {
+                ApiError::internal("collection Last-Modified timestamp is too large".to_owned())
+            })?;
+        let value =
+            HeaderValue::from_str(&httpdate::fmt_http_date(timestamp)).map_err(|error| {
+                ApiError::internal(format!("invalid collection Last-Modified header: {error}"))
+            })?;
+        headers.insert(LAST_MODIFIED, value);
+    }
+
+    Ok(headers)
 }
 
 #[derive(Debug, Deserialize)]

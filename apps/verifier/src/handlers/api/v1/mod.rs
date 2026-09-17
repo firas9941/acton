@@ -14,13 +14,19 @@ mod verify;
 pub fn router() -> Router<AppState> {
     Router::new()
         .route("/openapi.json", get(openapi_handler))
-        .route("/last_verified", get(verification::last_verified_handler))
+        .route(
+            "/last_verified",
+            get(verification::last_verified_handler).head(verification::last_verified_head_handler),
+        )
         .route("/statistics", get(verification::statistics_handler))
         .route(
             "/statistics/history",
             get(verification::statistics_history_handler),
         )
-        .route("/abi", get(verification::abi_handler))
+        .route(
+            "/abi",
+            get(verification::abi_handler).head(verification::abi_head_handler),
+        )
         .route("/take_ticket", post(take_ticket::handler))
         .route("/verify", post(verify::handler))
         .route("/verification/status", get(verification::status_handler))
@@ -46,9 +52,11 @@ fn openapi() -> utoipa::openapi::OpenApi {
         verify::handler,
         take_ticket::handler,
         verification::last_verified_handler,
+        verification::last_verified_head_handler,
         verification::statistics_handler,
         verification::statistics_history_handler,
         verification::abi_handler,
+        verification::abi_head_handler,
         verification::status_handler,
         verification::source_handler
     ),

@@ -2059,6 +2059,7 @@ dependencies = [
  "chrono",
  "dunce",
  "hex",
+ "httpdate",
  "include_dir",
  "reqwest",
  "ring",
