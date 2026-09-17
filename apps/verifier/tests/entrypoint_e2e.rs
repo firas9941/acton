@@ -161,6 +161,39 @@ fn rejects_unknown_authentication_mode() {
 }
 
 #[test]
+fn configures_source_repository_commit_and_push_modes() {
+    let temp_dir = tempfile::tempdir().expect("temporary directory should be created");
+    let output = run_entrypoint(
+        &temp_dir,
+        &[
+            variable("SOURCE_REPOSITORY_COMMIT_ENABLED", "false"),
+            variable("SOURCE_REPOSITORY_PUSH_ENABLED", "false"),
+        ],
+    );
+    assert!(
+        output.status.success(),
+        "expected valid modes; stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+
+    let config = fs::read_to_string(temp_dir.path().join("config.toml"))
+        .expect("generated config should be readable");
+    assert!(config.contains("commit_enabled = false\n"));
+    assert!(config.contains("push_enabled = false\n"));
+
+    assert_failure(
+        "invalid commit mode",
+        "SOURCE_REPOSITORY_COMMIT_ENABLED must be true or false",
+        &[variable("SOURCE_REPOSITORY_COMMIT_ENABLED", "yes")],
+    );
+    assert_failure(
+        "invalid push mode",
+        "SOURCE_REPOSITORY_PUSH_ENABLED must be true or false",
+        &[variable("SOURCE_REPOSITORY_PUSH_ENABLED", "yes")],
+    );
+}
+
+#[test]
 fn rejects_incomplete_or_mixed_authentication() {
     assert_failure(
         "SSH without a key",

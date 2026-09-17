@@ -48,6 +48,8 @@ docker run --rm -p 3000:3000 \
   -e SOURCE_REPOSITORY_AUTH_MODE=none \
   -e SOURCE_REPOSITORY_STORAGE_ROOT=sources \
   -e SOURCE_REPOSITORY_BRANCH=main \
+  -e SOURCE_REPOSITORY_COMMIT_ENABLED=true \
+  -e SOURCE_REPOSITORY_PUSH_ENABLED=true \
   -v verifier-source-repo:/var/lib/verifier/source-repo \
   -v verifier-registry-index:/var/lib/verifier/registry-index \
   -v verifier-payment-ledger:/var/lib/verifier/payment-ledger \

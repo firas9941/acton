@@ -133,6 +133,8 @@ SOURCE_REPOSITORY_URL=git@github.com:i582/test-verify-repo.git
 SOURCE_REPOSITORY_AUTH_MODE=ssh
 SOURCE_REPOSITORY_STORAGE_ROOT=sources
 SOURCE_REPOSITORY_BRANCH=main
+SOURCE_REPOSITORY_COMMIT_ENABLED=true
+SOURCE_REPOSITORY_PUSH_ENABLED=true
 SOURCE_REPOSITORY_AUTHOR_NAME=ton-verifier
 SOURCE_REPOSITORY_AUTHOR_EMAIL=ton-verifier@example.invalid
 SOURCE_REPOSITORY_SSH_KEY_FILE=/run/secrets/source_repo_key
@@ -153,6 +155,10 @@ available.
 multipart body, and defaults to 512 KiB. When nginx proxies the verifier,
 configure `client_max_body_size` slightly above the verifier request limit to
 allow for multipart framing overhead.
+
+`SOURCE_REPOSITORY_COMMIT_ENABLED` and `SOURCE_REPOSITORY_PUSH_ENABLED` default
+to `true`. Keep both enabled in production when verified sources must be
+committed and pushed to the configured remote repository.
 
 The payment verifier supports TON mainnet and testnet.
 `VERIFIER_PAYMENT_PRIMARY_NETWORK` selects which network receives and verifies

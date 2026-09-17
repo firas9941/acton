@@ -28,6 +28,15 @@ fail() {
     exit 1
 }
 
+validate_boolean() {
+    name="$1"
+    value="$2"
+    case "$value" in
+        true|false) ;;
+        *) fail "$name must be true or false" ;;
+    esac
+}
+
 url_contains_credentials() {
     case "$1" in
         https://*:*@*) return 0 ;;
@@ -190,6 +199,8 @@ write_generated_config() {
         write_optional_string remote "${SOURCE_REPOSITORY_REMOTE:-origin}"
         write_optional_string storage_root "${SOURCE_REPOSITORY_STORAGE_ROOT:-sources}"
         write_optional_string branch "${SOURCE_REPOSITORY_BRANCH:-main}"
+        printf 'commit_enabled = %s\n' "${SOURCE_REPOSITORY_COMMIT_ENABLED:-true}"
+        printf 'push_enabled = %s\n' "${SOURCE_REPOSITORY_PUSH_ENABLED:-true}"
         write_optional_string author_name "${SOURCE_REPOSITORY_AUTHOR_NAME:-ton-verifier}"
         write_optional_string author_email "${SOURCE_REPOSITORY_AUTHOR_EMAIL:-ton-verifier@example.invalid}"
         printf '\n'
@@ -210,6 +221,8 @@ write_generated_config() {
     } > "$config_path"
 }
 
+validate_boolean SOURCE_REPOSITORY_COMMIT_ENABLED "${SOURCE_REPOSITORY_COMMIT_ENABLED:-true}"
+validate_boolean SOURCE_REPOSITORY_PUSH_ENABLED "${SOURCE_REPOSITORY_PUSH_ENABLED:-true}"
 configure_git_auth
 ensure_source_repository
 
