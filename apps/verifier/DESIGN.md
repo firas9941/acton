@@ -411,6 +411,7 @@ optional `source_map`, and source `files`.
 
 `/api/v1/abi?code_hash=...` returns HTTP 404 when the requested contract has no
 indexed ABI. The unfiltered `/api/v1/abi` collection still returns an empty list.
+ABI GET responses include `total` before pagination.
 
 `payment_tx_hash` is absent only for an authenticated administrative submission
 that sets `verified_at` and skips the public payment flow.

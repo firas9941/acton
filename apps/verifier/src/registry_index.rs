@@ -127,6 +127,7 @@ pub struct IndexedAbiContractsQuery {
 #[derive(Clone, Debug)]
 pub struct IndexedAbiContractsPage {
     pub items: Vec<IndexedAbiContract>,
+    pub total: usize,
 }
 
 #[derive(Clone, Debug)]
@@ -525,6 +526,24 @@ impl VerificationIndex for SqliteVerificationIndex {
         let limit_i64 = usize_to_i64("limit", query.limit)?;
         let offset_i64 = usize_to_i64("offset", query.offset)?;
         let connection = self.connection()?;
+        let total = connection.query_row(
+            r"
+            select count(*)
+            from (
+              select
+                bundle_abis.code_hash,
+                bundle_abis.abi_json
+              from bundle_abis
+              join verified_bundles
+                on verified_bundles.code_hash = bundle_abis.code_hash
+              where (?1 is null or bundle_abis.code_hash = ?1)
+              group by bundle_abis.code_hash, bundle_abis.abi_json
+            ) as abi_contracts
+            ",
+            params![query.code_hash.as_deref()],
+            |row| row.get::<_, i64>(0),
+        )?;
+        let total = i64_to_usize("total", total)?;
         let mut statement = connection.prepare(
             r"
             select
@@ -556,7 +575,7 @@ impl VerificationIndex for SqliteVerificationIndex {
         drop(statement);
         drop(connection);
 
-        Ok(IndexedAbiContractsPage { items })
+        Ok(IndexedAbiContractsPage { items, total })
     }
 
     async fn payment_transaction_hashes(&self) -> Result<Vec<String>, VerificationIndexError> {

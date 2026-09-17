@@ -548,6 +548,9 @@ async fn openapi_json_documents_verifier_api() {
     assert!(body["components"]["schemas"]["VerificationStatisticsResponse"].is_object());
     assert!(body["components"]["schemas"]["VerificationStatisticsHistoryResponse"].is_object());
     assert!(body["components"]["schemas"]["SourceFileResponse"].is_object());
+    assert!(
+        body["components"]["schemas"]["AbiContractsResponse"]["properties"]["total"].is_object()
+    );
 
     let take_ticket = &body["paths"]["/api/v1/take_ticket"]["post"];
     let verify = &body["paths"]["/api/v1/verify"]["post"];
@@ -812,6 +815,7 @@ async fn abi_returns_indexed_tolk_abi_records_with_code_hash() {
     let response = get(state.clone(), "/api/v1/abi").await;
     assert_eq!(response.status(), StatusCode::OK);
     let body = response_json::<AbiContractsResponse>(response).await;
+    assert_eq!(body.total, 1);
     assert_eq!(body.items.len(), 1);
     assert_eq!(body.items[0].code_hash, CODE_HASH_ONE);
     assert_eq!(body.items[0].abi["contract_name"].as_str(), Some("Smoke"));
@@ -846,6 +850,7 @@ async fn abi_returns_indexed_tolk_abi_records_with_code_hash() {
     assert_eq!(response.status(), StatusCode::OK);
     let body = response_json::<AbiContractsResponse>(response).await;
     assert!(body.items.is_empty());
+    assert_eq!(body.total, 1);
 }
 
 #[tokio::test]
@@ -878,6 +883,7 @@ async fn abi_returns_not_found_when_contract_or_abi_is_missing() {
     assert_eq!(response.status(), StatusCode::OK);
     let body = response_json::<AbiContractsResponse>(response).await;
     assert!(body.items.is_empty());
+    assert_eq!(body.total, 0);
 }
 
 #[tokio::test]
@@ -3088,6 +3094,7 @@ struct LastVerifiedItem {
 #[derive(Debug, Deserialize)]
 struct AbiContractsResponse {
     items: Vec<AbiContract>,
+    total: usize,
 }
 
 #[derive(Debug, Deserialize)]

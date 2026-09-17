@@ -2,6 +2,7 @@
 name = "verifier"
 description = "TON smart contract source verification service"
 version = { workspace = true }
+default-run = "verifier"
 publish = false
 authors = { workspace = true }
 edition = { workspace = true }

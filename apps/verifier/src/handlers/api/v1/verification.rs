@@ -225,6 +225,7 @@ pub async fn abi_handler(
             .into_iter()
             .map(AbiContractResponse::from)
             .collect(),
+        total: receipt.total,
     }))
 }
 
@@ -517,6 +518,7 @@ impl From<IndexedVerificationStatisticsHistoryItem> for VerificationStatisticsHi
 #[derive(Debug, Serialize, Deserialize, ToSchema)]
 pub(super) struct AbiContractsResponse {
     items: Vec<AbiContractResponse>,
+    total: usize,
 }
 
 #[derive(Debug, Serialize, Deserialize, ToSchema)]

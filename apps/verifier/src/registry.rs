@@ -119,6 +119,7 @@ pub struct VerificationStatisticsHistoryReceipt {
 #[derive(Clone, Debug)]
 pub struct AbiContractsReceipt {
     pub items: Vec<IndexedAbiContract>,
+    pub total: usize,
 }
 
 #[derive(Clone)]
@@ -286,7 +287,10 @@ impl VerificationRegistry for SourceVerificationRegistry {
             })
             .await?;
 
-        Ok(AbiContractsReceipt { items: page.items })
+        Ok(AbiContractsReceipt {
+            items: page.items,
+            total: page.total,
+        })
     }
 
     async fn payment_transaction_hashes(&self) -> Result<Vec<String>, RegistryError> {
