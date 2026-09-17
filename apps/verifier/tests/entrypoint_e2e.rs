@@ -14,11 +14,15 @@ fn entrypoint_path() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("docker/entrypoint.sh")
 }
 
-fn run_entrypoint(temp_dir: &TempDir, environment: &[TestEnvEntry]) -> Output {
+fn run_entrypoint_with_command(
+    temp_dir: &TempDir,
+    environment: &[TestEnvEntry],
+    child_command: &[&str],
+) -> Output {
     let mut command = Command::new("/bin/sh");
     command
         .arg(entrypoint_path())
-        .arg("true")
+        .args(child_command)
         .env_clear()
         .env(
             "PATH",
@@ -32,6 +36,10 @@ fn run_entrypoint(temp_dir: &TempDir, environment: &[TestEnvEntry]) -> Output {
     }
 
     command.output().expect("entrypoint should run")
+}
+
+fn run_entrypoint(temp_dir: &TempDir, environment: &[TestEnvEntry]) -> Output {
+    run_entrypoint_with_command(temp_dir, environment, &["true"])
 }
 
 fn assert_success(name: &str, environment: &[TestEnvEntry]) {
@@ -151,5 +159,75 @@ fn rejects_incomplete_or_mixed_authentication() {
             ),
             variable("SOURCE_REPOSITORY_SSH_KEY_FILE", "/tmp/unused-key"),
         ],
+    );
+}
+
+#[test]
+fn validates_ssh_configuration_and_exports_git_environment() {
+    assert_failure(
+        "unreadable SSH key",
+        "SOURCE_REPOSITORY_SSH_KEY_FILE is not readable",
+        &[
+            variable("SOURCE_REPOSITORY_AUTH_MODE", "ssh"),
+            variable("SOURCE_REPOSITORY_SSH_KEY_FILE", "/missing/ssh-key"),
+        ],
+    );
+    assert_failure(
+        "invalid strict host key checking",
+        "invalid SOURCE_REPOSITORY_SSH_STRICT_HOST_KEY_CHECKING value",
+        &[
+            variable("SOURCE_REPOSITORY_AUTH_MODE", "ssh"),
+            variable("SOURCE_REPOSITORY_SSH_KEY_FILE", "/dev/null"),
+            variable("SOURCE_REPOSITORY_SSH_STRICT_HOST_KEY_CHECKING", "invalid"),
+        ],
+    );
+
+    let temp_dir = tempfile::tempdir().expect("temporary directory should be created");
+    let ssh_key = temp_dir.path().join("ssh-key");
+    fs::write(&ssh_key, []).expect("SSH key fixture should be created");
+    let environment = vec![
+        variable("SOURCE_REPOSITORY_AUTH_MODE", "ssh"),
+        variable("SOURCE_REPOSITORY_SSH_KEY_FILE", ssh_key.as_os_str()),
+        variable("SOURCE_REPOSITORY_SSH_STRICT_HOST_KEY_CHECKING", "yes"),
+    ];
+    let output = run_entrypoint_with_command(
+        &temp_dir,
+        &environment,
+        &["/bin/sh", "-c", "printf '%s' \"$GIT_SSH_COMMAND\""],
+    );
+    assert!(
+        output.status.success(),
+        "expected SSH environment export; stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    assert_eq!(
+        String::from_utf8_lossy(&output.stdout),
+        format!(
+            "ssh -i {} -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes",
+            ssh_key.display()
+        )
+    );
+}
+
+#[test]
+fn rejects_a_nonempty_non_git_checkout() {
+    let temp_dir = tempfile::tempdir().expect("temporary directory should be created");
+    let checkout = temp_dir.path().join("checkout");
+    fs::create_dir(&checkout).expect("checkout directory should be created");
+    fs::write(checkout.join("unexpected-file"), []).expect("fixture should be written");
+
+    let environment = vec![
+        variable("SOURCE_REPOSITORY_AUTH_MODE", "none"),
+        variable(
+            "SOURCE_REPOSITORY_URL",
+            temp_dir.path().join("remote").as_os_str(),
+        ),
+        variable("SOURCE_REPOSITORY_PATH", checkout.as_os_str()),
+    ];
+    let output = run_entrypoint(&temp_dir, &environment);
+    assert!(!output.status.success());
+    assert!(
+        String::from_utf8_lossy(&output.stderr)
+            .contains("source repository path exists and is not an empty git repository")
     );
 }
