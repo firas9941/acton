@@ -130,6 +130,7 @@ VERIFIER_PAYMENT_LEDGER_PATH=/var/lib/verifier/payment-ledger/payment-ledger.sql
 VERIFIER_UPLOAD_MAX_REQUEST_BYTES=524288
 
 SOURCE_REPOSITORY_URL=git@github.com:i582/test-verify-repo.git
+SOURCE_REPOSITORY_AUTH_MODE=ssh
 SOURCE_REPOSITORY_STORAGE_ROOT=sources
 SOURCE_REPOSITORY_BRANCH=main
 SOURCE_REPOSITORY_AUTHOR_NAME=ton-verifier
@@ -189,11 +190,19 @@ mounted key. Use the equivalent ownership rule for your secret manager.
 The key must match:
 
 ```bash
+SOURCE_REPOSITORY_AUTH_MODE=ssh
 SOURCE_REPOSITORY_URL=git@github.com:i582/test-verify-repo.git
 SOURCE_REPOSITORY_SSH_KEY_FILE=/run/secrets/source_repo_key
 ```
 
 HTTPS remotes can also work, but then credentials must be provided through Docker secret mounts, a credential helper, or a tokenized remote URL. Avoid committing tokens to files or image layers.
+
+Set `SOURCE_REPOSITORY_AUTH_MODE=url` when `SOURCE_REPOSITORY_URL` contains
+HTTPS basic-auth credentials, for example `https://x-access-token:<token>@github.com/owner/repository.git`.
+This mode stores the credential in the checkout's Git remote configuration, so
+it is intended only for deployments that deliberately manage that risk. Set
+the mode to `none` for repositories that need no credentials. Any embedded URL
+credentials are rejected in `none` and `ssh` modes.
 
 ## Docker Compose Deployment
 

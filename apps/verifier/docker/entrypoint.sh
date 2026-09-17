@@ -23,11 +23,65 @@ write_optional_int() {
     fi
 }
 
-configure_git_ssh() {
-    if [ -n "${SOURCE_REPOSITORY_SSH_KEY_FILE:-}" ]; then
-        strict_host_key_checking="${SOURCE_REPOSITORY_SSH_STRICT_HOST_KEY_CHECKING:-accept-new}"
-        export GIT_SSH_COMMAND="ssh -i ${SOURCE_REPOSITORY_SSH_KEY_FILE} -o IdentitiesOnly=yes -o StrictHostKeyChecking=${strict_host_key_checking}"
-    fi
+fail() {
+    echo "verifier-entrypoint: $*" >&2
+    exit 1
+}
+
+url_contains_credentials() {
+    case "$1" in
+        https://*:*@*) return 0 ;;
+        *) return 1 ;;
+    esac
+}
+
+configure_git_auth() {
+    auth_mode="${SOURCE_REPOSITORY_AUTH_MODE:-none}"
+    repo_url="${SOURCE_REPOSITORY_URL:-}"
+    ssh_key_file="${SOURCE_REPOSITORY_SSH_KEY_FILE:-}"
+
+    case "$auth_mode" in
+        none)
+            if [ -n "$ssh_key_file" ]; then
+                fail "SOURCE_REPOSITORY_SSH_KEY_FILE requires SOURCE_REPOSITORY_AUTH_MODE=ssh"
+            fi
+            if url_contains_credentials "$repo_url"; then
+                fail "credentials in SOURCE_REPOSITORY_URL require SOURCE_REPOSITORY_AUTH_MODE=url"
+            fi
+            ;;
+        url)
+            if [ -n "$ssh_key_file" ]; then
+                fail "SOURCE_REPOSITORY_AUTH_MODE=url cannot be combined with SOURCE_REPOSITORY_SSH_KEY_FILE"
+            fi
+            if [ -z "$repo_url" ]; then
+                fail "SOURCE_REPOSITORY_AUTH_MODE=url requires SOURCE_REPOSITORY_URL"
+            fi
+            if ! url_contains_credentials "$repo_url"; then
+                fail "SOURCE_REPOSITORY_AUTH_MODE=url requires credentials in an HTTPS SOURCE_REPOSITORY_URL"
+            fi
+            ;;
+        ssh)
+            if [ -z "$ssh_key_file" ]; then
+                fail "SOURCE_REPOSITORY_AUTH_MODE=ssh requires SOURCE_REPOSITORY_SSH_KEY_FILE"
+            fi
+            if [ ! -r "$ssh_key_file" ]; then
+                fail "SOURCE_REPOSITORY_SSH_KEY_FILE is not readable"
+            fi
+            if url_contains_credentials "$repo_url"; then
+                fail "SOURCE_REPOSITORY_AUTH_MODE=ssh cannot be combined with credentials in SOURCE_REPOSITORY_URL"
+            fi
+
+            strict_host_key_checking="${SOURCE_REPOSITORY_SSH_STRICT_HOST_KEY_CHECKING:-accept-new}"
+            case "$strict_host_key_checking" in
+                yes|no|ask|accept-new) ;;
+                *) fail "invalid SOURCE_REPOSITORY_SSH_STRICT_HOST_KEY_CHECKING value" ;;
+            esac
+            export GIT_SSH_COMMAND="ssh -i ${ssh_key_file} -o IdentitiesOnly=yes -o StrictHostKeyChecking=${strict_host_key_checking}"
+            ;;
+        *)
+            fail "SOURCE_REPOSITORY_AUTH_MODE must be one of: none, url, ssh"
+            ;;
+    esac
 }
 
 ensure_source_repository() {
@@ -113,7 +167,7 @@ write_generated_config() {
     } > "$config_path"
 }
 
-configure_git_ssh
+configure_git_auth
 ensure_source_repository
 
 if [ ! -f "$config_path" ] || [ "${VERIFIER_FORCE_GENERATE_CONFIG:-0}" = "1" ]; then

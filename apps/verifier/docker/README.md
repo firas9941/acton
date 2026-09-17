@@ -45,6 +45,7 @@ docker run --rm -p 3000:3000 \
   -e 'VERIFIER_PAYMENT_ADDRESS=0:<64-hex-character-wallet-address>' \
   -e VERIFIER_PAYMENT_MIN_AMOUNT_NANO=500000000 \
   -e SOURCE_REPOSITORY_URL=https://github.com/i582/test-verify-repo \
+  -e SOURCE_REPOSITORY_AUTH_MODE=none \
   -e SOURCE_REPOSITORY_STORAGE_ROOT=sources \
   -e SOURCE_REPOSITORY_BRANCH=main \
   -v verifier-source-repo:/var/lib/verifier/source-repo \
@@ -77,10 +78,23 @@ docker run --rm -p 3000:3000 \
 For SSH Git remotes, mount a deploy key and pass:
 
 ```bash
+-e SOURCE_REPOSITORY_AUTH_MODE=ssh
 -e SOURCE_REPOSITORY_URL=git@github.com:i582/test-verify-repo.git
 -e SOURCE_REPOSITORY_SSH_KEY_FILE=/run/secrets/source_repo_key
 -v ./source_repo_key:/run/secrets/source_repo_key:ro
 ```
+
+For an HTTPS remote with credentials embedded in its URL, pass:
+
+```bash
+-e SOURCE_REPOSITORY_AUTH_MODE=url
+-e SOURCE_REPOSITORY_URL=https://x-access-token:<token>@github.com/owner/repository.git
+```
+
+The `url` mode stores the credential in the checkout's Git remote configuration.
+Avoid it for short-lived credentials, and make sure deployment output and error
+logs do not expose the URL. Use `none` only for repositories that need no Git
+credentials.
 
 The image contains:
 

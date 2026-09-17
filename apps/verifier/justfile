@@ -27,6 +27,9 @@ test: install-compiler-worker
     cd compiler-worker && npm test
     cargo test --locked
 
+test-entrypoint:
+    cargo test --locked --test entrypoint_e2e
+
 check-ci: fmt-check check-deps clippy check-deny
 
 check: check-ci test
