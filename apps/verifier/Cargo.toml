@@ -9,6 +9,10 @@ rust-version = { workspace = true }
 repository = { workspace = true }
 license = { workspace = true }
 
+[[bin]]
+name = "verifier-github-app-credential"
+path = "verifier-github-app-credential/main.rs"
+
 [workspace]
 
 [workspace.package]
@@ -63,6 +67,8 @@ dunce = "1.0.5"
 hex = "0.4"
 include_dir = "0.7"
 reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }
+ring = "0.17.14"
+rustls-pki-types = "1.14"
 rusqlite = { version = "0.37", features = ["bundled"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
@@ -77,6 +83,7 @@ tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["fmt", "env-filter"] }
 tycho-types = "0.3.0"
 utoipa = { version = "5.5", features = ["axum_extras", "macros"] }
+zeroize = "1.9"
 
 [dev-dependencies]
 tower = { version = "0.5", features = ["util"] }

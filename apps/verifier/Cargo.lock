@@ -2061,7 +2061,9 @@ dependencies = [
  "hex",
  "include_dir",
  "reqwest",
+ "ring",
  "rusqlite",
+ "rustls-pki-types",
  "serde",
  "serde_json",
  "sha2",
@@ -2076,6 +2078,7 @@ dependencies = [
  "tracing-subscriber",
  "tycho-types",
  "utoipa",
+ "zeroize",
 ]
 
 [[package]]
