@@ -497,14 +497,13 @@ mod tests {
         .expect("worker should start without inheriting parent environment");
         let environment = serde_json::from_str::<Value>(&output.code_hash)
             .expect("worker environment report should be valid JSON");
-        let mut environment_keys = environment["environmentKeys"]
+        let environment_keys = environment["environmentKeys"]
             .as_array()
-            .expect("worker environment keys should be an array")
-            .clone();
-        #[cfg(target_os = "macos")]
-        environment_keys.retain(|name| name.as_str() != Some("__CF_USER_TEXT_ENCODING"));
+            .expect("worker environment keys should be an array");
 
-        assert_eq!(environment_keys, Vec::<Value>::new());
+        assert!(environment_keys.iter().all(|name| {
+            cfg!(target_os = "macos") && name.as_str() == Some("__CF_USER_TEXT_ENCODING")
+        }));
         assert_eq!(environment["leakedNames"], serde_json::json!([]));
     }
 
