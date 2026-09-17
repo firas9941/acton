@@ -6,6 +6,7 @@
   "scripts": {
     "generate-registry": "node scripts/generate-registry.mjs",
     "apply-patches": "node scripts/apply-patches.mjs",
+    "check-runtime-symlinks": "node scripts/check-runtime-symlinks.mjs .",
     "test": "node --test languages/*.test.mjs scripts/*.test.mjs"
   },
   "dependencies": {

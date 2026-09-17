@@ -59,7 +59,8 @@ COPY --from=rust-builder /build/apps/verifier/target/release/verifier /usr/local
 COPY --chown=node:node --from=compiler-worker /compiler-worker /app/compiler-worker
 COPY apps/verifier/docker/entrypoint.sh /usr/local/bin/verifier-entrypoint
 
-RUN chmod +x /usr/local/bin/verifier-entrypoint \
+RUN node /app/compiler-worker/scripts/check-runtime-symlinks.mjs /app/compiler-worker \
+    && chmod +x /usr/local/bin/verifier-entrypoint \
     && mkdir -p /etc/verifier /var/lib/verifier/source-repo /var/lib/verifier/registry-index /var/lib/verifier/payment-ledger \
     && chmod 0700 /var/lib/verifier/source-repo /var/lib/verifier/registry-index /var/lib/verifier/payment-ledger \
     && chown -R node:node /etc/verifier /var/lib/verifier
