@@ -248,6 +248,24 @@ pub enum CompilerError {
 mod tests {
     use super::*;
 
+    fn test_compile_request() -> CompileRequest {
+        CompileRequest {
+            language: "tolk".to_owned(),
+            compiler_version: "1.4.2".to_owned(),
+            entrypoint: "main.tolk".to_owned(),
+            import_mappings: BTreeMap::new(),
+            compile_params: Value::Null,
+            sources: vec![CompileSource {
+                path: "main.tolk".to_owned(),
+                content: "x".repeat(1024 * 1024),
+                is_entrypoint: true,
+                include_in_command: None,
+                is_stdlib: None,
+                has_include_directives: None,
+            }],
+        }
+    }
+
     // Exercise the real process boundary: mocks cannot reproduce a full stdin
     // pipe or a worker that writes output before it reads the request.
     async fn run_worker_script(
@@ -264,21 +282,7 @@ mod tests {
         };
         time::timeout(
             Duration::from_secs(5),
-            service.compile(CompileRequest {
-                language: "tolk".to_owned(),
-                compiler_version: "1.4.2".to_owned(),
-                entrypoint: "main.tolk".to_owned(),
-                import_mappings: BTreeMap::new(),
-                compile_params: Value::Null,
-                sources: vec![CompileSource {
-                    path: "main.tolk".to_owned(),
-                    content: "x".repeat(1024 * 1024),
-                    is_entrypoint: true,
-                    include_in_command: None,
-                    is_stdlib: None,
-                    has_include_directives: None,
-                }],
-            }),
+            service.compile(test_compile_request()),
         )
         .await
         .expect("compiler must enforce its own deadline")
@@ -327,6 +331,181 @@ mod tests {
         .expect("full duplex exchange must complete");
         assert_eq!(result.code_hash, "1048576");
         assert_eq!(result.used_source_paths, Some(vec!["main.tolk".to_owned()]));
+    }
+
+    #[tokio::test]
+    async fn node_compiler_service_enforces_runtime_restrictions() {
+        let worker_directory = tempfile::tempdir().expect("worker directory should be created");
+        let denied_directory = tempfile::tempdir().expect("denied directory should be created");
+        let worker_path = worker_directory.path().join("worker.mjs");
+        let denied_file = denied_directory.path().join("secret.txt");
+        let output_file = worker_directory.path().join("output.txt");
+        std::fs::write(&denied_file, "secret").expect("denied fixture should be written");
+        std::fs::write(
+            &worker_path,
+            r#"
+                import fs from "node:fs";
+                import { execFileSync } from "node:child_process";
+                import { WASI } from "node:wasi";
+                import { Worker } from "node:worker_threads";
+    
+                let input = "";
+                for await (const chunk of process.stdin) input += chunk;
+                const request = JSON.parse(input);
+                const { deniedPath, outputPath } = request.compile_params;
+                const restrictions = {};
+    
+                try {
+                  fs.readFileSync(deniedPath, "utf8");
+                  restrictions.fsRead = "allowed";
+                } catch (error) {
+                  restrictions.fsRead = error.code;
+                }
+    
+                try {
+                  fs.writeFileSync(outputPath, "output");
+                  restrictions.fsWrite = "allowed";
+                } catch (error) {
+                  restrictions.fsWrite = error.code;
+                }
+    
+                try {
+                  eval("1");
+                  restrictions.eval = "allowed";
+                } catch (error) {
+                  restrictions.eval = error.name;
+                }
+    
+                try {
+                  execFileSync(process.execPath, ["--version"]);
+                  restrictions.childProcess = "allowed";
+                } catch (error) {
+                  restrictions.childProcess = error.code;
+                }
+    
+                try {
+                  const worker = new Worker(new URL("data:text/javascript,", import.meta.url));
+                  await worker.terminate();
+                  restrictions.workerThreads = "allowed";
+                } catch (error) {
+                  restrictions.workerThreads = error.code;
+                }
+    
+                try {
+                  new WASI({ version: "preview1" });
+                  restrictions.wasi = "allowed";
+                } catch (error) {
+                  restrictions.wasi = error.code;
+                }
+    
+                try {
+                  await import("node:sqlite");
+                  restrictions.sqlite = "allowed";
+                } catch (error) {
+                  restrictions.sqlite = error.code;
+                }
+    
+                process.stdout.write(JSON.stringify({
+                  status: "ok",
+                  code_hash: JSON.stringify(restrictions),
+                }));
+            "#,
+        )
+        .expect("worker script should be written");
+
+        let service = NodeCompilerService {
+            node_bin: "node".to_owned(),
+            worker_path,
+            timeout: Duration::from_secs(3),
+        };
+        let mut request = test_compile_request();
+        request.compile_params = serde_json::json!({
+            "deniedPath": denied_file,
+            "outputPath": output_file,
+        });
+
+        let output = service
+            .compile(request)
+            .await
+            .expect("restricted worker should complete");
+        let restrictions = serde_json::from_str::<Value>(&output.code_hash)
+            .expect("worker restrictions should be valid JSON");
+
+        assert_eq!(restrictions["fsRead"], "ERR_ACCESS_DENIED");
+        assert_eq!(restrictions["fsWrite"], "ERR_ACCESS_DENIED");
+        assert_eq!(restrictions["eval"], "EvalError");
+        assert_eq!(restrictions["childProcess"], "ERR_ACCESS_DENIED");
+        assert_eq!(restrictions["workerThreads"], "ERR_ACCESS_DENIED");
+        assert_eq!(restrictions["wasi"], "ERR_ACCESS_DENIED");
+        assert_eq!(restrictions["sqlite"], "ERR_UNKNOWN_BUILTIN_MODULE");
+        assert!(!output_file.exists());
+    }
+
+    #[tokio::test]
+    async fn node_compiler_service_clears_sensitive_environment() {
+        const CHILD_MARKER: &str = "VERIFIER_ENV_ISOLATION_TEST_CHILD";
+        const TEST_NAME: &str =
+            "compilers::tests::node_compiler_service_clears_sensitive_environment";
+
+        if std::env::var_os(CHILD_MARKER).is_none() {
+            let output = Command::new(std::env::current_exe().expect("current test executable"))
+                .arg("--exact")
+                .arg(TEST_NAME)
+                .arg("--nocapture")
+                .env(CHILD_MARKER, "1")
+                .env("VERIFIER_API_KEY", "not-a-real-secret")
+                .env(
+                    "NODE_OPTIONS",
+                    "--require=/acton-verifier-test-missing-node-options-module.cjs",
+                )
+                .env("NODE_PATH", "/acton-verifier-test-missing-node-path")
+                .output()
+                .await
+                .expect("nested test process should run");
+
+            assert!(
+                output.status.success(),
+                "nested environment-isolation test failed\nstdout:\n{}\nstderr:\n{}",
+                String::from_utf8_lossy(&output.stdout),
+                String::from_utf8_lossy(&output.stderr),
+            );
+            return;
+        }
+
+        let output = run_worker_script(
+            r#"
+                for await (const _chunk of process.stdin) {
+                  // Drain the request before replying so the parent can finish writing stdin.
+                }
+                const sensitiveNames = [
+                  "VERIFIER_API_KEY",
+                  "NODE_OPTIONS",
+                  "NODE_PATH",
+                  "VERIFIER_ENV_ISOLATION_TEST_CHILD",
+                ];
+                process.stdout.write(JSON.stringify({
+                  status: "ok",
+                  code_hash: JSON.stringify({
+                    environmentKeys: Object.keys(process.env).sort(),
+                    leakedNames: sensitiveNames.filter(name => process.env[name] !== undefined),
+                  }),
+                }));
+            "#,
+            Duration::from_secs(3),
+        )
+        .await
+        .expect("worker should start without inheriting parent environment");
+        let environment = serde_json::from_str::<Value>(&output.code_hash)
+            .expect("worker environment report should be valid JSON");
+        let mut environment_keys = environment["environmentKeys"]
+            .as_array()
+            .expect("worker environment keys should be an array")
+            .clone();
+        #[cfg(target_os = "macos")]
+        environment_keys.retain(|name| name.as_str() != Some("__CF_USER_TEXT_ENCODING"));
+
+        assert_eq!(environment_keys, Vec::<Value>::new());
+        assert_eq!(environment["leakedNames"], serde_json::json!([]));
     }
 
     #[tokio::test]
