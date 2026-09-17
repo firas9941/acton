@@ -204,6 +204,39 @@ it is intended only for deployments that deliberately manage that risk. Set
 the mode to `none` for repositories that need no credentials. Any embedded URL
 credentials are rejected in `none` and `ssh` modes.
 
+For GitHub App authentication, install the App on the source repository with
+`Contents: Read and write`, generate a private key, and mount that key read-only:
+
+```bash
+sudo install -m 700 -d /opt/ton-verifier/secrets
+sudo install -o 1000 -g 1000 -m 600 github-app.pem \
+  /opt/ton-verifier/secrets/github-app.pem
+```
+
+Configure the repository with explicit App and installation IDs:
+
+```bash
+SOURCE_REPOSITORY_AUTH_MODE=github_app
+SOURCE_REPOSITORY_URL=https://github.com/tolk-labs/verifier-registry.git
+SOURCE_REPOSITORY_GITHUB_APP_ID=4979165
+SOURCE_REPOSITORY_GITHUB_APP_INSTALLATION_ID=162512672
+SOURCE_REPOSITORY_GITHUB_APP_PRIVATE_KEY_FILE=/run/secrets/github-app.pem
+```
+
+Mount the key in the verifier service:
+
+```yaml
+services:
+  verifier:
+    volumes:
+      - /opt/ton-verifier/secrets/github-app.pem:/run/secrets/github-app.pem:ro
+```
+
+The verifier directly requests an installation token for the configured
+installation ID whenever Git requests credentials. It does not perform a
+repository-to-installation lookup, and the clean HTTPS remote URL never
+contains the token.
+
 ## Docker Compose Deployment
 
 Create `/opt/ton-verifier/docker-compose.yml`:
@@ -497,9 +530,17 @@ For SSH remotes, verify the key mount:
 docker compose exec verifier test -r /run/secrets/source_repo_key
 ```
 
+For GitHub App authentication, verify its private key mount:
+
+```bash
+docker compose exec verifier test -r /run/secrets/github-app.pem
+```
+
 Common causes:
 
 - Deploy key does not have write access.
+- GitHub App is not installed on the source repository or lacks `Contents: Read and write`.
+- GitHub App ID, installation ID, or private key mount is incorrect.
 - `SOURCE_REPOSITORY_URL` points to HTTPS while only SSH credentials are mounted.
 - Host key verification blocks the first connection.
 - The branch configured in `SOURCE_REPOSITORY_BRANCH` is protected.

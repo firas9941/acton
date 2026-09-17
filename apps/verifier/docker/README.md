@@ -96,6 +96,22 @@ Avoid it for short-lived credentials, and make sure deployment output and error
 logs do not expose the URL. Use `none` only for repositories that need no Git
 credentials.
 
+For a GitHub App installation, mount its private key and pass the App and
+installation IDs explicitly:
+
+```bash
+-e SOURCE_REPOSITORY_AUTH_MODE=github_app
+-e SOURCE_REPOSITORY_URL=https://github.com/owner/repository.git
+-e SOURCE_REPOSITORY_GITHUB_APP_ID=<app-id>
+-e SOURCE_REPOSITORY_GITHUB_APP_INSTALLATION_ID=<installation-id>
+-e SOURCE_REPOSITORY_GITHUB_APP_PRIVATE_KEY_FILE=/run/secrets/github-app.pem
+-v ./github-app.pem:/run/secrets/github-app.pem:ro
+```
+
+The verifier requests the installation token directly from the configured
+installation ID whenever Git requests credentials. It does not store the token
+in the remote URL or look up the installation by repository.
+
 The image contains:
 
 - `verifier` Rust backend

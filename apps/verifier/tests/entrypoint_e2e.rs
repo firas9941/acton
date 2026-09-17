@@ -108,14 +108,55 @@ fn accepts_supported_authentication_modes() {
         "expected success for ssh; stderr: {}",
         String::from_utf8_lossy(&output.stderr)
     );
+
+    let temp_dir = tempfile::tempdir().expect("temporary directory should be created");
+    let private_key = temp_dir.path().join("github-app.pem");
+    fs::write(&private_key, []).expect("GitHub App key fixture should be created");
+    let environment = vec![
+        variable("SOURCE_REPOSITORY_AUTH_MODE", "github_app"),
+        variable(
+            "SOURCE_REPOSITORY_URL",
+            "https://github.com/owner/repository.git",
+        ),
+        variable("SOURCE_REPOSITORY_GITHUB_APP_ID", "4979165"),
+        variable("SOURCE_REPOSITORY_GITHUB_APP_INSTALLATION_ID", "162512672"),
+        variable(
+            "SOURCE_REPOSITORY_GITHUB_APP_PRIVATE_KEY_FILE",
+            private_key.into_os_string(),
+        ),
+    ];
+    let output = run_entrypoint_with_command(
+        &temp_dir,
+        &environment,
+        &[
+            "/bin/sh",
+            "-c",
+            "printf '%s\\n' \"$GIT_CONFIG_COUNT\" \"$GIT_CONFIG_KEY_0=$GIT_CONFIG_VALUE_0\" \"$GIT_CONFIG_KEY_1=$GIT_CONFIG_VALUE_1\" \"$GIT_CONFIG_KEY_2=$GIT_CONFIG_VALUE_2\" \"$GIT_TERMINAL_PROMPT\"",
+        ],
+    );
+    assert!(
+        output.status.success(),
+        "expected success for github_app; stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    assert_eq!(
+        String::from_utf8_lossy(&output.stdout),
+        concat!(
+            "3\n",
+            "credential.helper=\n",
+            "credential.helper=!/usr/local/bin/verifier-github-app-credential\n",
+            "credential.useHttpPath=true\n",
+            "0\n",
+        )
+    );
 }
 
 #[test]
 fn rejects_unknown_authentication_mode() {
     assert_failure(
         "unknown mode",
-        "SOURCE_REPOSITORY_AUTH_MODE must be one of: none, url, ssh",
-        &[variable("SOURCE_REPOSITORY_AUTH_MODE", "github_app")],
+        "SOURCE_REPOSITORY_AUTH_MODE must be one of: none, url, ssh, github_app",
+        &[variable("SOURCE_REPOSITORY_AUTH_MODE", "unknown")],
     );
 }
 
@@ -158,6 +199,28 @@ fn rejects_incomplete_or_mixed_authentication() {
                 "https://x-access-token:secret@github.com/owner/repository.git",
             ),
             variable("SOURCE_REPOSITORY_SSH_KEY_FILE", "/tmp/unused-key"),
+        ],
+    );
+    assert_failure(
+        "GitHub App without an App ID",
+        "SOURCE_REPOSITORY_GITHUB_APP_ID must be a positive integer",
+        &[
+            variable("SOURCE_REPOSITORY_AUTH_MODE", "github_app"),
+            variable(
+                "SOURCE_REPOSITORY_URL",
+                "https://github.com/owner/repository.git",
+            ),
+        ],
+    );
+    assert_failure(
+        "GitHub App with URL credentials",
+        "SOURCE_REPOSITORY_AUTH_MODE=github_app requires a URL without credentials",
+        &[
+            variable("SOURCE_REPOSITORY_AUTH_MODE", "github_app"),
+            variable(
+                "SOURCE_REPOSITORY_URL",
+                "https://x-access-token:secret@github.com/owner/repository.git",
+            ),
         ],
     );
 }

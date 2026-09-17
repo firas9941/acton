@@ -78,8 +78,51 @@ configure_git_auth() {
             esac
             export GIT_SSH_COMMAND="ssh -i ${ssh_key_file} -o IdentitiesOnly=yes -o StrictHostKeyChecking=${strict_host_key_checking}"
             ;;
+        github_app)
+            if [ -n "$ssh_key_file" ]; then
+                fail "SOURCE_REPOSITORY_AUTH_MODE=github_app cannot be combined with SOURCE_REPOSITORY_SSH_KEY_FILE"
+            fi
+            if [ -z "$repo_url" ]; then
+                fail "SOURCE_REPOSITORY_AUTH_MODE=github_app requires SOURCE_REPOSITORY_URL"
+            fi
+            if url_contains_credentials "$repo_url"; then
+                fail "SOURCE_REPOSITORY_AUTH_MODE=github_app requires a URL without credentials"
+            fi
+            case "$repo_url" in
+                https://github.com/*) ;;
+                *) fail "SOURCE_REPOSITORY_AUTH_MODE=github_app requires an HTTPS github.com URL" ;;
+            esac
+
+            github_app_id="${SOURCE_REPOSITORY_GITHUB_APP_ID:-}"
+            github_installation_id="${SOURCE_REPOSITORY_GITHUB_APP_INSTALLATION_ID:-}"
+            github_private_key_file="${SOURCE_REPOSITORY_GITHUB_APP_PRIVATE_KEY_FILE:-}"
+            case "$github_app_id" in
+                ''|*[!0-9]*) fail "SOURCE_REPOSITORY_GITHUB_APP_ID must be a positive integer" ;;
+            esac
+            case "$github_installation_id" in
+                ''|*[!0-9]*) fail "SOURCE_REPOSITORY_GITHUB_APP_INSTALLATION_ID must be a positive integer" ;;
+            esac
+            if [ "$github_app_id" = "0" ]; then
+                fail "SOURCE_REPOSITORY_GITHUB_APP_ID must be a positive integer"
+            fi
+            if [ "$github_installation_id" = "0" ]; then
+                fail "SOURCE_REPOSITORY_GITHUB_APP_INSTALLATION_ID must be a positive integer"
+            fi
+            if [ -z "$github_private_key_file" ] || [ ! -r "$github_private_key_file" ]; then
+                fail "SOURCE_REPOSITORY_GITHUB_APP_PRIVATE_KEY_FILE must be readable"
+            fi
+
+            export GIT_CONFIG_COUNT=3
+            export GIT_CONFIG_KEY_0=credential.helper
+            export GIT_CONFIG_VALUE_0=
+            export GIT_CONFIG_KEY_1=credential.helper
+            export GIT_CONFIG_VALUE_1="!/usr/local/bin/verifier-github-app-credential"
+            export GIT_CONFIG_KEY_2=credential.useHttpPath
+            export GIT_CONFIG_VALUE_2=true
+            export GIT_TERMINAL_PROMPT=0
+            ;;
         *)
-            fail "SOURCE_REPOSITORY_AUTH_MODE must be one of: none, url, ssh"
+            fail "SOURCE_REPOSITORY_AUTH_MODE must be one of: none, url, ssh, github_app"
             ;;
     esac
 }
