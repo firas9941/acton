@@ -1033,7 +1033,7 @@
   },
   {
     "address": "0:011a8f0a0b36b779af033473274966666d1cd6fb4e77df679375fbd6f970d012",
-    "name": "xRocket Bot"
+    "name": "xRocket"
   },
   {
     "address": "0:0130c77346e9ed82df677d107ad6a775c11f9c18f6a05c0dd17906b355850dad",
@@ -1097,7 +1097,7 @@
   },
   {
     "address": "0:07ce60b7e5f255a88c3707f3fbc79e2cf924ed6b4b7d09c6324f0ba2338a48fa",
-    "name": "KuCoin 4"
+    "name": "Kucoin 3"
   },
   {
     "address": "0:0833ee50cd9197613499475446793da0f6b36962634f434f7f1edbda2271da4f",
@@ -1121,7 +1121,7 @@
   },
   {
     "address": "0:0bc884e676ba3dcaabe75cea71c38d6691ed0d6a89cfd95d2772c32f7be01262",
-    "name": "TONAPI gas proxy (old)"
+    "name": "TonAPI Gas Proxy 3"
   },
   {
     "address": "0:0c5684355f5410a923fb7dd59314905dc7ff157b28c9130671c7a4f17007e898",
@@ -1289,7 +1289,7 @@
   },
   {
     "address": "0:1c06b78eb4c0c014b51308221f6263643746fe7be60b4831a8409051cba0306f",
-    "name": "TONAPI gas proxy (old)"
+    "name": "TonAPI Gas Proxy 2"
   },
   {
     "address": "0:1c7bd690f4f93de8b93db5790129dab65926c6e1fc9b57380089db5529516630",
@@ -1333,7 +1333,7 @@
   },
   {
     "address": "0:232bc48871c799b66662c4a9910da4703b532ead74a8419e8793d570db2886d2",
-    "name": "TON Strategy 2"
+    "name": "TON Strategy"
   },
   {
     "address": "0:23df7cbfb11a78629bb3f3375219fae161d4e05b5b8b863547b943413719ce03",
@@ -1389,7 +1389,7 @@
   },
   {
     "address": "0:28ee551374bca2af58b7737e2b800067e57bea0c35f99a0cbee8403d8c77e53b",
-    "name": "TON Strategy 5"
+    "name": "TON Strategy"
   },
   {
     "address": "0:28fec9c0a430ea17a18a574c5efd3e687b6f2bf38da026d8269203cc857d3e75",
@@ -1445,7 +1445,7 @@
   },
   {
     "address": "0:2ef40b4072dfab14e32e99b521df32da13d1503279985918b40befbb5083837b",
-    "name": "KuCoin 1"
+    "name": "KuCoin"
   },
   {
     "address": "0:2f616a3f7d91b0e8ef7e19e6bc00159aff8caa4821c6fe9f40c89d021608d176",
@@ -1525,11 +1525,11 @@
   },
   {
     "address": "0:34d3aa8bcfb7c065d2790fb31ce1ce5ab2a45f8baef60b04f309d50c4b32d6c8",
-    "name": "Cryptomus 2"
+    "name": "Cryptomus"
   },
   {
     "address": "0:362583c63f2c31e929f9f749d4774e81d8780e905bc9f9c0a74ceeb24c475a71",
-    "name": "Old @wallet Storage 4"
+    "name": "Old Walt Storage"
   },
   {
     "address": "0:36448ed7bc8b3dc0940aaf19136fb62da5e52e683fa9d1e4f9b817b86e47064f",
@@ -1541,7 +1541,7 @@
   },
   {
     "address": "0:36bcbaba93714d7aa8ede7c518814712196179121e9f436819d70858254caffc",
-    "name": "MRKT 3"
+    "name": "MRKT"
   },
   {
     "address": "0:3784a56ba6597e8d502d0352a37e968c27b606838e0ce8342e05d057f46e715b",
@@ -1613,7 +1613,7 @@
   },
   {
     "address": "0:3d2cb74e041df056045d3ba4bef650f938c553db86d1dab1f80bc9c238fe3ffe",
-    "name": "Rapira Exchange 1"
+    "name": "Rapira"
   },
   {
     "address": "0:3d7ee4917dc75c195b975a17b8fb7d367978fdc30bd9649200aa1255a93a3e57",
@@ -1785,7 +1785,7 @@
   },
   {
     "address": "0:4ffc9d6b1e44445357edbfa5d2d48f541cdada81614c6a9667ce067338282304",
-    "name": "MRKT 2"
+    "name": "MRKT"
   },
   {
     "address": "0:5012b262d031e0298b1e207b6b424e0de4240b0abdd7630910204c341cdb38ef",
@@ -1972,6 +1972,10 @@
     "name": "Connecton VPN"
   },
   {
+    "address": "0:6440fe3c69410383963945173c4b11479bf0b9b4d7090e58777bda581c2f9998",
+    "name": "Tether Multisig"
+  },
+  {
     "address": "0:648aa9dc77b0054f9ff6dc7f91a00d95ca793e373abf74ba1e31546d84053d44",
     "name": "Notcoin Voucher Swap 6"
   },
@@ -2073,7 +2077,7 @@
   },
   {
     "address": "0:708545cef8fc0118022596a056044a61833e923613bf70fd1e25f033fefd8a3c",
-    "name": "Rapira Exchange 2"
+    "name": "Rapira"
   },
   {
     "address": "0:70a4118401bf8d823531a66011020565f02e05ff91ac5f1677769b00d6acd07a",
@@ -2089,7 +2093,7 @@
   },
   {
     "address": "0:7251e83282040cfd2387cf677b2864f7f021720fa040cda543a9194119442cea",
-    "name": "Tonkeeper battery refunds"
+    "name": "Tonkeeper Battery Refunds"
   },
   {
     "address": "0:729c13b6df2c07cbf0a06ab63d34af454f3d320ec1bcd8fb5c6d24d0806a17c2",
@@ -2105,7 +2109,7 @@
   },
   {
     "address": "0:73727a419e7d7f1ae1c455e58ee432f26e3a75b31078f99cedcac403f47619be",
-    "name": "TONAPI gas proxy (old)"
+    "name": "TonAPI Gas Proxy 6"
   },
   {
     "address": "0:7392a00de15898752db8943d9f14f7bca1d1e7dab5247cc61b109f3c10128101",
@@ -2133,7 +2137,7 @@
   },
   {
     "address": "0:77537578de1d54571b1a6730f1f1dae099e29ac4c1c65298677aee0f09891c5b",
-    "name": "Cryptomus 3"
+    "name": "Cryptomus"
   },
   {
     "address": "0:779dcc815138d9500e449c5291e7f12738c23d575b5310000f6a253bd607384e",
@@ -2193,7 +2197,7 @@
   },
   {
     "address": "0:80d4123841167ca989ac912443cc99a4b9c1a87584536427ff6fd85c92395ae9",
-    "name": "KuCoin 2"
+    "name": "Kucoin 1"
   },
   {
     "address": "0:80d78a35f955a14b679faa887ff4cd5bfc0f43b4a4eea2a7e6927f3701b273c2",
@@ -2257,7 +2261,7 @@
   },
   {
     "address": "0:85af78e8d035e920117cda654615cdf371d464480b629e110d3c5310d85ab362",
-    "name": "Huobi Withdrawal"
+    "name": "Huobi"
   },
   {
     "address": "0:87116a10bfc9cc340b837eb03b059ee162aaef9b6fa22dc9e435b3e73a173df9",
@@ -2289,7 +2293,7 @@
   },
   {
     "address": "0:8b070edb01a700f3f6a4624c7e086e036da86060ebb04f19908ee61a3537335f",
-    "name": "Changelly 1"
+    "name": "Changelly"
   },
   {
     "address": "0:8bc991cfe177bc7e9721433efa3befd199485a55cffd040a06c89af026b71bcf",
@@ -2417,7 +2421,7 @@
   },
   {
     "address": "0:9b8ab637507230b99de26a55ea6d9cd4fef0cffcaafe2d1f15e835d5f5d38a43",
-    "name": "TONAPI gas proxy (old)"
+    "name": "TonAPI Gas Proxy 1"
   },
   {
     "address": "0:9b9b739de2527ae72d21083f5198d710c7288453b4733e57ecadb2e189ac829c",
@@ -2473,7 +2477,7 @@
   },
   {
     "address": "0:a1809e9a6f64adde7f0f485742968433a621a4f3b5e1c5920a7077d7b63c3411",
-    "name": "TONAPI gas proxy (old)"
+    "name": "TonAPI Gas Proxy 8"
   },
   {
     "address": "0:a1a113a9b9433872937a211cea353ae43fd8956476281e0c4c0010d5536f2f95",
@@ -2538,10 +2542,6 @@
   {
     "address": "0:a9b98b6ae799e193060398be0e5a3b2b758cbcde08f9ff8f673514390ab3cecd",
     "name": "STON.fi DEX"
-  },
-  {
-    "address": "0:a9bc094e3b3a9c23f354c7007476ac3fcddd12af6aed4b4168337e47692c5323",
-    "name": "DeDust GRAM vault"
   },
   {
     "address": "0:a9c1ad2fea5bc6034d6e2867ec5b508ad4d779f5a3bfc551461873f2ec94e084",
@@ -2645,7 +2645,7 @@
   },
   {
     "address": "0:b37e57033db21d10b950e6143b658c10c3bf425bd193025960aef7f22dbcf4fc",
-    "name": "KuCoin 3"
+    "name": "Kucoin 2"
   },
   {
     "address": "0:b39ec4a1b09985a39e11d46c06ce66c7239cdee20cb185d7fd18a5020b1ee402",
@@ -2797,7 +2797,7 @@
   },
   {
     "address": "0:c1dc654b598ab84cda4f12372efed8907cedf0901865a58649087373e01b1c24",
-    "name": "xRocket Bot (Old)"
+    "name": "xRocket"
   },
   {
     "address": "0:c1f0ca3d12f881920fc1c5f36fe82d8b3bf7e82515dc804178d69990bccbe707",
@@ -2841,7 +2841,7 @@
   },
   {
     "address": "0:c6f5916443f6f707139b108edce317ea52a8c4c5e5afaf9a3c6e93d64685d95d",
-    "name": "TONAPI gas proxy (old)"
+    "name": "TonAPI Gas Proxy 9"
   },
   {
     "address": "0:c708deda737561ae355fca014b23a274d47278da0832cd542f94d2dddbe1de96",
@@ -2873,7 +2873,7 @@
   },
   {
     "address": "0:c9f02665e81cc208d467c157afcdf3d5d97da5beff00d267c155e1c260d3facd",
-    "name": "MRKT 1"
+    "name": "MRKT"
   },
   {
     "address": "0:ca1d9edeef40b3a9dbd9082f3767859547c3ce0bf641d09d58e33a3cf06fb309",
@@ -2985,7 +2985,7 @@
   },
   {
     "address": "0:d5a60826d1d4f157085d2bc751d037c61f1fe2d55322cd5bc0297456c513dd69",
-    "name": "TONAPI gas proxy (old)"
+    "name": "TonAPI Gas Proxy 7"
   },
   {
     "address": "0:d887d0e2d1c4fc4126e71c970d33ab1896940000eae703bb1ab6cecc830777e3",
@@ -3065,7 +3065,7 @@
   },
   {
     "address": "0:dfaf143972b5de71cdaf46c34f02bb4d876a449252dfba9e149469206859e109",
-    "name": "TON Strategy 3"
+    "name": "TON Strategy"
   },
   {
     "address": "0:dfb5074f2139dbfb1f3e823ddfd7976da506e7f78175c98c627ed2e840f78606",
@@ -3073,7 +3073,7 @@
   },
   {
     "address": "0:dfdb34012c7831b091e62e28c73061e10d2c6d645beefd7c5f6f809d027cc80d",
-    "name": "TON Strategy 4"
+    "name": "TON Strategy"
   },
   {
     "address": "0:e065d735fc349ad0d8674033798b99af76f8dce671a9c49d4fe9164e644a6a52",
@@ -3117,7 +3117,7 @@
   },
   {
     "address": "0:e3b375a5f71ea17bec125d3a88f6483575ee909b16010eefed9b64fe9b0d64e5",
-    "name": "TONAPI gas proxy (old)"
+    "name": "TonAPI Gas Proxy 5"
   },
   {
     "address": "0:e3ce05c4da977132c24a3b102da8b5fbf2ea9173337b49de346e4a4b057f7579",
@@ -3221,11 +3221,11 @@
   },
   {
     "address": "0:ed53bc999e5a4af69a3f9c3de5376f7d90c487e1528f331e716dbe85903d5112",
-    "name": "Notcoin"
+    "name": "Notcoin Royalty"
   },
   {
     "address": "0:ed6df64f71a80ffd242a4b6fdd9609ac291f9019f00978e1ff100da950109e29",
-    "name": "KuCoin 5"
+    "name": "KuCoin"
   },
   {
     "address": "0:ee59aff2efcd2ba6211ead3bf9259b41abcb24a2f5a9d0d3cb1ed2558b7441e3",
@@ -3301,7 +3301,7 @@
   },
   {
     "address": "0:f33f5a1e309236c21fd412b9d522e24a6a6ef3745c01f7ec7d731bc0f844c334",
-    "name": "TONAPI gas proxy (old)"
+    "name": "TonAPI Gas Proxy 4"
   },
   {
     "address": "0:f3f4ed0913ab555d023745058f1a6c55a49d4876593cb9bdab1f780a99b185bc",

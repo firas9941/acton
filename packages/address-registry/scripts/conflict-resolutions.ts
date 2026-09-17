@@ -72,6 +72,26 @@ export const CONFLICT_RESOLUTIONS = [
     name: "Bybit 2",
   },
   {
+    address: "0:57eb74407604a19f7e04005315ef70aeb7b675e6551977586756f6baf12125ee",
+    source: "ton-assets",
+    name: "MEXC 1",
+  },
+  {
+    address: "0:1c7bd690f4f93de8b93db5790129dab65926c6e1fc9b57380089db5529516630",
+    source: "ton-assets",
+    name: "MEXC 2",
+  },
+  {
+    address: "0:d887d0e2d1c4fc4126e71c970d33ab1896940000eae703bb1ab6cecc830777e3",
+    source: "ton-assets",
+    name: "MEXC 3",
+  },
+  {
+    address: "0:3d7ee4917dc75c195b975a17b8fb7d367978fdc30bd9649200aa1255a93a3e57",
+    source: "ton-assets",
+    name: "Changelly 2",
+  },
+  {
     address: "0:cd525c15904d7b4027eae08b318624260f371ce8c9f4fcca0cdb7b583854107c",
     source: "ton-assets",
     name: "Bybit 3",
@@ -117,11 +137,6 @@ export const CONFLICT_RESOLUTIONS = [
     name: "Bybit 11",
   },
   {
-    address: "0:8b070edb01a700f3f6a4624c7e086e036da86060ebb04f19908ee61a3537335f",
-    source: "address-book",
-    name: "Changelly 1",
-  },
-  {
     address: "0:04f3c1c795ac8905e31734362b149875ab9522ae5383ab7abb2e10da5da8ba82",
     source: "address-book",
     name: "Portals Market Deposit",
@@ -133,18 +148,18 @@ export const CONFLICT_RESOLUTIONS = [
   },
   {
     address: "0:80d4123841167ca989ac912443cc99a4b9c1a87584536427ff6fd85c92395ae9",
-    source: "address-book",
-    name: "KuCoin 2",
+    source: "ton-assets",
+    name: "Kucoin 1",
   },
   {
     address: "0:b37e57033db21d10b950e6143b658c10c3bf425bd193025960aef7f22dbcf4fc",
-    source: "address-book",
-    name: "KuCoin 3",
+    source: "ton-assets",
+    name: "Kucoin 2",
   },
   {
     address: "0:07ce60b7e5f255a88c3707f3fbc79e2cf924ed6b4b7d09c6324f0ba2338a48fa",
-    source: "address-book",
-    name: "KuCoin 4",
+    source: "ton-assets",
+    name: "Kucoin 3",
   },
   {
     address: "0:5f00decb7da51881764dc3959cec60609045f6ca1b89e646bde49d492705d77f",
@@ -160,6 +175,41 @@ export const CONFLICT_RESOLUTIONS = [
     address: "0:66a1e72196d64d6faf48fa4b2ea861f67b0484d2d14a59caf701d8c286ce44e5",
     source: "ton-assets",
     name: "OKX 11",
+  },
+  {
+    address: "0:0338def34b84c6ee9134a04ab1601450be446340a37ae259de57cb37bdb590cd",
+    source: "ton-assets",
+    name: "OKX 4",
+  },
+  {
+    address: "0:24da1e7b8da901e5b3dd0f98c397feb6e5a5ea483195a8b6bd0682cf2c5327ae",
+    source: "ton-assets",
+    name: "OKX 6",
+  },
+  {
+    address: "0:7f2e84c723d8b6b6b1aacf810c8c26ab23c22022b464b87104b2d3065b0ea70b",
+    source: "ton-assets",
+    name: "OKX 7",
+  },
+  {
+    address: "0:854ec4521efd52ad43bcf1988e4c44ebdf9a26ad18fa51abfdb685fc3b348a5c",
+    source: "ton-assets",
+    name: "OKX 8",
+  },
+  {
+    address: "0:a30a49ec725e9f57244b66af4c2da7ab76004b4fce80d3a34b1cd0c37762abce",
+    source: "ton-assets",
+    name: "OKX 5",
+  },
+  {
+    address: "0:e7e86da08742ed933434ffeb8f08a63c7e100ee842e25f599a9cbf0891574a6c",
+    source: "ton-assets",
+    name: "OKX 3",
+  },
+  {
+    address: "0:f15db2c62cd86aff0860d39c491fc73a31395fafeb5945e644498562260c782e",
+    source: "ton-assets",
+    name: "OKX 2",
   },
   {
     address: "-1:386e6a793b70ed6235e67560183040734cfb2ef9c3cc720e758b767d6df748ef",
@@ -232,54 +282,65 @@ export const CONFLICT_RESOLUTIONS = [
     name: "STON.fi DEX",
   },
   {
-    address: "0:7251e83282040cfd2387cf677b2864f7f021720fa040cda543a9194119442cea",
+    address: "0:22bf722ec5803a64612e9ce819493b8c0736e98f045b5b0d3df96b04fa2a8a28",
     source: "ton-assets",
-    name: "Tonkeeper battery refunds",
+    name: "STON.fi DEX",
   },
   {
-    address: "0:9b8ab637507230b99de26a55ea6d9cd4fef0cffcaafe2d1f15e835d5f5d38a43",
+    address: "0:a2ca9a0158d2043e56ab069d3851e3f2123e731f46431f1b9136a275590c7714",
     source: "ton-assets",
-    name: "TONAPI gas proxy (old)",
+    name: "STON.fi DEX",
+  },
+  {
+    address: "0:f1fbe8d453d3d4b4796d3d8657ef0773222d123d8dca67c9ef3acd2266f40977",
+    source: "ton-assets",
+    name: "STON.fi DEX",
+  },
+
+  {
+    address: "0:9b8ab637507230b99de26a55ea6d9cd4fef0cffcaafe2d1f15e835d5f5d38a43",
+    source: "address-book",
+    name: "TonAPI Gas Proxy 1",
   },
   {
     address: "0:1c06b78eb4c0c014b51308221f6263643746fe7be60b4831a8409051cba0306f",
-    source: "ton-assets",
-    name: "TONAPI gas proxy (old)",
+    source: "address-book",
+    name: "TonAPI Gas Proxy 2",
   },
   {
     address: "0:0bc884e676ba3dcaabe75cea71c38d6691ed0d6a89cfd95d2772c32f7be01262",
-    source: "ton-assets",
-    name: "TONAPI gas proxy (old)",
+    source: "address-book",
+    name: "TonAPI Gas Proxy 3",
   },
   {
     address: "0:f33f5a1e309236c21fd412b9d522e24a6a6ef3745c01f7ec7d731bc0f844c334",
-    source: "ton-assets",
-    name: "TONAPI gas proxy (old)",
+    source: "address-book",
+    name: "TonAPI Gas Proxy 4",
   },
   {
     address: "0:e3b375a5f71ea17bec125d3a88f6483575ee909b16010eefed9b64fe9b0d64e5",
-    source: "ton-assets",
-    name: "TONAPI gas proxy (old)",
+    source: "address-book",
+    name: "TonAPI Gas Proxy 5",
   },
   {
     address: "0:73727a419e7d7f1ae1c455e58ee432f26e3a75b31078f99cedcac403f47619be",
-    source: "ton-assets",
-    name: "TONAPI gas proxy (old)",
+    source: "address-book",
+    name: "TonAPI Gas Proxy 6",
   },
   {
     address: "0:d5a60826d1d4f157085d2bc751d037c61f1fe2d55322cd5bc0297456c513dd69",
-    source: "ton-assets",
-    name: "TONAPI gas proxy (old)",
+    source: "address-book",
+    name: "TonAPI Gas Proxy 7",
   },
   {
     address: "0:a1809e9a6f64adde7f0f485742968433a621a4f3b5e1c5920a7077d7b63c3411",
-    source: "ton-assets",
-    name: "TONAPI gas proxy (old)",
+    source: "address-book",
+    name: "TonAPI Gas Proxy 8",
   },
   {
     address: "0:c6f5916443f6f707139b108edce317ea52a8c4c5e5afaf9a3c6e93d64685d95d",
-    source: "ton-assets",
-    name: "TONAPI gas proxy (old)",
+    source: "address-book",
+    name: "TonAPI Gas Proxy 9",
   },
   {
     address: "-1:3333333333333333333333333333333333333333333333333333333333333333",
@@ -343,13 +404,13 @@ export const CONFLICT_RESOLUTIONS = [
   },
   {
     address: "0:3d2cb74e041df056045d3ba4bef650f938c553db86d1dab1f80bc9c238fe3ffe",
-    source: "address-book",
-    name: "Rapira Exchange 1",
+    source: "ton-assets",
+    name: "Rapira",
   },
   {
     address: "0:708545cef8fc0118022596a056044a61833e923613bf70fd1e25f033fefd8a3c",
-    source: "address-book",
-    name: "Rapira Exchange 2",
+    source: "ton-assets",
+    name: "Rapira",
   },
   {
     address: "0:ca1d9edeef40b3a9dbd9082f3767859547c3ce0bf641d09d58e33a3cf06fb309",
@@ -458,13 +519,13 @@ export const CONFLICT_RESOLUTIONS = [
   },
   {
     address: "0:011a8f0a0b36b779af033473274966666d1cd6fb4e77df679375fbd6f970d012",
-    source: "ton-assets",
-    name: "xRocket Bot",
+    source: "address-book",
+    name: "xRocket",
   },
   {
     address: "0:c1dc654b598ab84cda4f12372efed8907cedf0901865a58649087373e01b1c24",
-    source: "ton-assets",
-    name: "xRocket Bot (Old)",
+    source: "address-book",
+    name: "xRocket",
   },
   {
     address: "0:f069c060822b0443e87e1d6eb752223d9ad200fa54404f5ba95cf8a88b284290",
@@ -484,7 +545,7 @@ export const CONFLICT_RESOLUTIONS = [
   {
     address: "0:ed53bc999e5a4af69a3f9c3de5376f7d90c487e1528f331e716dbe85903d5112",
     source: "ton-assets",
-    name: "Notcoin",
+    name: "Notcoin Royalty",
   },
   {
     address: "-1:34517c7bdf5187c55af4f8b61fdc321588c7ab768dee24b006df29106458d7cf",
@@ -492,8 +553,28 @@ export const CONFLICT_RESOLUTIONS = [
     name: "Log tests Contract",
   },
   {
-    address: "0:85af78e8d035e920117cda654615cdf371d464480b629e110d3c5310d85ab362",
+    address: "0:8d195793baad9a08c46dc353aebe999341dabd07721b9725f19e18abc3d10d92",
+    source: "ton-assets",
+    name: "EXMO Cold Storage 1",
+  },
+  {
+    address: "0:26ab8ae763a3a7c3067d882b7b01cd5d37254cb8768f57b6a47c00028effc7b8",
+    source: "ton-assets",
+    name: "EXMO Cold Storage 2",
+  },
+  {
+    address: "0:555f3053e257130374bb831ae0e219e5e5f9ec0ca8f8a0d133369d3d690c64c2",
+    source: "ton-assets",
+    name: "Huobi Deposit",
+  },
+  {
+    address: "0:7251e83282040cfd2387cf677b2864f7f021720fa040cda543a9194119442cea",
     source: "address-book",
-    name: "Huobi Withdrawal",
+    name: "Tonkeeper Battery Refunds",
+  },
+  {
+    address: "0:85af78e8d035e920117cda654615cdf371d464480b629e110d3c5310d85ab362",
+    source: "ton-assets",
+    name: "Huobi",
   },
 ] as const satisfies readonly ConflictResolution[]

@@ -1,1 +1,15 @@
-[]
+[
+  {
+    "address": "0:a9bc094e3b3a9c23f354c7007476ac3fcddd12af6aed4b4168337e47692c5323",
+    "candidates": [
+      {
+        "source": "ton-assets",
+        "name": "DeDust GRAM vault"
+      },
+      {
+        "source": "address-book",
+        "name": "StonFi Router"
+      }
+    ]
+  }
+]
