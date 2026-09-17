@@ -217,11 +217,32 @@ Configure the repository with explicit App and installation IDs:
 
 ```bash
 SOURCE_REPOSITORY_AUTH_MODE=github_app
-SOURCE_REPOSITORY_URL=https://github.com/tolk-labs/verifier-registry.git
-SOURCE_REPOSITORY_GITHUB_APP_ID=4979165
-SOURCE_REPOSITORY_GITHUB_APP_INSTALLATION_ID=162512672
+SOURCE_REPOSITORY_URL=https://github.com/owner/repository.git
+SOURCE_REPOSITORY_GITHUB_APP_ID=<app-id>
+SOURCE_REPOSITORY_GITHUB_APP_INSTALLATION_ID=<installation-id>
 SOURCE_REPOSITORY_GITHUB_APP_PRIVATE_KEY_FILE=/run/secrets/github-app.pem
 ```
+
+To attribute source repository commits to the GitHub App bot, look up the bot
+user ID from the App slug:
+
+```bash
+APP_SLUG=your-app-slug
+gh api "users/${APP_SLUG}[bot]" --jq '{id, login}'
+```
+
+GitHub App ID, installation ID, and bot user ID are different identifiers. Use
+the returned bot user ID and login to configure the commit identity in GitHub's
+noreply email format:
+
+```bash
+SOURCE_REPOSITORY_AUTHOR_NAME=your-app-slug[bot]
+SOURCE_REPOSITORY_AUTHOR_EMAIL=<bot-user-id>+your-app-slug[bot]@users.noreply.github.com
+```
+
+The generic email format is
+`<bot-user-id>+<app-slug>[bot]@users.noreply.github.com`. Commit identity is
+metadata only; repository access is authorized by the installation token.
 
 Mount the key in the verifier service:
 

@@ -161,7 +161,7 @@ mod tests {
     #[test]
     fn accepts_github_https_credential_target() {
         let request = CredentialRequest::parse(
-            "protocol=https\nhost=github.com\npath=tolk-labs/verifier-registry.git\n\n",
+            "protocol=https\nhost=github.com\npath=owner/repository.git\n\n",
         )
         .expect("credential request should parse");
 

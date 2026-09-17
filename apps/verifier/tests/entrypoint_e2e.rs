@@ -118,8 +118,8 @@ fn accepts_supported_authentication_modes() {
             "SOURCE_REPOSITORY_URL",
             "https://github.com/owner/repository.git",
         ),
-        variable("SOURCE_REPOSITORY_GITHUB_APP_ID", "4979165"),
-        variable("SOURCE_REPOSITORY_GITHUB_APP_INSTALLATION_ID", "162512672"),
+        variable("SOURCE_REPOSITORY_GITHUB_APP_ID", "42"),
+        variable("SOURCE_REPOSITORY_GITHUB_APP_INSTALLATION_ID", "84"),
         variable(
             "SOURCE_REPOSITORY_GITHUB_APP_PRIVATE_KEY_FILE",
             private_key.into_os_string(),

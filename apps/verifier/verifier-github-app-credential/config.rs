@@ -73,14 +73,14 @@ mod tests {
     #[test]
     fn parses_config_values() {
         let config = GitHubAppConfig::from_values(
-            Some("4979165".into()),
-            Some("162512672".into()),
+            Some("42".into()),
+            Some("84".into()),
             Some("/run/secrets/github-app.pem".into()),
         )
         .expect("config values should parse");
 
-        assert_eq!(config.app_id, 4_979_165);
-        assert_eq!(config.installation_id, 162_512_672);
+        assert_eq!(config.app_id, 42);
+        assert_eq!(config.installation_id, 84);
         assert_eq!(
             config.private_key_file,
             PathBuf::from("/run/secrets/github-app.pem")
