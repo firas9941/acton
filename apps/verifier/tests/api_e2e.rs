@@ -61,6 +61,34 @@ const SOURCES_ALIASED_FILES: &str = r#"[
 ]"#;
 
 #[tokio::test]
+async fn legacy_source_endpoint_returns_blueprint_upgrade_error() {
+    let request = Request::builder()
+        .method(Method::POST)
+        .uri("/source")
+        .header(header::CONTENT_TYPE, "application/octet-stream")
+        .body(Body::from("this body is intentionally ignored"))
+        .expect("POST /source request should be valid");
+
+    let response = app::router_with_state(app_state(&[], CODE_HASH_ONE).with_max_request_bytes(1))
+        .oneshot(request)
+        .await
+        .expect("router should handle POST /source request");
+
+    assert_eq!(response.status(), StatusCode::GONE);
+    assert_eq!(
+        response
+            .headers()
+            .get(header::CONTENT_TYPE)
+            .and_then(|value| value.to_str().ok()),
+        Some("application/json"),
+    );
+    assert_eq!(
+        response_json::<String>(response).await,
+        "This verifier is no longer supported. Update @ton/blueprint to version 0.46.0 or newer",
+    );
+}
+
+#[tokio::test]
 async fn verification_admission_rejects_ambiguous_and_excessive_uploads_before_payment() {
     let mut snapshot = serde_json::Map::new();
     for (name, value) in [
