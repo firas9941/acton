@@ -11,6 +11,7 @@ use crate::AppState;
 mod auth;
 mod challenge;
 mod claim;
+mod frontend;
 mod health;
 mod info;
 mod robots;
@@ -42,7 +43,6 @@ pub(crate) fn router(state: AppState) -> Router {
         .route_layer(middleware::from_fn(require_airdrop_headers));
 
     Router::new()
-        .route("/", get(info::root))
         .route("/openapi.json", get(openapi_handler))
         .route("/robots.txt", get(robots::robots_txt))
         .route("/readyz", get(info::ok))
@@ -54,6 +54,7 @@ pub(crate) fn router(state: AppState) -> Router {
         .route("/auth/github/callback", get(auth::github_callback))
         .merge(browser_auth_routes)
         .merge(airdrop_routes)
+        .fallback(frontend::handler)
         .with_state(state)
 }
 

@@ -1,6 +1,6 @@
 all: precommit
 
-build:
+build: build-ui
     cargo build --release --locked
 
 build-dev:
@@ -32,8 +32,17 @@ check: check-ci test
 
 precommit: fmt build check
 
-run:
+run: build-ui
     cargo run --locked
 
 clean:
     cargo clean
+    rm -rf ../../packages/faucet-ui/dist
+
+install: install-ui
+
+install-ui:
+    cd ../.. && bun ci
+
+build-ui: install-ui
+    cd ../../packages/faucet-ui && bun run build

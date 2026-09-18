@@ -9,7 +9,8 @@ WASM proof-of-work worker. Hosts provide a React Router, `ThemeProvider`,
 
 The standalone entry renders the same page with its own theme and notifications,
 using the same-origin faucet API and linking to Actonscan for account details.
-It builds to `dist`; integration with the faucet backend is separate.
+It builds to `dist`; release builds of the faucet backend embed that directory and
+serve the standalone UI from `/`.
 
 From the repository root:
 

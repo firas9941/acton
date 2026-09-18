@@ -1,5 +1,14 @@
 # syntax=docker/dockerfile:1
 
+FROM oven/bun:1.4.0-slim AS frontend-builder
+
+WORKDIR /workspace
+
+COPY package.json bun.lock ./
+COPY packages ./packages
+RUN bun install --frozen-lockfile --filter @acton/faucet-ui \
+    && bun --filter @acton/faucet-ui build
+
 FROM rust:1.97.1-slim-bookworm AS rust-builder
 
 WORKDIR /build/apps/faucet
@@ -12,6 +21,7 @@ RUN apt-get update \
 COPY apps/faucet/Cargo.toml apps/faucet/Cargo.lock apps/faucet/rust-toolchain.toml apps/faucet/build.rs ./
 COPY apps/faucet/crates ./crates
 COPY apps/faucet/src ./src
+COPY --from=frontend-builder /workspace/packages/faucet-ui/dist /build/packages/faucet-ui/dist
 
 RUN FAUCET_GIT_HASH="${VCS_REF}" cargo build --release --locked --bin faucet
 

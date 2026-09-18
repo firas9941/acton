@@ -50,6 +50,7 @@ faucet-config = { workspace = true }
 faucet-pow = { path = "crates/faucet-pow" }
 faucet-valkey = { path = "crates/faucet-valkey" }
 hex = { workspace = true }
+include_dir = "0.7"
 lazy-limit = "1"
 rand = { workspace = true }
 real = { version = "0.1", features = ["axum"] }

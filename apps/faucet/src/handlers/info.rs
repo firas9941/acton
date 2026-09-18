@@ -2,10 +2,6 @@ use axum::http::StatusCode;
 
 use crate::LONG_VERSION;
 
-pub(super) async fn root() -> &'static str {
-    "TON Faucet is running!"
-}
-
 pub(super) async fn ok() -> StatusCode {
     StatusCode::OK
 }

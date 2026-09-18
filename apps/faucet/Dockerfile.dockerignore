@@ -1,5 +1,8 @@
 *
 
+!package.json
+!bun.lock
+
 !apps/
 apps/*
 !apps/faucet/
@@ -12,3 +15,14 @@ apps/faucet/*
 !apps/faucet/build/.env.production
 !apps/faucet/src/
 !apps/faucet/crates/
+
+!packages/
+packages/*
+!packages/*/
+packages/*/*
+!packages/*/package.json
+!packages/ui/**
+packages/ui/node_modules/
+!packages/faucet-ui/**
+packages/faucet-ui/node_modules/
+packages/faucet-ui/dist/
