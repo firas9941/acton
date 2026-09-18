@@ -6,6 +6,7 @@ use utoipa::OpenApi;
 
 use crate::{error::ErrorResponse, state::AppState};
 
+mod status;
 mod take_ticket;
 mod validation;
 mod verification;
@@ -14,6 +15,7 @@ mod verify;
 pub fn router() -> Router<AppState> {
     Router::new()
         .route("/openapi.json", get(openapi_handler))
+        .route("/status", get(status::handler))
         .route(
             "/last_verified",
             get(verification::last_verified_handler).head(verification::last_verified_head_handler),
@@ -49,6 +51,7 @@ fn openapi() -> utoipa::openapi::OpenApi {
         description = "API for verifying TON smart contract source bundles by code hash."
     ),
     paths(
+        status::handler,
         verify::handler,
         take_ticket::handler,
         verification::last_verified_handler,
@@ -62,6 +65,7 @@ fn openapi() -> utoipa::openapi::OpenApi {
     ),
     components(schemas(
         ErrorResponse,
+        status::ServiceStatusResponse,
         take_ticket::TakeTicketRequest,
         take_ticket::TakeTicketResponse,
         verify::SourceMetadata,
@@ -86,6 +90,7 @@ fn openapi() -> utoipa::openapi::OpenApi {
         verification::AbiContractResponse
     )),
     tags(
+        (name = "system", description = "Verifier service status"),
         (name = "verification", description = "Source verification and lookup endpoints")
     )
 )]

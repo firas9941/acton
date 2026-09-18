@@ -429,6 +429,14 @@ Check service health:
 curl -sS http://127.0.0.1:3000/healthz
 ```
 
+Check whether new verifications are disabled:
+
+```bash
+curl -sS http://127.0.0.1:3000/api/v1/status
+```
+
+The response contains `{"read_only":true}` or `{"read_only":false}`.
+
 Check verification status for a known code hash:
 
 ```bash

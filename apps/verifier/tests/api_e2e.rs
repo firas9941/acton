@@ -211,6 +211,27 @@ async fn healthz_reports_payment_history_recovery() {
 }
 
 #[tokio::test]
+async fn service_status_reports_read_only_mode() {
+    let writable_response = get(app_state(&[], CODE_HASH_ONE), "/api/v1/status").await;
+    assert_eq!(writable_response.status(), StatusCode::OK);
+    assert_eq!(
+        response_json::<Value>(writable_response).await,
+        json!({"read_only": false})
+    );
+
+    let read_only_response = get(
+        app_state(&[], CODE_HASH_ONE).with_read_only(true),
+        "/api/v1/status",
+    )
+    .await;
+    assert_eq!(read_only_response.status(), StatusCode::OK);
+    assert_eq!(
+        response_json::<Value>(read_only_response).await,
+        json!({"read_only": true})
+    );
+}
+
+#[tokio::test]
 async fn take_ticket_returns_a_payment_bound_to_the_code_hash() {
     let response = post_take_ticket(app_state(&[], CODE_HASH_ONE), CODE_HASH_ONE_BASE64).await;
 
@@ -536,6 +557,7 @@ async fn openapi_json_documents_verifier_api() {
     let body = response_json::<Value>(response).await;
     assert_eq!(body["openapi"], "3.1.0");
     assert!(body["paths"]["/api/v1/take_ticket"].is_object());
+    assert!(body["paths"]["/api/v1/status"].is_object());
     assert!(body["paths"]["/api/v1/verify"].is_object());
     assert!(body["paths"]["/api/v1/last_verified"].is_object());
     assert!(body["paths"]["/api/v1/last_verified"]["head"].is_object());
@@ -546,6 +568,7 @@ async fn openapi_json_documents_verifier_api() {
     assert!(body["paths"]["/api/v1/verification/status"].is_object());
     assert!(body["paths"]["/api/v1/verification/source"].is_object());
     assert!(body["components"]["schemas"]["VerifyResponse"].is_object());
+    assert!(body["components"]["schemas"]["ServiceStatusResponse"].is_object());
     assert!(body["components"]["schemas"]["VerificationSourceResponse"].is_object());
     assert!(body["components"]["schemas"]["VerificationStatisticsResponse"].is_object());
     assert!(body["components"]["schemas"]["VerificationStatisticsHistoryResponse"].is_object());
@@ -555,6 +578,7 @@ async fn openapi_json_documents_verifier_api() {
     );
 
     let take_ticket = &body["paths"]["/api/v1/take_ticket"]["post"];
+    let service_status = &body["paths"]["/api/v1/status"]["get"];
     let verify = &body["paths"]["/api/v1/verify"]["post"];
     let abi = &body["paths"]["/api/v1/abi"]["get"];
     let abi_head = &body["paths"]["/api/v1/abi"]["head"];
@@ -562,6 +586,8 @@ async fn openapi_json_documents_verifier_api() {
     let last_verified_head = &body["paths"]["/api/v1/last_verified"]["head"];
     let source = &body["paths"]["/api/v1/verification/source"]["get"];
     assert_eq!(take_ticket["operationId"], "take_ticket");
+    assert_eq!(service_status["operationId"], "service_status");
+    assert_eq!(response_statuses(service_status), ["200"]);
     assert_eq!(verify["operationId"], "verify");
     assert_eq!(response_statuses(take_ticket), ["200", "400", "502", "503"]);
     assert_eq!(
