@@ -15,11 +15,28 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     tracing::info!(
         %addr,
         api_key_configured = config.api_key().is_some(),
-        payment_primary_network = %config.payment_primary_network(),
         read_only = config.read_only(),
+        "starting verifier backend"
+    );
+    tracing::info!(
+        address = %config.payment_address().unwrap_or("disabled"),
+        min_amount_nano = %config
+            .payment_min_amount_nano()
+            .map_or_else(|| "disabled".to_owned(), |amount| amount.to_string()),
+        primary_network = %config.payment_primary_network(),
+        "payment configuration"
+    );
+    tracing::info!(
+        timeout_ms = config.compiler_timeout().as_millis(),
+        max_concurrent_compilations = %config
+            .max_concurrent_compilations()
+            .map_or_else(|| "unlimited".to_owned(), |limit| limit.to_string()),
+        "compiler configuration"
+    );
+    tracing::info!(
         toncenter_mainnet_base_url = %config.toncenter_mainnet_base_url(),
         toncenter_testnet_base_url = %config.toncenter_testnet_base_url(),
-        "starting verifier backend"
+        "toncenter configuration"
     );
 
     if config.read_only() {
@@ -28,7 +45,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         );
     }
     if config.api_key().is_some() {
-        tracing::info!("verifier API key authentication is enabled for X-Verifier-Key");
+        tracing::warn!("verifier API key authentication is enabled for X-Verifier-Key");
     }
 
     let state = AppState::from_config(&config)?;
