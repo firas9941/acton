@@ -49,14 +49,6 @@ jobs:
             echo "changed=true" >> "${GITHUB_OUTPUT}"
           fi
 
-      - name: Validate network configs and Explorer
-        if: steps.changes.outputs.changed == 'true'
-        working-directory: packages/explorer-core
-        run: |
-          bun run network-config:check
-          bun test tests/networkConfigAudit.test.ts
-          bun run build
-
       - name: Create or update pull request
         if: steps.changes.outputs.changed == 'true'
         env:
@@ -84,7 +76,7 @@ jobs:
           cat > "${body_file}" <<EOF
           Updates the append-only Explorer manifests from the latest TON mainnet and testnet configurations returned by Toncenter.
 
-          Validation: the live network configuration checks, manifest audit tests and TypeScript checks passed in the [update workflow](https://github.com/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}).
+          Validation is handled by the repository's standard pull request CI.
           EOF
 
           pull_request=$(gh pr list \

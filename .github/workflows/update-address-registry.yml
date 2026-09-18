@@ -53,11 +53,6 @@ jobs:
             echo "changed=true" >> "${GITHUB_OUTPUT}"
           fi
 
-      - name: Validate address registry
-        if: steps.changes.outputs.changed == 'true'
-        working-directory: packages/address-registry
-        run: bun run test
-
       - name: Create or update pull request
         if: steps.changes.outputs.changed == 'true'
         env:
@@ -85,7 +80,7 @@ jobs:
           cat > "${body_file}" <<EOF
           Updates the generated address and token registries from their upstream community-maintained sources.
 
-          Validation: address registry tests and TypeScript checks passed in the [update workflow](https://github.com/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}).
+          Validation is handled by the repository's standard pull request CI.
           EOF
 
           pull_request=$(gh pr list \

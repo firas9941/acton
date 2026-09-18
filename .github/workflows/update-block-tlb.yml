@@ -65,14 +65,6 @@ jobs:
         # Only refresh presentation snapshots; integrity expectations stay fixed
         run: bun test tests/configTlb.test.ts --test-name-pattern 'keeps root declarations' --update-snapshots
 
-      - name: Validate schema and Explorer
-        if: steps.changes.outputs.changed == 'true'
-        working-directory: packages/explorer-core
-        run: |
-          bun run generate:block-tlb --check
-          bun run test
-          bun run build
-
       - name: Create or update pull request
         if: steps.changes.outputs.changed == 'true'
         env:
@@ -113,7 +105,7 @@ jobs:
 
           [Upstream changes](https://github.com/ton-blockchain/ton/compare/${previous_revision}...${revision})
 
-          Validation: reproducible generation, Explorer tests and TypeScript checks passed in the [update workflow](https://github.com/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}).
+          Validation is handled by the repository's standard pull request CI.
           EOF
 
           pull_request=$(gh pr list \
