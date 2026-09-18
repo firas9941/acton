@@ -74,8 +74,7 @@ async fn verification_logs_report_outcomes_without_uploading_source_payloads_to_
         ("completed", "acton/1.2.3"),
         ("started", "blueprint/0.42.0"),
         ("failed", "blueprint/0.42.0"),
-    ])
-    {
+    ]) {
         assert!(
             event.contains("operation=\"verify\"") && event.contains(CODE_HASH_ONE),
             "{event}"
@@ -85,7 +84,10 @@ async fn verification_logs_report_outcomes_without_uploading_source_payloads_to_
                 || event.contains(&format!("outcome=\"{outcome}\"")),
             "{event}"
         );
-        assert!(event.contains(&format!("user_agent={user_agent}")), "{event}");
+        assert!(
+            event.contains(&format!("user_agent={user_agent}")),
+            "{event}"
+        );
     }
     assert!(events.last().unwrap().contains("duration_ms="));
 }
