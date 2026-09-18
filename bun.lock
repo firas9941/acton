@@ -29,6 +29,7 @@
       "version": "1.0.0",
       "dependencies": {
         "@acton/address-registry": "workspace:*",
+        "@acton/localton-ui": "workspace:*",
         "@acton/transaction-ui": "workspace:*",
         "@acton/ui": "workspace:*",
         "@monaco-editor/react": "^4.7.0",
@@ -66,7 +67,6 @@
       "dependencies": {
         "@acton/explorer-core": "workspace:*",
         "@acton/faucet-ui": "workspace:*",
-        "@acton/localton-ui": "workspace:*",
         "@acton/transaction-ui": "workspace:*",
         "@acton/ui": "workspace:*",
         "@acton/verifier-ui": "workspace:*",
@@ -149,7 +149,6 @@
       "version": "0.1.0",
       "dependencies": {
         "@acton/explorer-core": "workspace:*",
-        "@acton/explorer-ui": "workspace:*",
         "@acton/faucet-ui": "workspace:*",
         "@acton/localton-ui": "workspace:*",
         "@acton/test-ui": "workspace:*",

@@ -5,9 +5,6 @@
   "license": "MIT OR Apache-2.0",
   "author": "TON Core",
   "type": "module",
-  "exports": {
-    "./pages/ValidatorsPage": "./src/pages/ValidatorsPage.tsx"
-  },
   "main": "index.js",
   "scripts": {
     "build": "tsc --noEmit && vite build && XDG_CONFIG_HOME=../../target/wrangler-config WRANGLER_LOG_PATH=../../target/wrangler-logs wrangler pages functions build functions --outdir dist --build-output-directory dist --compatibility-date 2026-06-18 && mv dist/index.js dist/_worker.js",
@@ -24,7 +21,6 @@
   "dependencies": {
     "@acton/explorer-core": "workspace:*",
     "@acton/faucet-ui": "workspace:*",
-    "@acton/localton-ui": "workspace:*",
     "@acton/transaction-ui": "workspace:*",
     "@acton/ui": "workspace:*",
     "@acton/verifier-ui": "workspace:*",

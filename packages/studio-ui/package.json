@@ -18,7 +18,6 @@
   },
   "dependencies": {
     "@acton/explorer-core": "workspace:*",
-    "@acton/explorer-ui": "workspace:*",
     "@acton/faucet-ui": "workspace:*",
     "@acton/localton-ui": "workspace:*",
     "@acton/test-ui": "workspace:*",

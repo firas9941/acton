@@ -59,6 +59,7 @@
     "./pages/FavoriteAccountsPage": "./src/pages/FavoriteAccountsPage.tsx",
     "./pages/SuspendedAddressesPage": "./src/pages/SuspendedAddressesPage.tsx",
     "./pages/TransactionPage": "./src/pages/TransactionPage.tsx",
+    "./pages/ValidatorsPage": "./src/pages/ValidatorsPage.tsx",
     "./pages/emulateSharing": "./src/pages/emulateSharing.ts",
     "./styles.css": "./styles.css"
   },
@@ -78,6 +79,7 @@
   },
   "dependencies": {
     "@acton/address-registry": "workspace:*",
+    "@acton/localton-ui": "workspace:*",
     "@acton/transaction-ui": "workspace:*",
     "@acton/ui": "workspace:*",
     "@monaco-editor/react": "^4.7.0",

@@ -9,14 +9,14 @@ import {
 import {Clock3} from "lucide-react"
 import {useEffect, useState, type FC} from "react"
 
-import type {TonClient, ValidatorCycle} from "@acton/explorer-core/api/client"
-import type {ValidatorSetConfiguration} from "@acton/explorer-core/api/config"
+import type {TonClient, ValidatorCycle} from "../api/client"
+import type {ValidatorSetConfiguration} from "../api/config"
 import {
   validatorElectionFromConfig,
   validatorElectionStage,
   type ValidatorElection,
-} from "@acton/explorer-core/api/validatorElections"
-import {ExplorerBreadcrumbs} from "@acton/explorer-core/components/ExplorerBreadcrumbs"
+} from "../api/validatorElections"
+import {ExplorerBreadcrumbs} from "../components/ExplorerBreadcrumbs"
 
 import styles from "./ValidatorsPage.module.css"
 
@@ -36,7 +36,7 @@ type ValidatorsLoadState =
 const CLOCK_REFRESH_MS = 1000
 const CONFIG_REFRESH_MS = 30_000
 
-/** Connects Actonscan config data to Localton's shared validator dashboard. */
+/** Adapts explorer config data to the shared validator dashboard for each host application. */
 export const ValidatorsPage: FC<ValidatorsPageProps> = ({client}) => {
   const [loadState, setLoadState] = useState<ValidatorsLoadState>({status: "loading"})
   const [now, setNow] = useState(() => Math.floor(Date.now() / 1000))
@@ -50,7 +50,7 @@ export const ValidatorsPage: FC<ValidatorsPageProps> = ({client}) => {
     return () => globalThis.clearInterval(interval)
   }, [])
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: Retry restarts the config refresh cycle after a failed request.
+  // Retry restarts the config refresh cycle after a failed request.
   useEffect(() => {
     let active = true
     setLoadState({status: "loading"})
