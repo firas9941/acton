@@ -1,3 +1,5 @@
+import * as v from "valibot"
+
 import {useCallback, useMemo, useSyncExternalStore} from "react"
 
 import {createFavoritesStore} from "./favoritesStore"
@@ -18,7 +20,13 @@ const favoriteBlocksStore = createFavoritesStore<FavoriteBlock>({
   storagePrefix: "acton:favorite-blocks",
   storageVersion: "v1",
   changeEvent: "acton:favorite-blocks-change",
-  parseRecord: parseFavoriteBlock,
+  recordSchema: v.object({
+    workchain: v.number(),
+    shard: v.string(),
+    seqno: v.number(),
+    savedAt: v.number(),
+    generatedAt: v.optional(v.number()),
+  }),
   normalize: normalizeFavoriteBlocks,
 })
 
@@ -161,26 +169,4 @@ function normalizeFavoriteBlockIdentity(
     shard,
     seqno: block.seqno,
   }
-}
-
-function parseFavoriteBlock(value: unknown): FavoriteBlock | undefined {
-  if (
-    typeof value !== "object" ||
-    value === null ||
-    Array.isArray(value) ||
-    typeof (value as FavoriteBlock).workchain !== "number" ||
-    typeof (value as FavoriteBlock).shard !== "string" ||
-    typeof (value as FavoriteBlock).seqno !== "number" ||
-    typeof (value as FavoriteBlock).savedAt !== "number"
-  ) {
-    return undefined
-  }
-
-  const candidate = value as FavoriteBlock
-  if (candidate.generatedAt !== undefined && typeof candidate.generatedAt !== "number") {
-    return undefined
-  }
-
-  const block = normalizeFavoriteBlockInput(candidate)
-  return block ? {...block, savedAt: candidate.savedAt} : undefined
 }

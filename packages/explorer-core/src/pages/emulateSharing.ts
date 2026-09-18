@@ -1,6 +1,8 @@
+import * as v from "valibot"
+
 import type {RawMessageEmulationOptions} from "../retrace/txTrace/lib/emulateRawMessage"
 import {
-  readEmulateNavigationPayload,
+  EmulateNavigationPayloadSchema,
   type EmulateNavigationPayload,
 } from "./emulateNavigationPayload"
 
@@ -10,6 +12,62 @@ export const SHARED_EMULATION_VERSION = 1
 const MAX_SHARED_ACCOUNT_OVERRIDES = 64
 const MAX_UINT32 = 0xff_ff_ff_ff
 
+const Uint32Schema = v.pipe(v.number(), v.integer(), v.minValue(0), v.maxValue(MAX_UINT32))
+
+const OptionalStringSchema = v.pipe(
+  v.optional(v.string(), () => undefined),
+  v.transform(value => value || undefined),
+)
+
+const AccountStateSchema = v.variant("type", [
+  v.object({type: v.literal("uninit")}),
+  v.object({type: v.literal("frozen"), stateHash: OptionalStringSchema}),
+  v.object({
+    type: v.literal("active"),
+    codeBoc: OptionalStringSchema,
+    dataBoc: OptionalStringSchema,
+  }),
+])
+
+const AccountOverridesSchema = v.pipe(
+  v.unknown(),
+  v.check(value => !Array.isArray(value)),
+  v.record(
+    v.pipe(v.string(), v.nonEmpty()),
+    v.object({
+      balance: OptionalStringSchema,
+      lastTransactionLt: OptionalStringSchema,
+      lastTransactionHash: OptionalStringSchema,
+      state: v.optional(AccountStateSchema, () => undefined),
+    }),
+  ),
+  v.maxEntries(MAX_SHARED_ACCOUNT_OVERRIDES),
+  v.transform(overrides => Object.assign(Object.create(null) as typeof overrides, overrides)),
+)
+
+/** The same schema validates incoming shares in the browser and in the storage worker. */
+export const SharedEmulationSchema = v.object({
+  version: v.literal(SHARED_EMULATION_VERSION),
+  input: v.pipe(
+    EmulateNavigationPayloadSchema,
+    v.check(input => {
+      const mcSeqno = Number(input.mcSeqnoInput)
+
+      return (
+        input.rawMessage.trim().length > 0 &&
+        v.is(Uint32Schema, mcSeqno) &&
+        input.mcSeqnoInput === String(mcSeqno)
+      )
+    }),
+  ),
+  options: v.object({
+    accountStateOverrides: v.optional(AccountOverridesSchema, () => undefined),
+    ignoreChksig: v.boolean(),
+    now: v.optional(Uint32Schema, () => undefined),
+  }),
+})
+
+/** Portable emulator input; the schema validates its JSON representation at external boundaries. */
 export interface SharedEmulation {
   readonly version: typeof SHARED_EMULATION_VERSION
   readonly input: EmulateNavigationPayload
@@ -19,6 +77,15 @@ export interface SharedEmulation {
     readonly now?: number
   }
 }
+
+const ShareResponseSchema = v.object({
+  id: v.pipe(v.string(), v.nonEmpty()),
+  expiresAt: v.pipe(v.number(), v.finite(), v.gtValue(0)),
+})
+
+const LoadedShareSchema = v.object({emulation: SharedEmulationSchema})
+
+const ErrorResponseSchema = v.object({error: v.string()})
 
 interface EmulationShareResponse {
   readonly id: string
@@ -34,59 +101,34 @@ export async function createEmulationShare(
     headers: {"content-type": "application/json"},
     body: JSON.stringify(emulation),
   })
+
   const payload = await readJsonResponse(response, "Failed to create emulation share")
-  if (
-    !isRecord(payload) ||
-    typeof payload.id !== "string" ||
-    !payload.id ||
-    !isFiniteTimestamp(payload.expiresAt)
-  ) {
+
+  const result = v.safeParse(ShareResponseSchema, payload)
+  if (!result.success) {
     throw new Error("Emulation share API returned an invalid response")
   }
-  return {id: payload.id, expiresAt: payload.expiresAt}
+
+  return result.output
 }
 
 export async function loadEmulationShare(apiPath: string, id: string): Promise<SharedEmulation> {
   const response = await fetch(`${apiPath}/${encodeURIComponent(id)}`)
   const payload = await readJsonResponse(response, "Failed to load shared emulation")
-  const emulation = isRecord(payload) ? parseSharedEmulation(payload.emulation) : undefined
-  if (!emulation) {
+
+  const result = v.safeParse(LoadedShareSchema, payload)
+  if (!result.success) {
     throw new Error("Emulation share API returned an invalid response")
   }
-  return emulation
+
+  return result.output.emulation
 }
 
+/** Rejects a malformed share atomically instead of applying only valid options. */
 export function parseSharedEmulation(value: unknown): SharedEmulation | undefined {
-  if (
-    !isRecord(value) ||
-    value.version !== SHARED_EMULATION_VERSION ||
-    !isRecord(value.options) ||
-    typeof value.options.ignoreChksig !== "boolean" ||
-    (value.options.now !== undefined && !isUint32(value.options.now))
-  ) {
-    return undefined
-  }
+  const result = v.safeParse(SharedEmulationSchema, value)
 
-  const input = readEmulateNavigationPayload({emulatePayload: value.input})
-  const mcSeqno = Number(input?.mcSeqnoInput)
-  if (!input?.rawMessage.trim() || !isUint32(mcSeqno) || input.mcSeqnoInput !== String(mcSeqno)) {
-    return undefined
-  }
-
-  const accountStateOverrides = parseAccountStateOverrides(value.options.accountStateOverrides)
-  if (value.options.accountStateOverrides !== undefined && !accountStateOverrides) {
-    return undefined
-  }
-
-  return {
-    version: SHARED_EMULATION_VERSION,
-    input,
-    options: {
-      accountStateOverrides,
-      ignoreChksig: value.options.ignoreChksig,
-      now: value.options.now,
-    },
-  }
+  return result.success ? result.output : undefined
 }
 
 async function readJsonResponse(response: Response, fallback: string): Promise<unknown> {
@@ -101,100 +143,10 @@ async function readJsonResponse(response: Response, fallback: string): Promise<u
   }
 
   if (!response.ok) {
-    const error = isRecord(payload) && typeof payload.error === "string" ? payload.error : fallback
-    throw new Error(error)
+    const result = v.safeParse(ErrorResponseSchema, payload)
+
+    throw new Error(result.success ? result.output.error : fallback)
   }
+
   return payload
-}
-
-function parseAccountStateOverrides(
-  value: unknown,
-): RawMessageEmulationOptions["accountStateOverrides"] | undefined {
-  if (value === undefined) {
-    return undefined
-  }
-  if (!isRecord(value)) {
-    return undefined
-  }
-
-  const entries = Object.entries(value)
-  if (entries.length > MAX_SHARED_ACCOUNT_OVERRIDES) {
-    return undefined
-  }
-
-  const result = Object.create(null) as NonNullable<
-    RawMessageEmulationOptions["accountStateOverrides"]
-  >
-  for (const [address, override] of entries) {
-    if (!address || !isRecord(override)) {
-      return undefined
-    }
-
-    const balance = optionalString(override.balance)
-    const lastTransactionLt = optionalString(override.lastTransactionLt)
-    const lastTransactionHash = optionalString(override.lastTransactionHash)
-    const state = parseAccountState(override.state)
-    if (
-      balance === false ||
-      lastTransactionLt === false ||
-      lastTransactionHash === false ||
-      state === false
-    ) {
-      return undefined
-    }
-
-    result[address] = {
-      balance: balance || undefined,
-      lastTransactionLt: lastTransactionLt || undefined,
-      lastTransactionHash: lastTransactionHash || undefined,
-      state: state || undefined,
-    }
-  }
-  return result
-}
-
-function parseAccountState(
-  value: unknown,
-):
-  | NonNullable<NonNullable<RawMessageEmulationOptions["accountStateOverrides"]>[string]["state"]>
-  | undefined
-  | false {
-  if (value === undefined) {
-    return undefined
-  }
-  if (!isRecord(value) || typeof value.type !== "string") {
-    return false
-  }
-
-  if (value.type === "uninit") {
-    return {type: "uninit"}
-  }
-  if (value.type === "frozen") {
-    const stateHash = optionalString(value.stateHash)
-    return stateHash === false ? false : {type: "frozen", stateHash: stateHash || undefined}
-  }
-  if (value.type === "active") {
-    const codeBoc = optionalString(value.codeBoc)
-    const dataBoc = optionalString(value.dataBoc)
-    return codeBoc === false || dataBoc === false
-      ? false
-      : {type: "active", codeBoc: codeBoc || undefined, dataBoc: dataBoc || undefined}
-  }
-  return false
-}
-
-function optionalString(value: unknown): string | undefined | false {
-  return value === undefined || typeof value === "string" ? value : false
-}
-
-function isUint32(value: unknown): value is number {
-  return Number.isSafeInteger(value) && Number(value) >= 0 && Number(value) <= MAX_UINT32
-}
-
-function isFiniteTimestamp(value: unknown): value is number {
-  return typeof value === "number" && Number.isFinite(value) && value > 0
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return Boolean(value) && typeof value === "object" && !Array.isArray(value)
 }

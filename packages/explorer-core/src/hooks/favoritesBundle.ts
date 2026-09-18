@@ -1,3 +1,5 @@
+import * as v from "valibot"
+
 import {Address} from "@ton/core"
 
 import type {RegisteredAddressName} from "../metadata/types"
@@ -27,6 +29,38 @@ export interface CreateFavoritesBundleOptions {
   readonly addressNames: readonly RegisteredAddressName[]
 }
 
+const favoritesFormatError = "This file is not a supported Acton favorites bundle"
+const favoritesNetworkError = "The favorites bundle does not specify a network"
+
+const FavoritesBundleSchema = v.pipe(
+  v.unknown(),
+  v.check(value => !Array.isArray(value), "The JSON root must be an object"),
+  v.object(
+    {
+      format: v.literal(FAVORITES_BUNDLE_FORMAT, favoritesFormatError),
+      version: v.literal(FAVORITES_BUNDLE_VERSION, favoritesFormatError),
+      network: v.pipe(v.string(favoritesNetworkError), v.trim(), v.nonEmpty(favoritesNetworkError)),
+      exportedAt: v.fallback(v.string(), ""),
+      accounts: v.optional(v.array(v.unknown(), "The accounts section must be an array"), []),
+      blocks: v.optional(v.array(v.unknown(), "The blocks section must be an array"), []),
+      transactions: v.optional(
+        v.array(v.unknown(), "The transactions section must be an array"),
+        [],
+      ),
+      addressNames: v.optional(
+        v.array(v.unknown(), "The address names section must be an array"),
+        [],
+      ),
+    },
+    "The JSON root must be an object",
+  ),
+)
+
+const AddressNameSchema = v.object({
+  address: v.pipe(v.string(), v.trim(), v.nonEmpty()),
+  name: v.pipe(v.string(), v.trim(), v.nonEmpty()),
+})
+
 export function createFavoritesBundle(options: CreateFavoritesBundleOptions): FavoritesBundle {
   return {
     format: FAVORITES_BUNDLE_FORMAT,
@@ -48,67 +82,31 @@ export function parseFavoritesBundle(raw: string): FavoritesBundle {
     throw new Error("The selected file is not valid JSON")
   }
 
-  if (!isRecord(value)) {
-    throw new Error("The JSON root must be an object")
-  }
-  if (value.format !== FAVORITES_BUNDLE_FORMAT || value.version !== FAVORITES_BUNDLE_VERSION) {
-    throw new Error("This file is not a supported Acton favorites bundle")
+  const result = v.safeParse(FavoritesBundleSchema, value, {abortEarly: true})
+  if (!result.success) {
+    throw new Error(result.issues[0].message)
   }
 
-  const network = typeof value.network === "string" ? value.network.trim() : ""
-  if (!network) {
-    throw new Error("The favorites bundle does not specify a network")
-  }
+  const bundle = result.output
 
   return {
-    format: FAVORITES_BUNDLE_FORMAT,
-    version: FAVORITES_BUNDLE_VERSION,
-    exportedAt: typeof value.exportedAt === "string" ? value.exportedAt : "",
-    network,
-    accounts: parseFavoriteList(value.accounts, parseFavoriteAccounts, "accounts"),
-    blocks: parseFavoriteList(value.blocks, parseFavoriteBlocks, "blocks"),
-    transactions: parseFavoriteList(value.transactions, parseFavoriteTransactions, "transactions"),
-    addressNames: parseAddressNames(value.addressNames),
+    ...bundle,
+    accounts: parseFavoriteAccounts(JSON.stringify(bundle.accounts)),
+    blocks: parseFavoriteBlocks(JSON.stringify(bundle.blocks)),
+    transactions: parseFavoriteTransactions(JSON.stringify(bundle.transactions)),
+    addressNames: parseAddressNames(bundle.addressNames),
   }
 }
 
-function parseFavoriteList<T>(
-  value: unknown,
-  parse: (raw: string | null) => readonly T[],
-  label: string,
-): readonly T[] {
-  if (value === undefined) {
-    return []
-  }
-  if (!Array.isArray(value)) {
-    throw new Error(`The ${label} section must be an array`)
-  }
-  return parse(JSON.stringify(value))
-}
-
-function parseAddressNames(value: unknown): readonly RegisteredAddressName[] {
-  if (value === undefined) {
-    return []
-  }
-  if (!Array.isArray(value)) {
-    throw new Error("The address names section must be an array")
-  }
-
+function parseAddressNames(value: readonly unknown[]): readonly RegisteredAddressName[] {
   const namesByAddress = new Map<string, RegisteredAddressName>()
   for (const candidate of value) {
-    if (
-      !isRecord(candidate) ||
-      typeof candidate.address !== "string" ||
-      typeof candidate.name !== "string"
-    ) {
+    const result = v.safeParse(AddressNameSchema, candidate)
+    if (!result.success) {
       continue
     }
 
-    const address = candidate.address.trim()
-    const name = candidate.name.trim()
-    if (!address || !name) {
-      continue
-    }
+    const {address, name} = result.output
 
     const key = normalizeAddressKey(address)
     if (!namesByAddress.has(key)) {
@@ -142,8 +140,4 @@ function normalizeAddressKey(address: string): string {
   } catch {
     return address
   }
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value)
 }

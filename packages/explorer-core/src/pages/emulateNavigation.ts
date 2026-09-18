@@ -1,3 +1,5 @@
+import * as v from "valibot"
+
 import {
   decodeAbiMessageBuilderDraft,
   type AbiMessageDirection,
@@ -140,6 +142,8 @@ export function saveEmulateNavigationPayload(
   }
 }
 
+const StoredHandoffSchema = v.looseObject({createdAt: v.number()})
+
 export function readStoredEmulateNavigationPayload(
   searchParams: URLSearchParams,
 ): EmulateNavigationPayload | undefined {
@@ -155,22 +159,14 @@ export function readStoredEmulateNavigationPayload(
       return undefined
     }
 
-    const stored = JSON.parse(raw) as unknown
-    if (
-      !isRecord(stored) ||
-      typeof stored.createdAt !== "number" ||
-      Date.now() - stored.createdAt > EMULATE_HANDOFF_TTL_MS
-    ) {
+    const result = v.safeParse(StoredHandoffSchema, JSON.parse(raw))
+    if (!result.success || Date.now() - result.output.createdAt > EMULATE_HANDOFF_TTL_MS) {
       globalThis.localStorage?.removeItem(storageKey)
       return undefined
     }
 
-    return readEmulateNavigationPayload(stored)
+    return readEmulateNavigationPayload(result.output)
   } catch {
     return undefined
   }
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return Boolean(value) && typeof value === "object" && !Array.isArray(value)
 }

@@ -1,10 +1,13 @@
 import {describe, expect, test} from "bun:test"
+import {deepEquals} from "bun"
 
 import {
   buildAbiImportPlan,
   buildSourceImportPlan,
+  sourceArtifactFromJson,
   type AbiImportFile,
 } from "../src/components/buildImport"
+import type {SourceBundle} from "../src/api/types"
 
 const HASH_A = "1BFC588273D9DE92326658D6ADFC7762B322DD850E3EA84FC3D0B4AA04E3AAAA"
 const HASH_B = "2c0e51710a1bc02b0fa1a2a2f162b0a3df6a32d1c2c1b0e51710a1bc02b0bbbb"
@@ -203,7 +206,7 @@ describe("buildAbiImportPlan", () => {
   })
 })
 
-function sourceBundle(entrypoint: string): Record<string, unknown> {
+function sourceBundle(entrypoint: string): SourceBundle {
   return {
     source_bundle_hash: "ab".repeat(32),
     verified_at: 0,
@@ -231,6 +234,66 @@ function sourceArtifactFile(path: string, hash: string, entrypoint: string): Abi
 }
 
 describe("buildSourceImportPlan", () => {
+  test("preserves nullable source flags, compiler parameters, and source maps after JSON import", () => {
+    const results = [null, false, true].map(flag => {
+      const original = sourceBundle("contracts/Example.tolk")
+      const bundle: SourceBundle = {
+        ...original,
+        compiler: {...original.compiler, params: flag === null ? null : {optLevel: 0, debug: flag}},
+        files: original.files.map(file => ({
+          ...file,
+          include_in_command: flag,
+          is_stdlib: flag,
+          has_include_directives: flag,
+        })),
+        source_map:
+          flag === null
+            ? null
+            : {
+                code_boc64: "te6ccgEBAQEAAgAAAA==",
+                symbol_types_json: {types: []},
+                debug_marks_json: [],
+                debug_marks_base64: "",
+              },
+      }
+
+      const artifact = {code_hash: HASH_A, verified: false, bundle}
+      const text = JSON.stringify(artifact)
+      const parsed = sourceArtifactFromJson(JSON.parse(text))
+      const plan = buildSourceImportPlan([{path: "Example.source.json", text}])
+
+      return {
+        flag,
+        artifactPreserved: deepEquals(parsed, artifact),
+        registeredSourcePreserved: deepEquals(plan.registrations[0]?.source, artifact),
+        warnings: plan.warnings,
+      }
+    })
+
+    expect(results).toMatchInlineSnapshot(`
+      [
+        {
+          "artifactPreserved": true,
+          "flag": null,
+          "registeredSourcePreserved": true,
+          "warnings": [],
+        },
+        {
+          "artifactPreserved": true,
+          "flag": false,
+          "registeredSourcePreserved": true,
+          "warnings": [],
+        },
+        {
+          "artifactPreserved": true,
+          "flag": true,
+          "registeredSourcePreserved": true,
+          "warnings": [],
+        },
+      ]
+    `)
+  })
+
   test("finds source artifacts anywhere in a dropped project tree", () => {
     const plan = buildSourceImportPlan([
       {path: "project/Acton.toml.json", text: "not json"},

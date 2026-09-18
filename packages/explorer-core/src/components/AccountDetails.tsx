@@ -1,3 +1,5 @@
+import * as v from "valibot"
+
 import {
   Suspense,
   lazy,
@@ -1620,6 +1622,19 @@ function ContractCodeSkeleton(): JSX.Element {
   )
 }
 
+const FilterKeysSchema = v.pipe(
+  v.fallback(v.array(v.fallback(v.optional(v.string()), undefined)), []),
+  v.transform(keys => keys.filter((key): key is string => key !== undefined)),
+)
+
+const TransactionFiltersSchema = v.object({
+  hiddenActionKeys: FilterKeysSchema,
+  hiddenToncenterActionKeys: FilterKeysSchema,
+  historyMode: v.fallback(v.picklist(["transactions", "actions"]), "actions"),
+  sortOrder: v.fallback(v.picklist(["asc", "desc"]), "desc"),
+  timeFormat: v.fallback(v.picklist(["relative", "smart", "absolute"]), "smart"),
+})
+
 function readTransactionFilters(): AccountTransactionFilters {
   try {
     const raw = globalThis.localStorage?.getItem(TRANSACTION_FILTERS_STORAGE_KEY)
@@ -1627,30 +1642,9 @@ function readTransactionFilters(): AccountTransactionFilters {
       return DEFAULT_TRANSACTION_FILTERS
     }
 
-    const parsed: unknown = JSON.parse(raw)
-    if (!isRecord(parsed)) {
-      return DEFAULT_TRANSACTION_FILTERS
-    }
+    const result = v.safeParse(TransactionFiltersSchema, JSON.parse(raw))
 
-    const hiddenActionKeys = Array.isArray(parsed.hiddenActionKeys)
-      ? parsed.hiddenActionKeys.filter((value): value is string => typeof value === "string")
-      : []
-    const hiddenToncenterActionKeys = Array.isArray(parsed.hiddenToncenterActionKeys)
-      ? parsed.hiddenToncenterActionKeys.filter(
-          (value): value is string => typeof value === "string",
-        )
-      : []
-    const historyMode: AccountHistoryMode =
-      parsed.historyMode === "transactions" ? "transactions" : "actions"
-    const sortOrder: AccountHistorySortOrder = parsed.sortOrder === "asc" ? "asc" : "desc"
-    const timeFormat: AccountTimeFormat =
-      parsed.timeFormat === "relative" ||
-      parsed.timeFormat === "smart" ||
-      parsed.timeFormat === "absolute"
-        ? parsed.timeFormat
-        : "smart"
-
-    return {historyMode, hiddenActionKeys, hiddenToncenterActionKeys, sortOrder, timeFormat}
+    return result.success ? result.output : DEFAULT_TRANSACTION_FILTERS
   } catch {
     return DEFAULT_TRANSACTION_FILTERS
   }
@@ -1658,10 +1652,6 @@ function readTransactionFilters(): AccountTransactionFilters {
 
 export function readAccountHistorySortOrder(): AccountHistorySortOrder {
   return readTransactionFilters().sortOrder
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value)
 }
 
 function HistoryTechnicalCell({

@@ -1,12 +1,9 @@
+import * as v from "valibot"
+
 import type {ContractABI} from "@ton/tolk-abi-to-typescript"
 
 import type {ExtendedContractABI} from "../api/compilerAbi"
-import type {
-  SourceBundle,
-  SourceCompiler,
-  SourceFile,
-  VerificationSourceResponse,
-} from "../api/types"
+import type {SourceBundle, VerificationSourceResponse} from "../api/types"
 import {normalizeCodeHash} from "../metadata/codeHash"
 import {sourceRegistrationFromResponse} from "../metadata/sourceRegistration"
 import type {CompilerAbiRegistration, SourceRegistration} from "../metadata/types"
@@ -45,22 +42,20 @@ function isSkippedDirName(name: string): boolean {
 const MAX_IMPORT_FILES = 2000
 const MAX_IMPORT_FILE_BYTES = 8 * 1024 * 1024
 
-export function isCompilerAbi(value: unknown): value is ContractABI {
-  if (!value || typeof value !== "object") {
-    return false
-  }
+const CompilerAbiEnvelopeSchema = v.object({
+  contract_name: v.string(),
+  get_methods: v.array(v.unknown()),
+  incoming_messages: v.array(v.unknown()),
+  incoming_external: v.array(v.unknown()),
+  outgoing_messages: v.array(v.unknown()),
+  emitted_events: v.array(v.unknown()),
+  declarations: v.array(v.unknown()),
+  thrown_errors: v.array(v.unknown()),
+})
 
-  const abi = value as Partial<ContractABI>
-  return (
-    typeof abi.contract_name === "string" &&
-    Array.isArray(abi.get_methods) &&
-    Array.isArray(abi.incoming_messages) &&
-    Array.isArray(abi.incoming_external) &&
-    Array.isArray(abi.outgoing_messages) &&
-    Array.isArray(abi.emitted_events) &&
-    Array.isArray(abi.declarations) &&
-    Array.isArray(abi.thrown_errors)
-  )
+/** Recognizes compiler artifacts; the ABI library owns validation of individual declarations. */
+export function isCompilerAbi(value: unknown): value is ContractABI {
+  return v.is(CompilerAbiEnvelopeSchema, value)
 }
 
 export function extendedAbiFromUpload(
@@ -249,73 +244,60 @@ export function buildSourceImportPlan(files: readonly AbiImportFile[]): SourceIm
   return {registrations, registeredNames, warnings}
 }
 
-// Accepts both the current artifact shape ({code_hash, verified, bundle}) and
-// the legacy one ({code_hash, verified, bundles: [...]}) written by CLIs
-// predating the single-bundle-per-code-hash change.
+const SourceFileSchema = v.object({
+  path: v.string(),
+  content_hash: v.string(),
+  include_in_command: v.nullable(v.boolean()),
+  is_stdlib: v.nullable(v.boolean()),
+  has_include_directives: v.nullable(v.boolean()),
+  content: v.string(),
+})
+
+const SourceBundleSchema = v.object({
+  source_bundle_hash: v.string(),
+  verified_at: v.number(),
+  storage_revision: v.string(),
+  entrypoint: v.string(),
+  compiler: v.object({
+    language: v.string(),
+    version: v.string(),
+    params: v.nonOptional(v.unknown()),
+  }),
+  files: v.pipe(v.array(SourceFileSchema), v.nonEmpty()),
+})
+
+const SourceArtifactSchema = v.object({
+  code_hash: v.pipe(
+    v.string(),
+    v.check(value => normalizeCodeHash(value) !== undefined),
+  ),
+  verified: v.boolean(),
+  bundle: v.optional(v.unknown()),
+  bundles: v.fallback(v.array(v.unknown()), []),
+})
+
+/** Reads source artifacts from both supported CLI formats without dropping bundle extensions. */
 export function sourceArtifactFromJson(value: unknown): VerificationSourceResponse | undefined {
-  if (!isRecord(value)) {
+  const result = v.safeParse(SourceArtifactSchema, value)
+  if (!result.success) {
     return undefined
   }
 
-  const codeHash =
-    typeof value.code_hash === "string" ? normalizeCodeHash(value.code_hash) : undefined
-  if (!codeHash || typeof value.verified !== "boolean") {
-    return undefined
-  }
+  const artifact = result.output
+  const bundle = isSourceBundle(artifact.bundle)
+    ? artifact.bundle
+    : artifact.bundles.find(isSourceBundle)
 
-  const bundle = isSourceBundle(value.bundle)
-    ? value.bundle
-    : Array.isArray(value.bundles)
-      ? value.bundles.find(isSourceBundle)
-      : undefined
   if (!bundle) {
     return undefined
   }
 
-  return {code_hash: value.code_hash as string, verified: value.verified, bundle}
+  return {code_hash: artifact.code_hash, verified: artifact.verified, bundle}
 }
 
 function isSourceBundle(value: unknown): value is SourceBundle {
-  return (
-    isRecord(value) &&
-    typeof value.source_bundle_hash === "string" &&
-    typeof value.verified_at === "number" &&
-    typeof value.storage_revision === "string" &&
-    typeof value.entrypoint === "string" &&
-    isSourceCompiler(value.compiler) &&
-    Array.isArray(value.files) &&
-    value.files.length > 0 &&
-    value.files.every(isSourceFile)
-  )
-}
-
-function isSourceCompiler(value: unknown): value is SourceCompiler {
-  return (
-    isRecord(value) &&
-    typeof value.language === "string" &&
-    typeof value.version === "string" &&
-    "params" in value
-  )
-}
-
-function isSourceFile(value: unknown): value is SourceFile {
-  return (
-    isRecord(value) &&
-    typeof value.path === "string" &&
-    typeof value.content_hash === "string" &&
-    isNullableBool(value.include_in_command) &&
-    isNullableBool(value.is_stdlib) &&
-    isNullableBool(value.has_include_directives) &&
-    typeof value.content === "string"
-  )
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value)
-}
-
-function isNullableBool(value: unknown): value is boolean | null {
-  return value === null || typeof value === "boolean"
+  // Keep the original bundle, including compiler ABI and source-map extensions used downstream.
+  return v.is(SourceBundleSchema, value)
 }
 
 export async function collectDroppedImportFiles(

@@ -1,3 +1,5 @@
+import * as v from "valibot"
+
 import {Address, Cell} from "@ton/core"
 
 import {loadSuspendedAddressList} from "../cell-inspector/block.tlb.generated"
@@ -112,42 +114,25 @@ function suspendedAccountsCacheKey(apiBaseUrl: string): string {
   return `${SUSPENDED_ACCOUNTS_CACHE_PREFIX}:${encodeURIComponent(apiBaseUrl)}`
 }
 
+const SuspendedAccountsCacheSchema = v.object({
+  expiresAt: v.pipe(v.number(), v.safeInteger(), v.minValue(1)),
+  rawAddresses: v.array(v.pipe(v.string(), v.check(isRawAddress))),
+  suspendedUntil: v.pipe(v.number(), v.safeInteger(), v.minValue(0)),
+})
+
 function parseSuspendedAccountsCacheEntry(value: unknown): SuspendedAccountsCacheEntry | undefined {
-  if (!isRecord(value)) return undefined
+  const result = v.safeParse(SuspendedAccountsCacheSchema, value)
 
-  const {expiresAt, rawAddresses, suspendedUntil} = value
-  if (
-    typeof expiresAt !== "number" ||
-    !Number.isSafeInteger(expiresAt) ||
-    expiresAt <= 0 ||
-    !Array.isArray(rawAddresses) ||
-    !rawAddresses.every(isRawAddress) ||
-    typeof suspendedUntil !== "number" ||
-    !Number.isSafeInteger(suspendedUntil) ||
-    suspendedUntil < 0
-  ) {
-    return undefined
-  }
-
-  return {
-    expiresAt,
-    rawAddresses,
-    suspendedUntil,
-  }
+  return result.success ? result.output : undefined
 }
 
-function isRawAddress(value: unknown): value is string {
-  if (typeof value !== "string") return false
+function isRawAddress(value: string): boolean {
   try {
     Address.parseRaw(value)
     return true
   } catch {
     return false
   }
-}
-
-function isRecord(value: unknown): value is Readonly<Record<string, unknown>> {
-  return typeof value === "object" && value !== null
 }
 
 function getLocalStorage(): Storage | undefined {

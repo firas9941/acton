@@ -1,3 +1,5 @@
+import * as v from "valibot"
+
 import {Address} from "@ton/core"
 import {useCallback, useMemo, useSyncExternalStore} from "react"
 
@@ -16,7 +18,10 @@ const favoriteAccountsStore = createFavoritesStore<FavoriteAccount>({
   storagePrefix: FAVORITE_ACCOUNTS_STORAGE_PREFIX,
   storageVersion: FAVORITE_ACCOUNTS_STORAGE_VERSION,
   changeEvent: FAVORITE_ACCOUNTS_CHANGE_EVENT,
-  parseRecord: parseFavoriteAccount,
+  recordSchema: v.object({
+    address: v.string(),
+    savedAt: v.number(),
+  }),
   normalize: normalizeFavoriteAccounts,
 })
 
@@ -127,28 +132,5 @@ function favoriteAddressKey(address: string): string | undefined {
     return Address.parse(trimmed).toRawString()
   } catch {
     return trimmed
-  }
-}
-
-function parseFavoriteAccount(value: unknown): FavoriteAccount | undefined {
-  if (
-    typeof value !== "object" ||
-    value === null ||
-    Array.isArray(value) ||
-    typeof (value as FavoriteAccount).address !== "string" ||
-    typeof (value as FavoriteAccount).savedAt !== "number"
-  ) {
-    return undefined
-  }
-
-  const address = favoriteAddressKey((value as FavoriteAccount).address)
-  if (!address) {
-    return undefined
-  }
-
-  const savedAt = (value as FavoriteAccount).savedAt
-  return {
-    address,
-    savedAt: Number.isFinite(savedAt) && savedAt > 0 ? savedAt : 0,
   }
 }

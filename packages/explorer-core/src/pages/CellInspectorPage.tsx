@@ -1,3 +1,5 @@
+import * as v from "valibot"
+
 import {
   Checkbox,
   CountValue,
@@ -1020,6 +1022,20 @@ function replaceCellInspectorQueryParameter(name: "cell" | "options", value?: st
   )
 }
 
+const CellInspectorDraftSchema = v.pipe(
+  v.unknown(),
+  v.check(value => !Array.isArray(value)),
+  v.object({
+    input: v.fallback(v.string(), ""),
+    rootIndex: v.unknown(),
+    strict: v.fallback(v.boolean(), false),
+    maxDepth: v.unknown(),
+    customTlb: v.fallback(v.string(), ""),
+    customTlbEnabled: v.fallback(v.optional(v.boolean()), undefined),
+    customTlbVisible: v.fallback(v.boolean(), false),
+  }),
+)
+
 function readCellInspectorDraft(urlCell: string | null = null): CellInspectorDraft {
   try {
     const raw = globalThis.localStorage?.getItem(CELL_INSPECTOR_DRAFT_KEY)
@@ -1028,25 +1044,15 @@ function readCellInspectorDraft(urlCell: string | null = null): CellInspectorDra
         ? EMPTY_CELL_INSPECTOR_DRAFT
         : {...EMPTY_CELL_INSPECTOR_DRAFT, input: urlCell}
     }
-    const value = JSON.parse(raw) as unknown
-    if (!isRecord(value)) {
-      return urlCell === null
-        ? EMPTY_CELL_INSPECTOR_DRAFT
-        : {...EMPTY_CELL_INSPECTOR_DRAFT, input: urlCell}
-    }
+    const draft = v.parse(CellInspectorDraftSchema, JSON.parse(raw))
 
     return {
-      input: urlCell ?? (typeof value.input === "string" ? value.input : ""),
-      rootIndex: boundedInteger(String(value.rootIndex ?? ""), 0, 0, Number.MAX_SAFE_INTEGER),
-      strict: typeof value.strict === "boolean" ? value.strict : false,
-      maxDepth: boundedInteger(String(value.maxDepth ?? ""), 8, 0, 128),
-      customTlb: typeof value.customTlb === "string" ? value.customTlb : "",
-      customTlbEnabled:
-        typeof value.customTlbEnabled === "boolean"
-          ? value.customTlbEnabled
-          : typeof value.customTlbVisible === "boolean"
-            ? value.customTlbVisible
-            : false,
+      input: urlCell ?? draft.input,
+      rootIndex: boundedInteger(String(draft.rootIndex ?? ""), 0, 0, Number.MAX_SAFE_INTEGER),
+      strict: draft.strict,
+      maxDepth: boundedInteger(String(draft.maxDepth ?? ""), 8, 0, 128),
+      customTlb: draft.customTlb,
+      customTlbEnabled: draft.customTlbEnabled ?? draft.customTlbVisible,
     }
   } catch {
     return urlCell === null
@@ -1061,10 +1067,6 @@ function writeCellInspectorDraft(draft: CellInspectorDraft): void {
   } catch {
     // Storage can be unavailable or full. Inspection itself must keep working.
   }
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return Boolean(value) && typeof value === "object" && !Array.isArray(value)
 }
 
 function nonNegativeInteger(value: string, fallback: number): number {

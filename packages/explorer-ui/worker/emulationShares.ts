@@ -1,4 +1,11 @@
-import {parseSharedEmulation, type SharedEmulation} from "@acton/explorer-core/pages/emulateSharing"
+import {
+  parseSharedEmulation,
+  SharedEmulationSchema,
+  type SharedEmulation,
+} from "@acton/explorer-core/pages/emulateSharing"
+
+// biome-ignore lint/performance/noNamespaceImport: Valibot supports tree shaking through its namespace API
+import * as v from "valibot"
 
 export const EMULATION_SHARE_TTL_MS = 30 * 24 * 60 * 60 * 1000
 
@@ -152,12 +159,15 @@ export async function readEmulationShareResponse(
   return jsonResponse({emulation: stored.emulation, expiresAt: stored.expiresAt})
 }
 
+const StoredEmulationShareSchema = v.object({
+  expiresAt: v.pipe(v.number(), v.finite(), v.gtValue(0)),
+  emulation: SharedEmulationSchema,
+})
+
 function parseStoredEmulationShare(value: unknown): StoredEmulationShare | undefined {
-  if (!isRecord(value) || !isTimestamp(value.expiresAt)) {
-    return undefined
-  }
-  const emulation = parseSharedEmulation(value.emulation)
-  return emulation ? {expiresAt: value.expiresAt, emulation} : undefined
+  const result = v.safeParse(StoredEmulationShareSchema, value)
+
+  return result.success ? result.output : undefined
 }
 
 function objectKey(id: string): string {
@@ -174,12 +184,4 @@ function jsonResponse(payload: unknown, status = 200, headers?: HeadersInit): Re
   responseHeaders.set("content-type", "application/json; charset=utf-8")
   responseHeaders.set("x-content-type-options", "nosniff")
   return new Response(JSON.stringify(payload), {status, headers: responseHeaders})
-}
-
-function isTimestamp(value: unknown): value is number {
-  return typeof value === "number" && Number.isFinite(value) && value > 0
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return Boolean(value) && typeof value === "object" && !Array.isArray(value)
 }

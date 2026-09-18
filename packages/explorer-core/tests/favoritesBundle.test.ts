@@ -35,6 +35,7 @@ describe("favorites bundles", () => {
 
   test("rejects invalid JSON and malformed sections", () => {
     expect(() => parseFavoritesBundle("not json")).toThrow("not valid JSON")
+    expect(() => parseFavoritesBundle("[]")).toThrow("The JSON root must be an object")
     expect(() =>
       parseFavoritesBundle(
         JSON.stringify({

@@ -1,3 +1,6 @@
+// biome-ignore lint/performance/noNamespaceImport: Valibot supports tree shaking through its namespace API
+import * as v from "valibot"
+
 import {FaucetPage} from "@acton/faucet-ui"
 import {Checkbox, Input, Popover, ThemeSwitch, ToastProvider, useToast} from "@acton/ui"
 import {
@@ -164,9 +167,6 @@ const customNetworkLabel = (v3BaseUrl: string): string => {
   }
 }
 
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === "object" && value !== null && !Array.isArray(value)
-
 const EXPLORER_API_CONFIGS = {
   mainnet: {
     id: "mainnet",
@@ -217,44 +217,42 @@ const EXPLORER_NETWORKS: readonly SelectableExplorerNetwork[] = [
   EXPLORER_API_CONFIGS.testnet,
 ]
 
+const StoredCustomNetworkSchema = v.object({
+  id: v.fallback(v.optional(v.pipe(v.string(), v.startsWith("custom:"))), undefined),
+  label: v.fallback(v.pipe(v.string(), v.trim()), ""),
+  testOnly: v.fallback(v.boolean(), false),
+  supportsActions: v.fallback(v.boolean(), false),
+  api: v.object({
+    v2BaseUrl: v.string(),
+    v3BaseUrl: v.string(),
+    toncenterApiKey: v.fallback(v.optional(v.string()), undefined),
+  }),
+})
+
+const StoredCustomNetworksSchema = v.array(v.unknown())
+
 const parseStoredCustomNetwork = (value: unknown): SelectableExplorerNetwork | undefined => {
-  if (!isRecord(value) || !isRecord(value.api)) {
+  const result = v.safeParse(StoredCustomNetworkSchema, value)
+  if (!result.success) {
     return undefined
   }
 
-  const v2BaseUrl =
-    typeof value.api.v2BaseUrl === "string"
-      ? normalizeStoredCustomApiUrl(value.api.v2BaseUrl)
-      : undefined
-  const v3BaseUrl =
-    typeof value.api.v3BaseUrl === "string"
-      ? normalizeStoredCustomApiUrl(value.api.v3BaseUrl)
-      : undefined
+  const stored = result.output
+  const v2BaseUrl = normalizeStoredCustomApiUrl(stored.api.v2BaseUrl)
+  const v3BaseUrl = normalizeStoredCustomApiUrl(stored.api.v3BaseUrl)
   if (!v2BaseUrl || !v3BaseUrl) {
     return undefined
   }
 
-  const id =
-    typeof value.id === "string" && value.id.startsWith("custom:")
-      ? (value.id as CustomExplorerNetworkId)
-      : customNetworkId(v3BaseUrl)
-  const label =
-    typeof value.label === "string" && value.label.trim()
-      ? value.label.trim()
-      : customNetworkLabel(v3BaseUrl)
-
   return {
-    id,
-    label,
-    testOnly: value.testOnly === true,
-    supportsActions: value.supportsActions === true,
+    id: stored.id ? (stored.id as CustomExplorerNetworkId) : customNetworkId(v3BaseUrl),
+    label: stored.label || customNetworkLabel(v3BaseUrl),
+    testOnly: stored.testOnly,
+    supportsActions: stored.supportsActions,
     api: {
       v2BaseUrl,
       v3BaseUrl,
-      toncenterApiKey:
-        typeof value.api.toncenterApiKey === "string"
-          ? cleanApiKey(value.api.toncenterApiKey)
-          : undefined,
+      toncenterApiKey: cleanApiKey(stored.api.toncenterApiKey),
     },
   }
 }
@@ -274,10 +272,7 @@ const readCustomExplorerNetworks = (): readonly SelectableExplorerNetwork[] => {
       return []
     }
 
-    const parsed: unknown = JSON.parse(raw)
-    if (!Array.isArray(parsed)) {
-      return []
-    }
+    const parsed = v.parse(StoredCustomNetworksSchema, JSON.parse(raw))
 
     return parsed.flatMap(value => {
       const network = parseStoredCustomNetwork(value)

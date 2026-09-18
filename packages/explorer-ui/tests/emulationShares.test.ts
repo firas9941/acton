@@ -1,4 +1,12 @@
-import {expect, test} from "bun:test"
+import {expect, spyOn, test} from "bun:test"
+import {deepEquals, file} from "bun"
+
+import {
+  createEmulationShare,
+  loadEmulationShare,
+  type SharedEmulation,
+} from "@acton/explorer-core/pages/emulateSharing"
+import type {ContractABI} from "@ton/tolk-abi-to-typescript"
 
 import {onRequest as createShare} from "../functions/api/emulations"
 import {onRequest as readShare} from "../functions/api/emulations/[id]"
@@ -27,6 +35,136 @@ const EMULATION = {
     now: 1_753_444_800,
   },
 } as const
+
+test("round-trips catalog ABIs and every account state through the client, worker, and storage", async () => {
+  const catalog = (await file(
+    new URL("../../../crates/acton-abi-catalog/data/data-abis.json", import.meta.url),
+  ).json()) as {contracts: {id: string; compilerAbi: ContractABI}[]}
+
+  const cases: {name: string; emulation: SharedEmulation}[] = [
+    {
+      name: "raw without optional settings",
+      emulation: {...EMULATION, options: {ignoreChksig: false}},
+    },
+    {
+      name: "all account states and uint32 boundaries",
+      emulation: {
+        ...EMULATION,
+        input: {...EMULATION.input, mcSeqnoInput: "0"},
+        options: {
+          ignoreChksig: false,
+          now: 0xff_ff_ff_ff,
+          accountStateOverrides: {
+            [`0:${"00".repeat(32)}`]: {},
+            [`0:${"11".repeat(32)}`]: {balance: "0", state: {type: "uninit"}},
+            [`-1:${"22".repeat(32)}`]: {state: {type: "frozen"}},
+            [`0:${"33".repeat(32)}`]: {state: {type: "frozen", stateHash: "44".repeat(32)}},
+            [`0:${"55".repeat(32)}`]: {state: {type: "active"}},
+            [`0:${"66".repeat(32)}`]: {
+              balance: "18446744073709551615",
+              lastTransactionLt: "18446744073709551615",
+              lastTransactionHash: "77".repeat(32),
+              state: {
+                type: "active",
+                codeBoc: EMULATION.input.rawMessage,
+                dataBoc: EMULATION.input.rawMessage,
+              },
+            },
+          },
+        },
+      },
+    },
+    {
+      name: "automatic builder without ABI",
+      emulation: {
+        ...EMULATION,
+        input: {
+          ...EMULATION.input,
+          inputMode: "builder",
+          builder: {
+            abiSourceMode: "auto",
+            abiEndpoint: "destination",
+            messageName: "",
+            argsJson: "{}",
+          },
+        },
+      },
+    },
+  ]
+
+  for (const contract of [
+    ...catalog.contracts,
+    {
+      id: "anonymous ABI with extensions",
+      compilerAbi: {
+        ...catalog.contracts[0].compilerAbi,
+        contract_name: "",
+        author: "Author",
+        extension: {data: [null, false, 0]},
+      },
+    },
+  ]) {
+    cases.push({
+      name: contract.id,
+      emulation: {
+        ...EMULATION,
+        input: {
+          ...EMULATION.input,
+          inputMode: "builder",
+          messageTransport: "external",
+          mcSeqnoInput: "4294967295",
+          builder: {
+            abi: contract.compilerAbi,
+            abiSourceMode: "manual",
+            abiEndpoint: "source",
+            messageName: "",
+            argsJson: "{}",
+          },
+        },
+      },
+    })
+  }
+
+  const bucket = new MemoryEmulationShareBucket()
+  const fetchMock = spyOn(globalThis, "fetch").mockImplementation((input, init) => {
+    const request = new Request(input, init)
+    const id = new URL(request.url).pathname.split("/").at(-1)
+    const context = createContext(request, bucket, id)
+
+    return request.method === "POST" ? createShare(context) : readShare(context)
+  })
+
+  try {
+    const outcomes = await Promise.all(
+      cases.map(async ({name, emulation}) => {
+        const created = await createEmulationShare(
+          "https://actonscan.example/api/emulations",
+          emulation,
+        )
+        const restored = await loadEmulationShare(
+          "https://actonscan.example/api/emulations",
+          created.id,
+        )
+
+        return {name, matches: deepEquals(JSON.parse(JSON.stringify(restored)), emulation)}
+      }),
+    )
+
+    expect({
+      catalogCount: catalog.contracts.length,
+      storedCount: bucket.objects.size,
+      mismatches: outcomes.filter(outcome => !outcome.matches),
+    }).toMatchInlineSnapshot(`
+      {
+        "catalogCount": 288,
+        "mismatches": [],
+        "storedCount": 292,
+      }
+    `)
+  } finally {
+    fetchMock.mockRestore()
+  }
+})
 
 test("stores and reads an emulation through the R2 binding", async () => {
   const bucket = new MemoryEmulationShareBucket()

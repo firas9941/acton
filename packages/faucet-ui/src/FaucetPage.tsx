@@ -1,3 +1,6 @@
+// biome-ignore lint/performance/noNamespaceImport: Valibot supports tree shaking through its namespace API
+import * as v from "valibot"
+
 import {
   Button,
   formatDateTime,
@@ -963,6 +966,15 @@ function writeGitHubReturnState(address: string, network: string | null): void {
   }
 }
 
+const GitHubReturnStateSchema = v.object({
+  createdAt: v.pipe(v.number(), v.safeInteger()),
+  address: v.pipe(v.string(), v.maxLength(MAX_GITHUB_RETURN_ADDRESS_LENGTH)),
+  network: v.optional(
+    v.pipe(v.string(), v.nonEmpty(), v.maxLength(MAX_GITHUB_RETURN_NETWORK_LENGTH)),
+    () => undefined,
+  ),
+})
+
 function readGitHubReturnState(now = Date.now()): GitHubReturnState | undefined {
   let serialized: string | null
   try {
@@ -973,27 +985,17 @@ function readGitHubReturnState(now = Date.now()): GitHubReturnState | undefined 
   if (!serialized) return undefined
 
   try {
-    const parsed = JSON.parse(serialized) as Partial<GitHubReturnState>
-    if (
-      typeof parsed.createdAt !== "number" ||
-      !Number.isSafeInteger(parsed.createdAt) ||
-      parsed.createdAt > now ||
-      now - parsed.createdAt > GITHUB_RETURN_STATE_TTL_MS ||
-      typeof parsed.address !== "string" ||
-      parsed.address.length > MAX_GITHUB_RETURN_ADDRESS_LENGTH ||
-      (parsed.network !== undefined &&
-        (typeof parsed.network !== "string" ||
-          parsed.network.length === 0 ||
-          parsed.network.length > MAX_GITHUB_RETURN_NETWORK_LENGTH))
-    ) {
+    const result = v.safeParse(GitHubReturnStateSchema, JSON.parse(serialized))
+    if (!result.success) {
       return undefined
     }
 
-    return {
-      address: parsed.address,
-      network: parsed.network,
-      createdAt: parsed.createdAt,
+    const state = result.output
+    if (state.createdAt > now || now - state.createdAt > GITHUB_RETURN_STATE_TTL_MS) {
+      return undefined
     }
+
+    return state
   } catch {
     return undefined
   }

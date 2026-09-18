@@ -1,3 +1,5 @@
+import * as v from "valibot"
+
 import {Address} from "@ton/core"
 import {useCallback, useMemo, useSyncExternalStore} from "react"
 
@@ -20,7 +22,13 @@ const favoriteTransactionsStore = createFavoritesStore<FavoriteTransaction>({
   storagePrefix: "acton:favorite-transactions",
   storageVersion: "v1",
   changeEvent: "acton:favorite-transactions-change",
-  parseRecord: parseFavoriteTransaction,
+  recordSchema: v.object({
+    hash: v.string(),
+    savedAt: v.number(),
+    account: v.optional(v.string()),
+    lt: v.optional(v.string()),
+    timestamp: v.optional(v.number()),
+  }),
   normalize: normalizeFavoriteTransactions,
 })
 
@@ -163,28 +171,4 @@ function normalizeFavoriteTransactionAccount(account: string | undefined): strin
   } catch {
     return trimmed
   }
-}
-
-function parseFavoriteTransaction(value: unknown): FavoriteTransaction | undefined {
-  if (
-    typeof value !== "object" ||
-    value === null ||
-    Array.isArray(value) ||
-    typeof (value as FavoriteTransaction).hash !== "string" ||
-    typeof (value as FavoriteTransaction).savedAt !== "number"
-  ) {
-    return undefined
-  }
-
-  const candidate = value as FavoriteTransaction
-  if (
-    (candidate.account !== undefined && typeof candidate.account !== "string") ||
-    (candidate.lt !== undefined && typeof candidate.lt !== "string") ||
-    (candidate.timestamp !== undefined && typeof candidate.timestamp !== "number")
-  ) {
-    return undefined
-  }
-
-  const normalized = normalizeFavoriteTransactionInput(candidate)
-  return normalized ? {...normalized, savedAt: candidate.savedAt} : undefined
 }

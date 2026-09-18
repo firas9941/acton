@@ -1,3 +1,6 @@
+// biome-ignore lint/performance/noNamespaceImport: Valibot supports tree shaking through its namespace API
+import * as v from "valibot"
+
 const DEFAULT_FAUCET_URL = "https://faucet.ton.org"
 const DEFAULT_MAX_SOLVE_TTL_SECONDS = 60
 const DEFAULT_MAX_NONCE_ATTEMPTS = 1_000_000_000
@@ -53,55 +56,99 @@ export class FaucetRequestError extends Error {
   }
 }
 
-interface FaucetChallengeResponse {
-  readonly version?: unknown
-  readonly challenge?: unknown
-  readonly difficulty?: unknown
-  readonly max_solve_ttl_seconds?: unknown
-  readonly max_nonce_attempts?: unknown
-}
+const JsonObjectSchema = v.pipe(
+  v.unknown(),
+  v.check(value => !Array.isArray(value)),
+  v.record(v.string(), v.unknown()),
+)
 
-interface FaucetMessageResponse {
-  readonly error?: unknown
-  readonly message?: unknown
-}
+const AuthStatusSchema = v.object({
+  enabled: v.fallback(v.boolean(), false),
+  // The backend permits zero limits and a zero window when the limiter is disabled.
+  guestMaxRequests: integerSchema("guest request limit", 0),
+  verifiedMaxRequests: integerSchema("verified request limit", 0),
+  establishedMaxRequests: integerSchema("established request limit", 0),
+  windowSeconds: integerSchema("request window", 0),
+})
 
-interface FaucetAuthStatusResponse {
-  readonly enabled?: unknown
-  readonly guestMaxRequests?: unknown
-  readonly verifiedMaxRequests?: unknown
-  readonly establishedMaxRequests?: unknown
-  readonly windowSeconds?: unknown
-}
+const SessionResponseSchema = v.object({
+  authenticated: v.literal(true, "Faucet returned an invalid GitHub session"),
+  login: v.pipe(
+    v.string("Faucet returned an invalid GitHub session"),
+    v.nonEmpty("Faucet returned an invalid GitHub session"),
+  ),
+  tier: v.picklist(
+    ["guest", "verified", "established"],
+    "Faucet returned an invalid GitHub session",
+  ),
+  githubUserId: integerSchema("GitHub user ID", 1),
+  maxRequests: integerSchema("request limit", 0),
+  accountAgeDays: integerSchema("account age", 0),
+  publicRepos: integerSchema("public repository count", 0),
+  followers: integerSchema("follower count", 0),
+})
 
-interface FaucetSessionResponse {
-  readonly authenticated?: unknown
-  readonly githubUserId?: unknown
-  readonly login?: unknown
-  readonly tier?: unknown
-  readonly maxRequests?: unknown
-  readonly accountAgeDays?: unknown
-  readonly publicRepos?: unknown
-  readonly followers?: unknown
-  readonly token?: unknown
-}
+const SessionSchema = v.pipe(
+  SessionResponseSchema,
+  v.transform(({authenticated: _, ...session}) => session),
+)
+
+const GrantSchema = v.pipe(
+  v.object({
+    token: v.pipe(
+      v.string("Faucet returned an invalid GitHub session token"),
+      v.minLength(32, "Faucet returned an invalid GitHub session token"),
+    ),
+    ...SessionResponseSchema.entries,
+  }),
+  v.transform(({token, authenticated: _, ...session}) => ({token, session})),
+)
+
+const ChallengeSchema = v.pipe(
+  v.object({
+    max_solve_ttl_seconds: v.optional(
+      integerSchema("PoW solve time limit", 1),
+      DEFAULT_MAX_SOLVE_TTL_SECONDS,
+    ),
+    max_nonce_attempts: v.optional(integerSchema("PoW nonce limit", 1), DEFAULT_MAX_NONCE_ATTEMPTS),
+    version: v.literal(1, issue => `Unsupported faucet challenge version: ${String(issue.input)}`),
+    challenge: v.pipe(
+      v.string("Faucet returned an invalid PoW challenge"),
+      v.nonEmpty("Faucet returned an invalid PoW challenge"),
+    ),
+    difficulty: v.message(
+      v.pipe(v.number(), v.integer(), v.minValue(0), v.maxValue(256)),
+      issue => `Faucet returned an invalid PoW difficulty: ${String(issue.input)}`,
+    ),
+  }),
+  v.transform(({max_solve_ttl_seconds, max_nonce_attempts, ...challenge}) => ({
+    ...challenge,
+    maxSolveTtlSeconds: max_solve_ttl_seconds,
+    maxNonceAttempts: max_nonce_attempts,
+  })),
+)
+
+const NonblankStringSchema = v.pipe(
+  v.string(),
+  v.check(value => value.trim().length > 0),
+)
+
+const ClaimSchema = v.object({
+  message: v.fallback(NonblankStringSchema, "Your testnet claim has been queued"),
+})
+
+const ErrorSchema = v.object({
+  error: v.fallback(v.optional(NonblankStringSchema), undefined),
+  message: v.fallback(v.optional(NonblankStringSchema), undefined),
+})
 
 export async function requestFaucetAuthStatus(
   signal?: AbortSignal,
   baseUrl?: string,
 ): Promise<FaucetAuthStatus> {
-  const payload = await faucetGet<FaucetAuthStatusResponse>("auth/status", signal, false, baseUrl)
+  const payload = await faucetGet("auth/status", signal, false, baseUrl)
 
-  return {
-    enabled: payload.enabled === true,
-    guestMaxRequests: positiveSafeInteger(payload.guestMaxRequests, "guest request limit"),
-    verifiedMaxRequests: positiveSafeInteger(payload.verifiedMaxRequests, "verified request limit"),
-    establishedMaxRequests: positiveSafeInteger(
-      payload.establishedMaxRequests,
-      "established request limit",
-    ),
-    windowSeconds: positiveSafeInteger(payload.windowSeconds, "request window"),
-  }
+  return parseFaucetResponse(AuthStatusSchema, payload)
 }
 
 /**
@@ -119,16 +166,15 @@ export async function exchangeGitHubGrant(
   signal?: AbortSignal,
   baseUrl?: string,
 ): Promise<FaucetSession> {
-  const payload = await faucetRequest<FaucetSessionResponse>(
+  const payload = await faucetRequest(
     "auth/exchange",
     {grant},
     {signal, authorized: false, baseUrl},
   )
-  if (typeof payload.token !== "string" || payload.token.length < 32) {
-    throw new Error("Faucet returned an invalid GitHub session token")
-  }
-  const session = parseFaucetSession(payload)
-  writeFaucetSessionToken(payload.token)
+
+  const {session, token} = parseFaucetResponse(GrantSchema, payload)
+  writeFaucetSessionToken(token)
+
   return session
 }
 
@@ -139,8 +185,9 @@ export async function requestFaucetSession(
   if (!readFaucetSessionToken()) return undefined
 
   try {
-    const payload = await faucetGet<FaucetSessionResponse>("auth/session", signal, true, baseUrl)
-    return parseFaucetSession(payload)
+    const payload = await faucetGet("auth/session", signal, true, baseUrl)
+
+    return parseFaucetResponse(SessionSchema, payload)
   } catch (error) {
     if (error instanceof FaucetRequestError && error.status === 401) {
       clearFaucetSession()
@@ -181,42 +228,9 @@ export async function requestFaucetChallenge(
   address: string,
   options: FaucetRequestOptions = {},
 ): Promise<FaucetChallenge> {
-  const payload = await faucetRequest<FaucetChallengeResponse>(
-    "challenge",
-    {address, type: 1},
-    options,
-  )
-  const maxSolveTtlSeconds =
-    payload.max_solve_ttl_seconds === undefined
-      ? DEFAULT_MAX_SOLVE_TTL_SECONDS
-      : positiveSafeInteger(payload.max_solve_ttl_seconds, "PoW solve time limit")
-  const maxNonceAttempts =
-    payload.max_nonce_attempts === undefined
-      ? DEFAULT_MAX_NONCE_ATTEMPTS
-      : positiveSafeInteger(payload.max_nonce_attempts, "PoW nonce limit")
+  const payload = await faucetRequest("challenge", {address, type: 1}, options)
 
-  if (payload.version !== 1) {
-    throw new Error(`Unsupported faucet challenge version: ${String(payload.version)}`)
-  }
-  if (typeof payload.challenge !== "string" || payload.challenge.length === 0) {
-    throw new Error("Faucet returned an invalid PoW challenge")
-  }
-  if (
-    typeof payload.difficulty !== "number" ||
-    !Number.isInteger(payload.difficulty) ||
-    payload.difficulty < 0 ||
-    payload.difficulty > 256
-  ) {
-    throw new Error(`Faucet returned an invalid PoW difficulty: ${String(payload.difficulty)}`)
-  }
-
-  return {
-    version: payload.version,
-    challenge: payload.challenge,
-    difficulty: payload.difficulty,
-    maxSolveTtlSeconds,
-    maxNonceAttempts,
-  }
+  return parseFaucetResponse(ChallengeSchema, payload)
 }
 
 export async function submitFaucetClaim(
@@ -225,7 +239,7 @@ export async function submitFaucetClaim(
   nonce: number,
   options: FaucetRequestOptions = {},
 ): Promise<FaucetClaim> {
-  const payload = await faucetRequest<FaucetMessageResponse>(
+  const payload = await faucetRequest(
     "claim",
     {
       address,
@@ -237,20 +251,15 @@ export async function submitFaucetClaim(
     options,
   )
 
-  return {
-    message:
-      typeof payload.message === "string" && payload.message.trim()
-        ? payload.message
-        : "Your testnet claim has been queued",
-  }
+  return parseFaucetResponse(ClaimSchema, payload)
 }
 
-function faucetRequest<T>(
+function faucetRequest(
   path: string,
   payload: Record<string, unknown>,
   options: FaucetRequestOptions = {},
-): Promise<T> {
-  return faucetFetch<T>(path, {
+): Promise<unknown> {
+  return faucetFetch(path, {
     method: "POST",
     body: JSON.stringify(payload),
     signal: options.signal,
@@ -260,13 +269,13 @@ function faucetRequest<T>(
   })
 }
 
-function faucetGet<T>(
+function faucetGet(
   path: string,
   signal?: AbortSignal,
   authorized = true,
   baseUrl?: string,
-): Promise<T> {
-  return faucetFetch<T>(path, {method: "GET", signal, authorized, baseUrl})
+): Promise<unknown> {
+  return faucetFetch(path, {method: "GET", signal, authorized, baseUrl})
 }
 
 interface FaucetFetchOptions {
@@ -278,7 +287,7 @@ interface FaucetFetchOptions {
   readonly baseUrl?: string
 }
 
-async function faucetFetch<T = unknown>(path: string, options: FaucetFetchOptions): Promise<T> {
+async function faucetFetch(path: string, options: FaucetFetchOptions): Promise<unknown> {
   const headers: Record<string, string> = {
     "x-acton-client": FAUCET_CLIENT_HEADER,
     "x-device-uid": faucetDeviceUid(),
@@ -302,12 +311,12 @@ async function faucetFetch<T = unknown>(path: string, options: FaucetFetchOption
     if (response.status === 401 && options.authorized !== false) clearFaucetSession()
     throw new FaucetRequestError(faucetErrorMessage(parsed, text, response.status), response.status)
   }
-  if (response.status === 204) return undefined as T
-  if (!isRecord(parsed)) {
+  if (response.status === 204) return undefined
+  if (!v.is(JsonObjectSchema, parsed)) {
     throw new Error("Faucet returned an invalid JSON response")
   }
 
-  return parsed as T
+  return parsed
 }
 
 function faucetBaseUrl(override?: string): string {
@@ -362,39 +371,24 @@ function isValidDeviceUid(value: string): boolean {
   return value === "default" || value.length === 32 || value.length === 36
 }
 
-function positiveSafeInteger(value: unknown, label: string): number {
-  if (typeof value !== "number" || !Number.isSafeInteger(value) || value <= 0) {
-    throw new Error(`Faucet returned an invalid ${label}: ${String(value)}`)
-  }
-  return value
+function integerSchema(label: string, minimum: number) {
+  return v.message(
+    v.pipe(v.number(), v.safeInteger(), v.minValue(minimum)),
+    issue => `Faucet returned an invalid ${label}: ${String(issue.input)}`,
+  )
 }
 
-function nonNegativeSafeInteger(value: unknown, label: string): number {
-  if (typeof value !== "number" || !Number.isSafeInteger(value) || value < 0) {
-    throw new Error(`Faucet returned an invalid ${label}: ${String(value)}`)
-  }
-  return value
-}
-
-function parseFaucetSession(payload: FaucetSessionResponse): FaucetSession {
-  if (
-    payload.authenticated !== true ||
-    typeof payload.login !== "string" ||
-    payload.login.length === 0 ||
-    (payload.tier !== "guest" && payload.tier !== "verified" && payload.tier !== "established")
-  ) {
-    throw new Error("Faucet returned an invalid GitHub session")
+// Do not expose Valibot's issue objects: they can contain the OAuth token from the response.
+function parseFaucetResponse<TSchema extends v.GenericSchema>(
+  schema: TSchema,
+  payload: unknown,
+): v.InferOutput<TSchema> {
+  const result = v.safeParse(schema, payload, {abortEarly: true})
+  if (!result.success) {
+    throw new Error(result.issues[0].message)
   }
 
-  return {
-    githubUserId: positiveSafeInteger(payload.githubUserId, "GitHub user ID"),
-    login: payload.login,
-    tier: payload.tier,
-    maxRequests: positiveSafeInteger(payload.maxRequests, "request limit"),
-    accountAgeDays: nonNegativeSafeInteger(payload.accountAgeDays, "account age"),
-    publicRepos: nonNegativeSafeInteger(payload.publicRepos, "public repository count"),
-    followers: nonNegativeSafeInteger(payload.followers, "follower count"),
-  }
+  return result.output
 }
 
 function parseJson(value: string): unknown {
@@ -408,14 +402,13 @@ function parseJson(value: string): unknown {
 }
 
 function faucetErrorMessage(parsed: unknown, raw: string, status: number): string {
-  if (isRecord(parsed)) {
-    if (typeof parsed.error === "string" && parsed.error.trim()) return parsed.error
-    if (typeof parsed.message === "string" && parsed.message.trim()) return parsed.message
+  const result = v.safeParse(ErrorSchema, parsed)
+  if (result.success) {
+    if (result.output.error) return result.output.error
+    if (result.output.message) return result.output.message
   }
-  if (raw.trim()) return raw.trim()
-  return `Faucet request failed with status ${status}`
-}
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value)
+  if (raw.trim()) return raw.trim()
+
+  return `Faucet request failed with status ${status}`
 }

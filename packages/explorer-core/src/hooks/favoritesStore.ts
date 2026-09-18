@@ -1,3 +1,5 @@
+import * as v from "valibot"
+
 interface FavoriteRecord {
   readonly savedAt: number
 }
@@ -6,7 +8,7 @@ interface FavoritesStoreOptions<T extends FavoriteRecord> {
   readonly storagePrefix: string
   readonly storageVersion: string
   readonly changeEvent: string
-  readonly parseRecord: (value: unknown) => T | undefined
+  readonly recordSchema: v.GenericSchema<unknown, T>
   readonly normalize: (favorites: readonly T[]) => readonly T[]
 }
 
@@ -30,6 +32,9 @@ export function createFavoritesStore<T extends FavoriteRecord>(
   const cache = new Map<string, FavoritesCacheEntry<T>>()
   const empty: readonly T[] = []
 
+  // One damaged entry must not hide the other favorites stored in the same list.
+  const StoredFavoritesSchema = v.array(v.fallback(v.optional(options.recordSchema), undefined))
+
   const storageKey = (namespace: string): string =>
     `${options.storagePrefix}:${namespace}:${options.storageVersion}`
 
@@ -47,14 +52,9 @@ export function createFavoritesStore<T extends FavoriteRecord>(
     }
 
     try {
-      const parsed = JSON.parse(raw) as unknown
-      if (!Array.isArray(parsed)) {
-        return empty
-      }
+      const parsed = v.parse(StoredFavoritesSchema, JSON.parse(raw))
 
-      return options.normalize(
-        parsed.map(options.parseRecord).filter((entry): entry is T => entry !== undefined),
-      )
+      return options.normalize(parsed.filter((entry): entry is T => entry !== undefined))
     } catch {
       return empty
     }
