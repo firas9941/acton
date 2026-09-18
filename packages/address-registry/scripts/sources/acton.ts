@@ -43,6 +43,10 @@ export const ACTON_TESTNET_ADDRESSES = [
     address: "kQD_O1WeM-icMY8JIoGzgySEQ8ivvoSpgSoglUsaua6YDBtX",
     name: "Acton Faucet",
   },
+  {
+    address: "kQCmmHxrCW6m7odUOiaVyqnk6aPbDXTW3QR8-KZk0aYC7nT0",
+    name: "Verifier Treasury",
+  },
 ] as const satisfies readonly SourceAddress[]
 
 const ACTON_ADDRESSES = [...ACTON_MAINNET_ADDRESSES, ...ACTON_TESTNET_ADDRESSES]

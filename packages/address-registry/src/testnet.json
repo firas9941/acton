@@ -96,6 +96,10 @@
     "name": "Tolya"
   },
   {
+    "address": "0:a6987c6b096ea6ee87543a2695caa9e4e9a3db0d74d6dd047cf8a664d1a602ee",
+    "name": "Verifier Treasury"
+  },
+  {
     "address": "0:ad040142d36aa07f68ca7fa4ab2cd891c5365a1eeb7ba51a5b5d9a1ab0ec7612",
     "name": "Tonometr Bot"
   },
