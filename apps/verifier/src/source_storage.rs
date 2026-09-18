@@ -5,7 +5,7 @@ use std::{
         Arc,
         atomic::{AtomicBool, Ordering},
     },
-    time::{Duration, SystemTime, UNIX_EPOCH},
+    time::{Duration, Instant, SystemTime, UNIX_EPOCH},
 };
 
 use async_trait::async_trait;
@@ -225,7 +225,11 @@ impl GitSourceStorage {
         Ok(())
     }
 
-    async fn push_pending_head(&self, repo_path: &Path) -> Result<(), SourceStorageError> {
+    async fn push_pending_head(
+        &self,
+        repo_path: &Path,
+        target: Option<&str>,
+    ) -> Result<(), SourceStorageError> {
         if !self.pending_push.load(Ordering::Acquire) {
             return Ok(());
         }
@@ -234,7 +238,21 @@ impl GitSourceStorage {
             None => current_branch(repo_path).await?,
         };
         let refspec = format!("HEAD:{branch}");
-        git(repo_path, &["push", &self.remote, &refspec]).await?;
+        let push_started = Instant::now();
+        let result = git(repo_path, &["push", &self.remote, &refspec]).await;
+        tracing::debug!(
+            operation = "verify",
+            target = target.unwrap_or("pending"),
+            phase = "git_push",
+            duration_ms = push_started.elapsed().as_millis(),
+            outcome = if result.is_ok() {
+                "completed"
+            } else {
+                "failed"
+            },
+            "source repository push finished"
+        );
+        result?;
         self.pending_push.store(false, Ordering::Release);
         Ok(())
     }
@@ -339,7 +357,8 @@ impl GitSourceStorage {
         };
 
         if self.commit_enabled && self.push_enabled {
-            self.push_pending_head(repo_path).await?;
+            self.push_pending_head(repo_path, Some(&request.code_hash))
+                .await?;
         }
 
         Ok(SourceStorageReceipt { revision, created })
@@ -417,7 +436,7 @@ impl GitSourceStorage {
     async fn current_revision_locked(&self) -> Result<Option<String>, SourceStorageError> {
         let repo_path = self.repository_for_operation().await?;
         if self.commit_enabled && self.push_enabled {
-            self.push_pending_head(repo_path).await?;
+            self.push_pending_head(repo_path, None).await?;
         }
 
         match git_output(repo_path, &["rev-parse", "--verify", "HEAD"]).await {

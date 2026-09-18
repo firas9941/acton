@@ -1,6 +1,9 @@
-use std::sync::{
-    Arc,
-    atomic::{AtomicBool, Ordering},
+use std::{
+    sync::{
+        Arc,
+        atomic::{AtomicBool, Ordering},
+    },
+    time::Instant,
 };
 
 use async_trait::async_trait;
@@ -193,7 +196,16 @@ impl VerificationRegistry for SourceVerificationRegistry {
         request: StoreSourceBundleRequest,
     ) -> Result<StoreVerifiedBundleReceipt, RegistryError> {
         // Keep the source write and index update in one serialized operation.
+        let lock_started = Instant::now();
         let _guard = self.index_update_lock.lock().await;
+        tracing::debug!(
+            operation = "verify",
+            target = %request.code_hash,
+            phase = "registry_queue",
+            duration_ms = lock_started.elapsed().as_millis(),
+            outcome = "acquired",
+            "verification registry lock acquired"
+        );
         if !self.index_ready.load(Ordering::Acquire) {
             self.refresh_index().await?;
         }

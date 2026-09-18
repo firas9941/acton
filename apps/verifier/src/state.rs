@@ -1,4 +1,4 @@
-use std::{future::Future, sync::Arc};
+use std::{future::Future, sync::Arc, time::Instant};
 
 use thiserror::Error;
 use tokio::task::JoinHandle;
@@ -130,8 +130,36 @@ impl AppState {
         code_hash: &str,
         request: CompileRequest,
     ) -> Result<CompileOutput, CompilerError> {
-        let _permit = self.compilation_queue.acquire(code_hash).await?;
-        self.compiler_service.compile(request).await
+        let language = request.language.clone();
+        let compiler_version = request.compiler_version.clone();
+
+        let queue_started = Instant::now();
+        let permit = self.compilation_queue.acquire(code_hash).await;
+        tracing::debug!(
+            operation = "compile",
+            target = %code_hash,
+            language,
+            compiler_version,
+            phase = "compiler_queue",
+            duration_ms = queue_started.elapsed().as_millis(),
+            outcome = if permit.is_ok() { "acquired" } else { "failed" },
+            "compiler queue wait finished"
+        );
+        let _permit = permit?;
+
+        let worker_started = Instant::now();
+        let result = self.compiler_service.compile(request).await;
+        tracing::debug!(
+            operation = "compile",
+            target = %code_hash,
+            language,
+            compiler_version,
+            phase = "compiler_worker",
+            duration_ms = worker_started.elapsed().as_millis(),
+            outcome = if result.is_ok() { "completed" } else { "failed" },
+            "compiler worker finished"
+        );
+        result
     }
 
     #[must_use]

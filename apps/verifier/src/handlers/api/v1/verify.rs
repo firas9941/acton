@@ -320,6 +320,7 @@ async fn verify_target(
                     })
                     .collect(),
             })?;
+            let storage_started = Instant::now();
             let stored = state
                 .verification_registry()
                 .store_verified_bundle(StoreSourceBundleRequest {
@@ -336,7 +337,16 @@ async fn verify_target(
                     files: storage_files,
                     source_map: compiled.source_map,
                 })
-                .await?;
+                .await;
+            tracing::debug!(
+                operation = "verify",
+                target = %resolved_target.code_hash,
+                phase = "source_storage",
+                duration_ms = storage_started.elapsed().as_millis(),
+                outcome = if stored.is_ok() { "completed" } else { "failed" },
+                "source bundle storage finished"
+            );
+            let stored = stored?;
             if !stored.storage.created {
                 verification_result = VerificationResult::AlreadyVerified;
             }
