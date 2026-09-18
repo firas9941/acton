@@ -56,10 +56,12 @@ fn is_backend_path(path: &str) -> bool {
 
 fn asset_path(request_path: &str) -> Option<String> {
     let path = request_path.trim_start_matches('/');
-    let path = if path.is_empty() || !asset_path_has_extension(path) {
+    let path = if path.is_empty() {
         "index.html"
-    } else {
+    } else if asset_path_has_extension(path) {
         path
+    } else {
+        return None;
     };
 
     if is_safe_asset_path(path) {
@@ -130,9 +132,14 @@ mod tests {
     use super::{asset_path, is_backend_path};
 
     #[test]
-    fn frontend_routes_use_the_spa_entry() {
-        for route in ["/", "/oauth/callback", "/some/nested/route"] {
-            assert_eq!(asset_path(route), Some("index.html".to_owned()));
+    fn root_uses_the_spa_entry() {
+        assert_eq!(asset_path("/"), Some("index.html".to_owned()));
+    }
+
+    #[test]
+    fn unknown_frontend_routes_are_not_spa_fallbacks() {
+        for route in ["/kek", "/some/nested/route"] {
+            assert_eq!(asset_path(route), None);
         }
     }
 
