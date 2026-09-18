@@ -59,18 +59,21 @@ import {ExplorerIndexPage} from "@acton/explorer-core/pages/ExplorerIndexPage"
 import {FavoriteAccountsPage} from "@acton/explorer-core/pages/FavoriteAccountsPage"
 import {SuspendedAddressesPage} from "@acton/explorer-core/pages/SuspendedAddressesPage"
 import {TransactionPage} from "@acton/explorer-core/pages/TransactionPage"
+import {ValidatorsPage} from "@acton/explorer-core/pages/ValidatorsPage"
 import "@acton/ui/styles/tokens.css"
 import "@acton/explorer-core/styles.css"
 import actonScanCustomLogo from "./assets/acton-scan-custom-logo-dark.svg"
 import actonScanLogo from "./assets/acton-scan-logo-dark.svg"
 import actonScanTestnetLogo from "./assets/acton-scan-testnet-logo-dark.svg"
 import {DeveloperExplorerBanner} from "./components/DeveloperExplorerBanner"
-import {EXPLORER_NETWORK_QUERY_PARAM, explorerNetworkSearch} from "./explorerNetworkUrl"
-import {AddressConverterPage} from "./pages/AddressConverterPage"
-import {AbiCatalogPage, AbiDetailsPage} from "./pages/abi-pages"
-import {SourceCatalogPage} from "./pages/SourceCatalogPage"
-import {ValidatorsPage} from "@acton/explorer-core/pages/ValidatorsPage"
-import {CellInspectorExplorerPage, EmulateExplorerPage} from "./pages/explorer-tool-pages"
+import {
+  AbiCatalogPage,
+  AbiDetailsPage,
+  AddressConverterPage,
+  CellInspectorExplorerPage,
+  EmulateExplorerPage,
+  SourceCatalogPage,
+} from "./pages/explorer-pages"
 import {loadNetworkTps} from "./actonscanBackend"
 import styles from "./ExplorerApp.module.css"
 
@@ -93,6 +96,7 @@ type NetworkFormMode =
   | {readonly type: "edit"; readonly networkId: CustomExplorerNetworkId}
 
 const EXPLORER_NETWORK_STORAGE_KEY = "explorerNetwork"
+const EXPLORER_NETWORK_QUERY_PARAM = "network"
 const EXPLORER_CUSTOM_NETWORKS_STORAGE_KEY = "explorerCustomNetworks"
 const ACTON_VERIFIER_API = createVerifierApi({
   baseUrl: "https://verifier.ton.org/api/v1",
@@ -841,8 +845,16 @@ const ExplorerNetworkUrlSync: FC<{
   const navigate = useNavigate()
 
   useEffect(() => {
-    const search = explorerNetworkSearch(location.search, networkId)
-    if (search === new URLSearchParams(location.search).toString()) return
+    const searchParams = new URLSearchParams(location.search)
+    const previousSearch = searchParams.toString()
+    if (networkId === "mainnet" || networkId === "testnet") {
+      searchParams.set(EXPLORER_NETWORK_QUERY_PARAM, networkId)
+    } else {
+      searchParams.delete(EXPLORER_NETWORK_QUERY_PARAM)
+    }
+
+    const search = searchParams.toString()
+    if (search === previousSearch) return
 
     void navigate(
       {

@@ -64,7 +64,7 @@ test.describe("Explorer shell", () => {
     await page.goto("/?network=mainnet")
 
     await expect(page.getByRole("button", {name: "Mainnet"})).toBeVisible()
-    await expect(page).toHaveURL("/")
+    await expect(page).toHaveURL("/?network=mainnet")
   })
 
   test("opens blocks by masterchain seqno and toncenter block ID", async ({page}) => {
