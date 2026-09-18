@@ -12,6 +12,7 @@ const PRIMARY_NAV_ITEMS = [
   {href: "/verified", label: "Verified contracts"},
   {href: "/statistics", label: "Statistics"},
 ] as const
+const VERIFIER_REGISTRY_URL = "https://github.com/tolk-labs/verifier-registry"
 
 interface AppShellProps {
   readonly children: ReactNode
@@ -85,6 +86,14 @@ export function AppShell({children, headerAccessory}: AppShellProps) {
                     {item.label}
                   </Link>
                 ))}
+                <a
+                  className={styles.navLink}
+                  href={VERIFIER_REGISTRY_URL}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  Registry
+                </a>
               </nav>
             </div>
             {!isHomePage && (
@@ -151,6 +160,10 @@ export function AppShell({children, headerAccessory}: AppShellProps) {
                         {item.label}
                       </Link>
                     ))}
+                    <a href={VERIFIER_REGISTRY_URL} target="_blank" rel="noreferrer">
+                      <span>Registry</span>
+                      <Github size={17} aria-hidden="true" />
+                    </a>
                     <a
                       href="https://github.com/ton-blockchain/acton"
                       target="_blank"
