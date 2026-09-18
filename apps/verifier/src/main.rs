@@ -14,6 +14,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let listener = tokio::net::TcpListener::bind(addr).await?;
     tracing::info!(
         %addr,
+        api_key_configured = config.api_key().is_some(),
         payment_primary_network = %config.payment_primary_network(),
         read_only = config.read_only(),
         toncenter_mainnet_base_url = %config.toncenter_mainnet_base_url(),
@@ -25,6 +26,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         tracing::warn!(
             "verifier read-only mode is enabled; new contract verifications will be rejected"
         );
+    }
+    if config.api_key().is_some() {
+        tracing::info!("verifier API key authentication is enabled for X-Verifier-Key");
     }
 
     let state = AppState::from_config(&config)?;
