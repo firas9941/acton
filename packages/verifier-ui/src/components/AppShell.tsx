@@ -60,7 +60,10 @@ export function AppShell({children, headerAccessory}: AppShellProps) {
         {bannerVisible ? (
           <Banner
             aria-label="TON Verifier announcement"
-            title="Welcome to the new TON Verifier"
+            title="Welcome to TON Verifier 2.0"
+            action={
+              <a href="https://ton-blockchain.github.io/acton/docs/verify">Read the docs</a>
+            }
             dismissLabel="Dismiss TON Verifier announcement"
             onDismiss={() => setBannerVisible(false)}
           />

@@ -4,7 +4,7 @@ import {AppShell} from "../components/AppShell"
 import {SearchBox} from "../components/SearchBox"
 import styles from "./HomePage.module.css"
 
-const COMING_SOON = true
+const COMING_SOON = false
 
 export function HomePage() {
   // biome-ignore lint/suspicious/noUnnecessaryConditions: Keep the launch screen enabled until the verifier UI is ready
