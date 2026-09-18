@@ -5,9 +5,7 @@ description: "Learn how to use scripts to deploy contracts and send transactions
 
 Acton scripts can interact with the real TON blockchain, enabling contract deployment, transaction sending, and state querying. By using `--net <network>`, Tolk scripts can execute real operations using configured wallets.
 
-<Callout type="tip">
-  <AvailabilityBadge since="Acton 1.2" />
-
+<Callout type="tip" title="Available since: Acton 1.2">
   Start with local emulator tests and actions, continue on a [simulator network](/docs/environments/simulator/overview), then validate on testnet before mainnet. [Acton Studio](/docs/studio) provides the same deployment and inspection tools throughout.
 </Callout>
 
@@ -297,9 +295,7 @@ Both wait helpers automatically adapt to the execution mode:
 | Local (default)   | Returns the already processed local transaction or trace immediately |
 | `--net <network>` | Polls the network until the transaction or trace is found            |
 
-<Callout type="warn">
-  <AvailabilityBadge since="Acton 1.2" />
-
+<Callout type="warn" title="Available since: Acton 1.2">
   Do not use `ExternalSendResult.isAccepted()` after broadcasting an external-in message. The send API confirms submission, but it does not report whether the destination contract accepted the message. `isAccepted()` exits with an error in this case. Use `waitForFirstTransaction()` or `waitForTrace()` to look for the transaction on-chain.
 </Callout>
 
