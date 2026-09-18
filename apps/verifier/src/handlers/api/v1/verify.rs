@@ -8,7 +8,7 @@ use axum::{
     Json,
     body::Bytes,
     extract::{Multipart as MultipartExtractor, State, multipart::Multipart},
-    http::HeaderMap,
+    http::{HeaderMap, header::USER_AGENT},
     response::IntoResponse,
 };
 use serde::{Deserialize, Serialize};
@@ -201,6 +201,10 @@ async fn handle_multipart(
     let payment_tx_hash = payment_claim
         .as_ref()
         .map(|claim| claim.transaction_hash.clone());
+    let user_agent = headers
+        .get(USER_AGENT)
+        .map_or("<missing>", |value| value.to_str().unwrap_or("<invalid>"))
+        .to_owned();
 
     let task_state = state.clone();
     let task = state.spawn_background_task(async move {
@@ -216,6 +220,7 @@ async fn handle_multipart(
             files,
             verified_at,
             payment_tx_hash,
+            &user_agent,
         )
         .await;
 
@@ -236,6 +241,7 @@ async fn handle_multipart(
         tracing::info!(
             operation = "verify",
             target = %target_hash,
+            user_agent = %user_agent,
             duration_ms = started.elapsed().as_millis(),
             outcome = if result.is_ok() { "completed" } else { "failed" },
             "verification request finished"
@@ -259,6 +265,7 @@ async fn verify_target(
     files: Vec<ReceivedFile>,
     verified_at: Option<u64>,
     payment_tx_hash: Option<String>,
+    user_agent: &str,
 ) -> Result<Json<VerifyResponse>, ApiError> {
     let verified_bundle = match verified_bundle {
         Some(bundle) => Some(bundle),
@@ -274,6 +281,7 @@ async fn verify_target(
     tracing::info!(
         operation = "verify",
         target = %resolved_target.code_hash,
+        user_agent = %user_agent,
         outcome = "started",
         "verification started"
     );
@@ -364,6 +372,7 @@ async fn verify_target(
     tracing::info!(
         operation = "verify",
         target = %resolved_target.code_hash,
+        user_agent = %user_agent,
         language = %configuration.language,
         compiled_code_hash = %compiled_code_hash,
         source_bundle_hash,

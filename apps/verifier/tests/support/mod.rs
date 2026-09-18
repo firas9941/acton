@@ -600,11 +600,19 @@ pub fn payment_transaction(transaction_hash: &str, code_hash: &str) -> PaymentTr
 }
 
 pub async fn post_verify(state: AppState, parts: Vec<MultipartPart>) -> Response {
-    post_verify_request(state, parts, None, true).await
+    post_verify_request(state, parts, None, None, true).await
+}
+
+pub async fn post_verify_with_user_agent(
+    state: AppState,
+    parts: Vec<MultipartPart>,
+    user_agent: &str,
+) -> Response {
+    post_verify_request(state, parts, None, Some(user_agent), true).await
 }
 
 pub async fn post_verify_without_payment(state: AppState, parts: Vec<MultipartPart>) -> Response {
-    post_verify_request(state, parts, None, false).await
+    post_verify_request(state, parts, None, None, false).await
 }
 
 pub async fn post_verify_with_api_key(
@@ -612,13 +620,14 @@ pub async fn post_verify_with_api_key(
     parts: Vec<MultipartPart>,
     api_key: &str,
 ) -> Response {
-    post_verify_request(state, parts, Some(api_key), false).await
+    post_verify_request(state, parts, Some(api_key), None, false).await
 }
 
 async fn post_verify_request(
     state: AppState,
     mut parts: Vec<MultipartPart>,
     api_key: Option<&str>,
+    user_agent: Option<&str>,
     include_payment: bool,
 ) -> Response {
     if include_payment {
@@ -634,6 +643,9 @@ async fn post_verify_request(
         );
     if let Some(api_key) = api_key {
         request = request.header("X-Verifier-Key", api_key);
+    }
+    if let Some(user_agent) = user_agent {
+        request = request.header(axum::http::header::USER_AGENT, user_agent);
     }
     let request = request
         .body(Body::from(body))

@@ -1,7 +1,9 @@
 mod support;
 
 use axum::http::StatusCode;
-use support::{app_state, failing_compiler_app_state, file_part, post_verify, text_part};
+use support::{
+    app_state, failing_compiler_app_state, file_part, post_verify_with_user_agent, text_part,
+};
 
 const CODE_HASH_ONE: &str = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
 
@@ -47,13 +49,14 @@ async fn verification_logs_report_outcomes_without_uploading_source_payloads_to_
             );
         }
     }
-    let response = post_verify(app_state(&[], CODE_HASH_ONE), parts)
+    let response = post_verify_with_user_agent(app_state(&[], CODE_HASH_ONE), parts, "acton/1.2.3")
         .with_subscriber(subscriber.clone())
         .await;
     assert_eq!(response.status(), StatusCode::OK);
-    let failure = post_verify(
+    let failure = post_verify_with_user_agent(
         failing_compiler_app_state(&[], "expected compiler error"),
         valid_verify_parts(),
+        "blueprint/0.42.0",
     )
     .with_subscriber(subscriber)
     .await;
@@ -65,10 +68,13 @@ async fn verification_logs_report_outcomes_without_uploading_source_payloads_to_
         .filter(|line| line.contains("operation=\"verify\""))
         .collect();
     assert_eq!(events.len(), 5, "{content}");
-    for (event, outcome) in
-        events
-            .iter()
-            .zip(["started", "match", "completed", "started", "failed"])
+    for (event, (outcome, user_agent)) in events.iter().zip([
+        ("started", "acton/1.2.3"),
+        ("match", "acton/1.2.3"),
+        ("completed", "acton/1.2.3"),
+        ("started", "blueprint/0.42.0"),
+        ("failed", "blueprint/0.42.0"),
+    ])
     {
         assert!(
             event.contains("operation=\"verify\"") && event.contains(CODE_HASH_ONE),
@@ -79,6 +85,7 @@ async fn verification_logs_report_outcomes_without_uploading_source_payloads_to_
                 || event.contains(&format!("outcome=\"{outcome}\"")),
             "{event}"
         );
+        assert!(event.contains(&format!("user_agent={user_agent}")), "{event}");
     }
     assert!(events.last().unwrap().contains("duration_ms="));
 }
