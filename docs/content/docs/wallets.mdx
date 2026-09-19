@@ -28,6 +28,17 @@ If `--name` or `--version` is omitted, Acton prompts for them. Common wallet ver
 
 By default, Acton prefers secure native storage for the mnemonic when the system keyring is available. To require secure storage explicitly, pass `--secure true`. To force plain-text storage, pass `--secure false`.
 
+On macOS, Acton stores the mnemonic in the login keychain. Open **Keychain Access** and search for `ton.acton.wallet`.
+Acton stores a generic password entry, which does not appear as a website login in **Passwords**.
+
+To show the mnemonic, run this command from the project directory:
+
+```bash
+acton wallet export-mnemonic deployer
+```
+
+The command requires an interactive terminal and asks you to confirm the wallet name.
+
 ## Import an existing wallet
 
 Import a wallet when the mnemonic already exists:
@@ -169,8 +180,15 @@ Secure native storage is the preferred option for local development:
 [wallets.deployer]
 kind = "v5r1"
 workchain = 0
-keys = { mnemonic-keyring = "my-project:deployer" }
+keys = { mnemonic-keyring = "local:0123456789abcdef" }
 ```
+
+Acton creates this reference when you create or import a wallet with secure storage. Do not copy the example ID into another project.
+The keyring service is `ton.acton.wallet`. Wallets in one scope share a JSON entry that maps wallet names to mnemonics:
+
+- Local wallets use `local:<hash>`, where `<hash>` comes from the project's canonical path.
+- Global wallets use `global`.
+- If the wallet file already contains a keyring ID, Acton reuses that ID.
 
 Use an environment variable when the mnemonic must stay outside the config file:
 
@@ -208,7 +226,7 @@ Expected addresses help catch wallet misconfiguration before real-network operat
 [wallets.deployer]
 kind = "v5r1"
 workchain = 0
-keys = { mnemonic-keyring = "my-project:deployer" }
+keys = { mnemonic-keyring = "local:0123456789abcdef" }
 
 [wallets.deployer.expected]
 address-testnet = "0QD36XRy1ISfSB8zmlSQKBsa5bmeixAWwD6vUUhOXXur8ZLd"

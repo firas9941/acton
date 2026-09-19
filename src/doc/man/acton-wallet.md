@@ -369,8 +369,21 @@ Wallets can be stored:
   (`mnemonic-keyring`), environment variables (`mnemonic-env`), or external
   files (`mnemonic-file`) depending on configuration
 
-For local wallets, keyring IDs usually include a project prefix. For global
-wallets, the keyring ID usually matches the wallet name.
+The keyring service is `ton.acton.wallet`. Wallets in one scope share a JSON
+entry that maps wallet names to mnemonics.
+
+- Local wallets use `local:<hash>`, where `<hash>` comes from the project's
+  canonical path.
+- Global wallets use `global`.
+- If the wallet file already contains a keyring ID, Acton reuses that ID.
+
+On macOS, Acton uses the login keychain. Open **Keychain Access** and search
+for `ton.acton.wallet`. These generic password entries do not appear as website
+logins in **Passwords**.
+
+To show a mnemonic, run `acton wallet export-mnemonic <name>` from the project
+directory. The command requires an interactive terminal and asks you to confirm
+the wallet name.
 
 ## Security
 

@@ -405,8 +405,29 @@ Wallets can be stored:
 files (\fBmnemonic\-file\fR) depending on configuration
 .RE
 .sp
-For local wallets, keyring IDs usually include a project prefix. For global
-wallets, the keyring ID usually matches the wallet name.
+The keyring service is \fBton.acton.wallet\fR\&. Wallets in one scope share a JSON
+entry that maps wallet names to mnemonics.
+.sp
+.RS 4
+\h'-04'\(bu\h'+03'Local wallets use \fBlocal:<hash>\fR, where \fB<hash>\fR comes from the project\[cq]s
+canonical path.
+.RE
+.sp
+.RS 4
+\h'-04'\(bu\h'+03'Global wallets use \fBglobal\fR\&.
+.RE
+.sp
+.RS 4
+\h'-04'\(bu\h'+03'If the wallet file already contains a keyring ID, Acton reuses that ID.
+.RE
+.sp
+On macOS, Acton uses the login keychain. Open \fBKeychain Access\fR and search
+for \fBton.acton.wallet\fR\&. These generic password entries do not appear as website
+logins in \fBPasswords\fR\&.
+.sp
+To show a mnemonic, run \fBacton wallet export\-mnemonic <name>\fR from the project
+directory. The command requires an interactive terminal and asks you to confirm
+the wallet name.
 .SH "SECURITY"
 .sp
 .RS 4
