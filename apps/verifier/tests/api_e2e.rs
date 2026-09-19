@@ -146,8 +146,7 @@ async fn verify_rejects_empty_source_file() {
     )
     .await;
 
-    // TODO: Restore the rejection assertion when REJECT_EMPTY_FILES is re-enabled.
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
 }
 
 #[tokio::test]
