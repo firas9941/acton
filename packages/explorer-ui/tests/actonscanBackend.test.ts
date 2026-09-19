@@ -2,10 +2,14 @@ import {env} from "node:process"
 import type {NetworkTpsSnapshot} from "@acton/explorer-core/api/networkStats"
 import {afterEach, beforeEach, expect, mock, spyOn, test} from "bun:test"
 
-import {loadNetworkTps} from "../src/actonscanBackend"
+import {createNetworkTpsLoader} from "../src/actonscanBackend"
+
+const loadNetworkTps = createNetworkTpsLoader("mainnet")
 
 // biome-ignore lint/style/noProcessEnv: Preserve the caller's configuration for transport tests
 const originalBackendUrl = env.VITE_ACTONSCAN_BACKEND_URL
+// biome-ignore lint/style/noProcessEnv: Preserve the caller's configuration for transport tests
+const originalTestnetBackendUrl = env.VITE_ACTONSCAN_TESTNET_BACKEND_URL
 const window = {
   window_seconds: 60,
   coverage_seconds: 60,
@@ -22,6 +26,7 @@ const snapshot = {
 
 beforeEach(() => {
   env.VITE_ACTONSCAN_BACKEND_URL = " https://actonscan.example/backend/ "
+  env.VITE_ACTONSCAN_TESTNET_BACKEND_URL = ""
 })
 
 afterEach(() => {
@@ -33,6 +38,40 @@ afterEach(() => {
   } else {
     env.VITE_ACTONSCAN_BACKEND_URL = originalBackendUrl
   }
+
+  if (originalTestnetBackendUrl === undefined) {
+    // biome-ignore lint/style/noProcessEnv: Restore the original environment after each test
+    // biome-ignore lint/performance/noDelete: Assigning undefined would create a string value
+    delete env.VITE_ACTONSCAN_TESTNET_BACKEND_URL
+  } else {
+    env.VITE_ACTONSCAN_TESTNET_BACKEND_URL = originalTestnetBackendUrl
+  }
+})
+
+test("keeps mainnet and testnet requests on their own backends", async () => {
+  const fetchMock = spyOn(globalThis, "fetch").mockImplementation(() =>
+    Promise.resolve(Response.json(snapshot)),
+  )
+  const loadTestnetTps = createNetworkTpsLoader("testnet")
+  const signal = new AbortController().signal
+
+  await loadNetworkTps(signal)
+  await loadTestnetTps(signal)
+
+  env.VITE_ACTONSCAN_BACKEND_URL = " "
+  env.VITE_ACTONSCAN_TESTNET_BACKEND_URL = " https://testnet.example/backend/ "
+
+  await loadNetworkTps(signal)
+  await loadTestnetTps(signal)
+
+  expect(fetchMock.mock.calls.map(([url]) => url)).toMatchInlineSnapshot(`
+    [
+      "https://actonscan.example/backend/api/v1/stats/tps",
+      "https://api.actonscan.com/testnet/api/v1/stats/tps",
+      "https://api.actonscan.com/api/v1/stats/tps",
+      "https://testnet.example/backend/api/v1/stats/tps",
+    ]
+  `)
 })
 
 test("loads a validated TPS snapshot and strips unrelated backend fields", async () => {

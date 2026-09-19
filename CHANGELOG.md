@@ -7,6 +7,10 @@ All notable changes to this project will be documented in this file.
 ### Actonscan
 
 - Fix Docker image builds for the Actonscan backend.
+- Show testnet TPS from its dedicated public backend, with the latest indexed block time
+  and partial-window indicators.
+- Download P2P shard blocks from competing peers so an unresponsive peer does not
+  hold up indexing until its request times out.
 
 ### Testing
 

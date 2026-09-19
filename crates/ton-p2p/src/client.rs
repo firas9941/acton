@@ -5,6 +5,7 @@ use std::{collections::BTreeMap, path::PathBuf, sync::Arc, time::Duration};
 use anyhow::{Context, Result, ensure};
 use futures::{StreamExt, stream};
 use tokio::{
+    sync::Semaphore,
     task::JoinSet,
     time::{Instant, timeout},
 };
@@ -24,6 +25,7 @@ use crate::{
 const DISCOVERY_INTERVAL: Duration = Duration::from_secs(30);
 const METADATA_TIMEOUT: Duration = Duration::from_secs(3);
 const PEER_ATTEMPTS: usize = 16;
+const PARALLEL_PEER_ATTEMPTS: usize = 8;
 
 /// Connection settings and cache location for one client.
 /// The data directory remains exclusively locked until the client is dropped.
@@ -32,7 +34,7 @@ pub struct ClientOptions {
     pub network: NetworkOptions,
     /// Original block BOCs and the masterchain download checkpoint.
     pub data_dir: PathBuf,
-    /// Maximum concurrent shard downloads, in the range 1..=128.
+    /// Maximum concurrent shard requests, including competing peers, in the range 1..=128.
     pub parallelism: usize,
 }
 
@@ -171,8 +173,20 @@ impl Client {
         );
         self.refresh_peers().await?;
 
+        // Peer races share one budget across all shards. A stalled peer must
+        // not serialize a block, and a wide frontier must not multiply the limit.
+        let requests = Semaphore::new(self.options.parallelism);
         let mut downloads = stream::iter(ids.iter().copied().enumerate())
-            .map(|(index, id)| download_shard(&self.network, &self.peers, &self.options, index, id))
+            .map(|(index, id)| {
+                download_shard(
+                    &self.network,
+                    &self.peers,
+                    &self.options,
+                    &requests,
+                    index,
+                    id,
+                )
+            })
             .buffered(self.options.parallelism);
         let mut blocks = Vec::with_capacity(ids.len());
         let mut preferred = Vec::new();
@@ -289,7 +303,7 @@ impl Client {
         let previous = (!self.storage.needs_anchor()).then_some(head);
         let network = Arc::clone(&self.network);
         let deadline = self.options.network.timeout;
-        let parallelism = self.options.parallelism.min(8);
+        let parallelism = self.options.parallelism.min(PARALLEL_PEER_ATTEMPTS);
         let peers = self
             .peers
             .iter()
@@ -370,6 +384,7 @@ async fn download_shard(
     network: &Network,
     peers: &[Peer],
     options: &ClientOptions,
+    requests: &Semaphore,
     offset: usize,
     id: BlockId,
 ) -> Result<Option<(Vec<u8>, Option<Peer>)>> {
@@ -392,46 +407,59 @@ async fn download_shard(
         }
     }
 
-    for peer in peers
+    let candidates = peers
         .iter()
         .cycle()
         .skip(offset % peers.len().max(1))
         .take(peers.len().min(PEER_ATTEMPTS))
-    {
-        let started = Instant::now();
-        let result = async {
-            match small_query(
-                network,
-                peer,
-                Query::PrepareBlock {
-                    block: wire_id(&id),
-                },
-                options.network.timeout.min(METADATA_TIMEOUT),
-            )
-            .await?
-            {
-                Answer::NotFound => return Ok(None),
-                Answer::Prepared => {}
-                _ => anyhow::bail!("unexpected prepare-block response"),
+        .cloned()
+        .collect::<Vec<_>>();
+    let mut downloads = stream::iter(candidates)
+        .map(|peer| async move {
+            let started = Instant::now();
+            let result = async {
+                let _permit = requests.acquire().await?;
+
+                match small_query(
+                    network,
+                    &peer,
+                    Query::PrepareBlock {
+                        block: wire_id(&id),
+                    },
+                    options.network.timeout.min(METADATA_TIMEOUT),
+                )
+                .await?
+                {
+                    Answer::NotFound => return Ok(None),
+                    Answer::Prepared => {}
+                    _ => anyhow::bail!("unexpected prepare-block response"),
+                }
+
+                let boc = fullnode_query(
+                    network,
+                    &peer,
+                    Query::DownloadBlock {
+                        block: wire_id(&id),
+                    },
+                    options.network.timeout,
+                    MAX_DOWNLOAD_SIZE,
+                )
+                .await?;
+                validate_block(&id, &boc)?;
+                Ok::<_, anyhow::Error>(Some(boc))
             }
+            .await;
 
-            let boc = fullnode_query(
-                network,
-                peer,
-                Query::DownloadBlock {
-                    block: wire_id(&id),
-                },
-                options.network.timeout,
-                MAX_DOWNLOAD_SIZE,
-            )
-            .await?;
-            validate_block(&id, &boc)?;
-            Ok::<_, anyhow::Error>(Some(boc))
-        }
-        .await;
+            (peer, started, result)
+        })
+        .buffer_unordered(options.parallelism.min(PARALLEL_PEER_ATTEMPTS));
 
+    while let Some((peer, started, result)) = downloads.next().await {
         match result {
             Ok(Some(boc)) => {
+                // Stop the losing requests before persisting the verified winner.
+                drop(downloads);
+
                 // Persist the original BOC: reserialization can change file_hash.
                 let boc = tokio::task::spawn_blocking(move || {
                     std::fs::create_dir_all(&directory)?;
@@ -450,7 +478,7 @@ async fn download_shard(
                     outcome = "stored",
                     "shard block saved",
                 );
-                return Ok(Some((boc, Some(peer.clone()))));
+                return Ok(Some((boc, Some(peer))));
             }
             Ok(None) => {}
             Err(error) => debug!(

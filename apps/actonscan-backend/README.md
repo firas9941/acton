@@ -17,6 +17,34 @@ The server listens on `127.0.0.1:3008`. It provides these endpoints:
 - `GET /api/v1/stats/tps`
 - `GET /api/v1/stats/opcodes`
 
+## Public API
+
+Available since trunk.
+
+The public service uses a separate backend and database for each network.
+Requests do not require an API key.
+
+| Network | Base URL | OpenAPI schema |
+| --- | --- | --- |
+| Mainnet | `https://api.actonscan.com/` | [OpenAPI](https://api.actonscan.com/openapi.json) |
+| Testnet | `https://api.actonscan.com/testnet/` | [OpenAPI](https://api.actonscan.com/testnet/openapi.json) |
+
+Append endpoint paths to the selected base URL, including its network prefix:
+
+```sh
+curl --fail 'https://api.actonscan.com/testnet/api/v1/stats/tps'
+curl --fail 'https://api.actonscan.com/testnet/api/v1/stats/opcodes?limit=20&min_messages=2'
+```
+
+TPS windows contain `coverage_seconds` and `complete`. The `syncing` status can
+mean incomplete windows or an indexer that has not reached recent blocks.
+`latest_block_time` is the UNIX timestamp of the latest indexed masterchain block.
+`/healthz` reports HTTP availability, not the freshness of indexed blocks.
+
+Explorer selects the TPS backend for the active network. Custom networks do not use these public statistics.
+Build-time overrides are `VITE_ACTONSCAN_BACKEND_URL` for mainnet and
+`VITE_ACTONSCAN_TESTNET_BACKEND_URL` for testnet. Each value includes the full base path.
+
 ## Opcode statistics
 
 `GET /api/v1/stats/opcodes` returns all-time opcode statistics. The default
@@ -64,7 +92,7 @@ from_latest = true
 
 Replace `address` with your reachable IPv4 address and UDP port.
 P2P uses ADNL UDP, DHT, and RLDP2 for all block downloads.
-`parallelism` limits concurrent shard downloads to 1–128. Its default is 16.
+Available since trunk: `parallelism` limits concurrent shard requests to 1–128, including requests to competing peers. Its default is 16.
 
 Available since trunk: `from_latest = true` uses LiteServer to select a recent starting block ID for a new index and download directory.
 It checks the server's network zerostate, then closes the LiteServer connections before downloading blocks through P2P.

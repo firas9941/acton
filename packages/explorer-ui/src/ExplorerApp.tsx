@@ -77,7 +77,7 @@ import {
   EmulateExplorerPage,
   SourceCatalogPage,
 } from "./pages/explorer-pages"
-import {loadNetworkTps} from "./actonscanBackend"
+import {createNetworkTpsLoader} from "./actonscanBackend"
 import styles from "./ExplorerApp.module.css"
 
 type BuiltinSelectableExplorerNetworkId = "mainnet" | "testnet"
@@ -1128,6 +1128,10 @@ export const ExplorerApp: FC = () => {
   const networkConfig =
     selectableNetworks.find(network => network.id === networkId) ?? EXPLORER_API_CONFIGS.mainnet
   const networkKind: ExplorerNetworkKind = isCustomNetworkId(networkId) ? "custom" : networkId
+  const loadNetworkTps = useMemo(
+    () => (networkKind === "custom" ? undefined : createNetworkTpsLoader(networkKind)),
+    [networkKind],
+  )
   const brandLogo = EXPLORER_NETWORK_LOGOS[networkKind]
   const client = useMemo(
     () =>
@@ -1462,8 +1466,9 @@ export const ExplorerApp: FC = () => {
                         path="/blocks"
                         element={
                           <BlocksPage
+                            key={networkId}
                             client={client}
-                            loadNetworkTps={networkId === "mainnet" ? loadNetworkTps : undefined}
+                            loadNetworkTps={loadNetworkTps}
                           />
                         }
                       />

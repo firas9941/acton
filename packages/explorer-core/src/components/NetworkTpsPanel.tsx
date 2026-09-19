@@ -1,4 +1,4 @@
-import {formatSchedulePeriod, Skeleton} from "@acton/ui"
+import {formatSchedulePeriod, RelativeTime, Skeleton} from "@acton/ui"
 import {useEffect, useState} from "react"
 import type {FC} from "react"
 
@@ -67,6 +67,12 @@ export const NetworkTpsPanel: FC<NetworkTpsPanelProps> = ({loadNetworkTps}) => {
           <span className={styles.meta}>
             {snapshot.status === "syncing" ? "Syncing" : "Updated"} at masterchain block{" "}
             {countFormatter.format(snapshot.latest_masterchain_seqno)}
+            {snapshot.latest_block_time === undefined ? null : (
+              <>
+                {" · "}
+                <RelativeTime value={snapshot.latest_block_time} unit="seconds" />
+              </>
+            )}
           </span>
         )}
       </header>

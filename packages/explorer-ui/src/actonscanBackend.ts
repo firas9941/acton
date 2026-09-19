@@ -3,7 +3,6 @@ import type {LoadNetworkTps} from "@acton/explorer-core/api/networkStats"
 import * as v from "valibot"
 
 const TPS_PATH = "api/v1/stats/tps"
-const DEFAULT_ACTONSCAN_BACKEND_URL = "https://api.actonscan.com/"
 const REQUEST_TIMEOUT_MS = 4000
 
 const NonnegativeIntegerSchema = v.pipe(v.number(), v.safeInteger(), v.minValue(0))
@@ -23,28 +22,34 @@ const NetworkTpsSnapshotSchema = v.object({
   ),
 })
 
-/** Validates Actonscan's response at the transport boundary before exposing it to core views. */
-export const loadNetworkTps: LoadNetworkTps = async signal => {
-  const requestSignal = AbortSignal.any([signal, AbortSignal.timeout(REQUEST_TIMEOUT_MS)])
-  const response = await fetch(tpsUrl(), {
-    headers: {Accept: "application/json"},
-    signal: requestSignal,
-  })
-  if (!response.ok) {
-    throw new Error(`Actonscan backend returned HTTP ${response.status}`)
-  }
+/** Binds TPS requests to one network and validates responses before exposing them to core views. */
+export function createNetworkTpsLoader(network: "mainnet" | "testnet"): LoadNetworkTps {
+  return async signal => {
+    const requestSignal = AbortSignal.any([signal, AbortSignal.timeout(REQUEST_TIMEOUT_MS)])
+    const response = await fetch(tpsUrl(network), {
+      headers: {Accept: "application/json"},
+      signal: requestSignal,
+    })
+    if (!response.ok) {
+      throw new Error(`Actonscan backend returned HTTP ${response.status}`)
+    }
 
-  const result = v.safeParse(NetworkTpsSnapshotSchema, await response.json(), {abortEarly: true})
-  if (!result.success) {
-    const path = v.getDotPath(result.issues[0]) ?? "root"
-    throw new Error(`Actonscan backend returned an invalid TPS snapshot at ${path}`)
-  }
+    const result = v.safeParse(NetworkTpsSnapshotSchema, await response.json(), {abortEarly: true})
+    if (!result.success) {
+      const path = v.getDotPath(result.issues[0]) ?? "root"
+      throw new Error(`Actonscan backend returned an invalid TPS snapshot at ${path}`)
+    }
 
-  return result.output
+    return result.output
+  }
 }
 
-function tpsUrl(): string {
+function tpsUrl(network: "mainnet" | "testnet"): string {
   const configured =
-    import.meta.env.VITE_ACTONSCAN_BACKEND_URL?.trim() || DEFAULT_ACTONSCAN_BACKEND_URL
+    network === "mainnet"
+      ? import.meta.env.VITE_ACTONSCAN_BACKEND_URL?.trim() || "https://api.actonscan.com/"
+      : import.meta.env.VITE_ACTONSCAN_TESTNET_BACKEND_URL?.trim() ||
+        "https://api.actonscan.com/testnet/"
+
   return `${configured.replace(/\/$/, "")}/${TPS_PATH}`
 }

@@ -5,6 +5,7 @@ interface ViteTypeOptions {
 
 interface ImportMetaEnv {
   readonly VITE_ACTONSCAN_BACKEND_URL?: string
+  readonly VITE_ACTONSCAN_TESTNET_BACKEND_URL?: string
   readonly VITE_EXPLORER_TONCENTER_API_KEY?: string
   readonly VITE_EXPLORER_TONCENTER_API_V2_URL?: string
   readonly VITE_EXPLORER_TONCENTER_API_V3_URL?: string
