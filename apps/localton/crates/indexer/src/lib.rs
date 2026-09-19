@@ -17,9 +17,10 @@ use serde::Serialize;
 use thiserror::Error;
 use tokio::sync::watch;
 use ton_indexer_core::{
-    Batch, BlockId, CheckpointStore, Error as IndexerError, IndexPipeline, Sink,
+    Batch, BlockId, CanonicalBlockSource, CheckpointStore, Error as IndexerError, IndexPipeline,
+    Sink,
 };
-use ton_indexer_liteserver::{CanonicalBlockSource, TonutilsLiteClient};
+use ton_indexer_liteserver::TonutilsLiteClient;
 use tracing::{info, warn};
 
 // Covers at least fifteen minutes at Localton's fastest supported 400 ms cadence.

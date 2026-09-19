@@ -1890,6 +1890,38 @@ dependencies = [
 ]
 
 [[package]]
+name = "everscale-network"
+version = "0.5.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "19f25d8b1ab4e223f7141db064f5b5d197d1c20cd1d44560661748ae7dc1fbf8"
+dependencies = [
+ "aes",
+ "ahash",
+ "anyhow",
+ "async-trait",
+ "bytes",
+ "ctr",
+ "dashmap 5.5.3",
+ "everscale-crypto",
+ "frunk_core",
+ "futures-util",
+ "generic-array",
+ "hex",
+ "libc",
+ "once_cell",
+ "parking_lot",
+ "rand 0.8.6",
+ "serde",
+ "sha2",
+ "smallvec",
+ "thiserror 1.0.69",
+ "tl-proto 0.4.12",
+ "tokio",
+ "tokio-util",
+ "tracing",
+]
+
+[[package]]
 name = "expect-test"
 version = "1.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2075,6 +2107,15 @@ checksum = "0f158e3ff0a1b334408dc9fb811cd99b446986f4d8b741bb08f9df1604085ae7"
 dependencies = [
  "lazy_static",
  "num",
+]
+
+[[package]]
+name = "frunk_core"
+version = "0.4.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "476eeaa382e3462b84da5d6ba3da97b5786823c2d0d3a0d04ef088d073da225c"
+dependencies = [
+ "serde",
 ]
 
 [[package]]
@@ -3941,7 +3982,7 @@ dependencies = [
  "once_cell",
  "socket2",
  "tracing",
- "windows-sys 0.59.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -4055,6 +4096,12 @@ checksum = "caa0f4137e1c0a72f4c651489402276c8e8e1cf081f3b0ba156d2cbeef09e86a"
 dependencies = [
  "rand_core 0.10.1",
 ]
+
+[[package]]
+name = "raptorq"
+version = "2.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4d4215fb79ef19442a0c71616aabb0715a386e6a16ed9031775ee3e3f20e7502"
 
 [[package]]
 name = "raw-cpuid"
@@ -5814,10 +5861,22 @@ version = "1.2.0"
 dependencies = [
  "async-trait",
  "futures",
- "thiserror 2.0.20",
  "tokio",
  "ton-indexer-core",
  "tonutils",
+]
+
+[[package]]
+name = "ton-indexer-p2p"
+version = "1.2.0"
+dependencies = [
+ "anyhow",
+ "async-trait",
+ "tokio",
+ "ton-indexer-core",
+ "ton-indexer-liteserver",
+ "ton-p2p",
+ "tracing",
 ]
 
 [[package]]
@@ -5985,6 +6044,27 @@ dependencies = [
  "pkg-config",
  "sha2",
  "toml",
+]
+
+[[package]]
+name = "ton-p2p"
+version = "1.2.0"
+dependencies = [
+ "anyhow",
+ "async-trait",
+ "base64",
+ "everscale-network",
+ "futures",
+ "rand 0.8.6",
+ "raptorq",
+ "serde",
+ "serde_json",
+ "tempfile",
+ "tl-proto 0.5.3",
+ "tokio",
+ "ton-fullnode-master",
+ "tracing",
+ "tycho-types",
 ]
 
 [[package]]

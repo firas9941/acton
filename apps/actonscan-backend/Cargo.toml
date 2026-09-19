@@ -11,6 +11,11 @@ license = { workspace = true }
 
 [workspace]
 
+# Optimize RaptorQ decoding while keeping application debug checks enabled.
+[profile.dev.package.raptorq]
+opt-level = 3
+debug-assertions = false
+
 [workspace.package]
 version = "0.1.0"
 authors = ["TON Core"]
@@ -47,6 +52,8 @@ thiserror = { workspace = true }
 tokio = { workspace = true }
 ton-indexer-core = { path = "../../crates/ton-indexer-core" }
 ton-indexer-liteserver = { path = "../../crates/ton-indexer-liteserver" }
+ton-indexer-p2p = { path = "../../crates/ton-indexer-p2p" }
+ton-p2p = { path = "../../crates/ton-p2p" }
 tvm-ffi = { path = "../../crates/tvm-ffi" }
 tower-http = { workspace = true, features = ["compression-br", "compression-gzip", "cors"] }
 tracing = { workspace = true }

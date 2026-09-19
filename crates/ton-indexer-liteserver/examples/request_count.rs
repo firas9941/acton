@@ -5,7 +5,8 @@
 
 use std::{env, error::Error, time::Instant};
 
-use ton_indexer_liteserver::{CanonicalBlockSource, LiteRequestStats, TonutilsLiteClient};
+use ton_indexer_core::CanonicalBlockSource;
+use ton_indexer_liteserver::{LiteRequestStats, TonutilsLiteClient};
 
 const MAINNET_CONFIG: &str = concat!(
     env!("CARGO_MANIFEST_DIR"),

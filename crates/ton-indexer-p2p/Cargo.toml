@@ -1,6 +1,6 @@
 [package]
-name = "ton-indexer-liteserver"
-description = "Direct TON LiteAPI block source for ton-indexer-core"
+name = "ton-indexer-p2p"
+description = "TON P2P block source for ton-indexer-core"
 version.workspace = true
 authors.workspace = true
 edition.workspace = true
@@ -10,21 +10,17 @@ license.workspace = true
 publish = false
 
 [dependencies]
+anyhow.workspace = true
 async-trait.workspace = true
-futures.workspace = true
 tokio.workspace = true
 ton-indexer-core = { path = "../ton-indexer-core" }
-tonutils = { version = "=1.1.0", default-features = false, features = [
-  "liteclient",
-  "network-config",
-  "std",
-] }
-
-[dev-dependencies]
-tokio.workspace = true
+ton-indexer-liteserver = { path = "../ton-indexer-liteserver" }
+ton-p2p = { path = "../ton-p2p" }
+tracing.workspace = true
 
 [lints]
 workspace = true
 
 [lib]
+test = false
 doctest = false

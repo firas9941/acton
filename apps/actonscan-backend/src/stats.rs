@@ -1,4 +1,8 @@
-use std::{collections::VecDeque, sync::Arc};
+use std::{
+    collections::VecDeque,
+    sync::Arc,
+    time::{SystemTime, UNIX_EPOCH},
+};
 
 use serde::Serialize;
 use tokio::sync::RwLock;
@@ -21,7 +25,7 @@ pub struct TpsStats {
 pub enum TpsStatus {
     /// Historical samples are still being loaded.
     Syncing,
-    /// Every configured rolling window is covered and the startup tip was reached.
+    /// Every rolling window is covered and the source has reached its live target.
     Ready,
 }
 
@@ -64,6 +68,7 @@ pub(crate) struct TpsSample {
 struct TpsAccumulator {
     samples: VecDeque<TpsSample>,
     startup_tip_seqno: Option<u32>,
+    follow_recent_blocks: bool,
 }
 
 impl TpsStats {
@@ -75,6 +80,12 @@ impl TpsStats {
         Self {
             inner: Arc::new(RwLock::new(inner)),
         }
+    }
+
+    /// P2P has no global latest-tip query. Use block freshness for readiness
+    /// and re-evaluate it on each snapshot, including when downloads stall.
+    pub(crate) async fn follow_recent_blocks(&self) {
+        self.inner.write().await.follow_recent_blocks = true;
     }
 
     pub(crate) async fn set_startup_tip(&self, seqno: u32) {
@@ -135,8 +146,14 @@ impl TpsAccumulator {
         let latest = self.samples.back().copied();
         let oldest_timestamp = self.samples.front().map(|sample| sample.timestamp);
         let caught_up = latest.is_some_and(|sample| {
-            self.startup_tip_seqno
-                .is_some_and(|tip| sample.masterchain_seqno >= tip)
+            if self.follow_recent_blocks {
+                SystemTime::now()
+                    .duration_since(UNIX_EPOCH)
+                    .is_ok_and(|now| sample.timestamp.abs_diff(now.as_secs()) <= 60)
+            } else {
+                self.startup_tip_seqno
+                    .is_some_and(|tip| sample.masterchain_seqno >= tip)
+            }
         });
         let windows = TPS_WINDOWS_SECONDS
             .into_iter()

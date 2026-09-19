@@ -1,6 +1,6 @@
 use std::{
     env, fs, io,
-    net::SocketAddr,
+    net::{SocketAddr, SocketAddrV4},
     path::{Path, PathBuf},
     time::Duration,
 };
@@ -26,13 +26,46 @@ pub struct Config {
     indexer: IndexerConfig,
 }
 
-/// Settings for the LiteServer-backed TPS indexer.
+/// Settings for the canonical block source and statistics indexer.
 #[derive(Clone, Debug)]
 pub struct IndexerConfig {
+    pub(crate) source: SourceKind,
+    pub(crate) p2p: P2pConfig,
     pub(crate) global_config_path: PathBuf,
     pub(crate) parallelism: usize,
     pub(crate) backfill_batches: u32,
     pub(crate) poll_interval: Duration,
+}
+
+#[derive(Clone, Copy, Debug, Default, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "lowercase")]
+pub(crate) enum SourceKind {
+    #[default]
+    Liteserver,
+    P2p,
+}
+
+/// P2P owns its UDP listener and download directory for the indexer's lifetime.
+#[derive(Clone, Debug, Deserialize)]
+#[serde(default, deny_unknown_fields)]
+pub(crate) struct P2pConfig {
+    pub address: SocketAddrV4,
+    pub data_dir: PathBuf,
+    pub parallelism: usize,
+    pub timeout_seconds: u64,
+    pub from_latest: bool,
+}
+
+impl Default for P2pConfig {
+    fn default() -> Self {
+        Self {
+            address: SocketAddrV4::new(std::net::Ipv4Addr::LOCALHOST, 0),
+            data_dir: PathBuf::from(".actonscan-p2p"),
+            parallelism: 16,
+            timeout_seconds: 30,
+            from_latest: false,
+        }
+    }
 }
 
 impl Config {
@@ -65,6 +98,19 @@ impl Config {
             })?;
 
         let bind_addr = file.server.bind_addr.unwrap_or_else(default_bind_addr);
+        if file.indexer.source == SourceKind::P2p {
+            if !(1..=128).contains(&file.indexer.p2p.parallelism) {
+                return Err(ConfigError::Invalid(
+                    "indexer.p2p.parallelism must be between 1 and 128".to_owned(),
+                ));
+            }
+            if file.indexer.p2p.timeout_seconds == 0 {
+                return Err(ConfigError::Invalid(
+                    "indexer.p2p.timeout_seconds must be greater than zero".to_owned(),
+                ));
+            }
+        }
+
         let parallelism = file
             .indexer
             .liteserver_parallelism
@@ -113,6 +159,8 @@ impl Config {
                 .database_path
                 .unwrap_or_else(|| PathBuf::from(DEFAULT_DATABASE_PATH)),
             indexer: IndexerConfig {
+                source: file.indexer.source,
+                p2p: file.indexer.p2p,
                 global_config_path,
                 parallelism,
                 backfill_batches,
@@ -194,6 +242,10 @@ struct StorageConfig {
 
 #[derive(Debug, Default, Deserialize)]
 struct IndexerFileConfig {
+    #[serde(default)]
+    source: SourceKind,
+    #[serde(default)]
+    p2p: P2pConfig,
     global_config_path: Option<PathBuf>,
     liteserver_parallelism: Option<usize>,
     tps_backfill_batches: Option<u32>,

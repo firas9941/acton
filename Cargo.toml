@@ -361,6 +361,11 @@ flate2 = { workspace = true }
 tar = { workspace = true }
 zstd = { workspace = true }
 
+# Keep application debug checks while avoiding expensive RaptorQ matrix checks.
+[profile.dev.package.raptorq]
+opt-level = 3
+debug-assertions = false
+
 # save ~15% of size (29mb -> 23mb), but very slow to compile/link
 [profile.release-size]
 inherits = "release"

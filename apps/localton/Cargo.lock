@@ -3419,7 +3419,6 @@ version = "1.2.0"
 dependencies = [
  "async-trait",
  "futures",
- "thiserror",
  "tokio",
  "ton-indexer-core",
  "tonutils",

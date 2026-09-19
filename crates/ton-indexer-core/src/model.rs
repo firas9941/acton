@@ -127,6 +127,33 @@ impl fmt::Display for BlockId {
     }
 }
 
+impl From<tycho_types::models::BlockId> for BlockId {
+    fn from(id: tycho_types::models::BlockId) -> Self {
+        Self {
+            workchain: id.shard.workchain(),
+            shard: id.shard.prefix(),
+            seqno: id.seqno,
+            root_hash: Hash256::new(id.root_hash.0),
+            file_hash: Hash256::new(id.file_hash.0),
+        }
+    }
+}
+
+impl TryFrom<BlockId> for tycho_types::models::BlockId {
+    type Error = crate::SourceError;
+
+    fn try_from(id: BlockId) -> Result<Self, Self::Error> {
+        Ok(Self {
+            shard: tycho_types::models::ShardIdent::new(id.workchain, id.shard).ok_or_else(
+                || crate::SourceError::InvalidBlockId(format!("invalid shard in {id}")),
+            )?,
+            seqno: id.seqno,
+            root_hash: id.root_hash.into_bytes().into(),
+            file_hash: id.file_hash.into_bytes().into(),
+        })
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

@@ -122,6 +122,10 @@ pub enum Answer {
     #[tl(id = 0xc769c17a)]
     PreparedProofEmpty,
 
+    /// `tonNode.preparedProof = tonNode.PreparedProof`
+    #[tl(id = 0x899f9a4b)]
+    PreparedProof,
+
     /// `tonNode.keyBlocks blocks:(vector tonNode.blockIdExt) incomplete:Bool error:Bool = tonNode.KeyBlocks`
     #[tl(id = 0x17286d4e)]
     KeyBlocks {
@@ -133,6 +137,10 @@ pub enum Answer {
     /// `tonNode.blockDescriptionEmpty = tonNode.BlockDescription`
     #[tl(id = 0x8384ae95)]
     BlockDescriptionEmpty,
+
+    /// `tonNode.blockDescription id:tonNode.blockIdExt = tonNode.BlockDescription`
+    #[tl(id = 0x46a1d088)]
+    BlockDescription { id: BlockIdExt },
 
     /// `tonNode.success = tonNode.Success`
     #[tl(id = 0xc096244f)]

@@ -11,7 +11,12 @@ async fn main() -> anyhow::Result<()> {
     let storage = SqliteStorage::open(config.database_path())?;
     let tps_stats = storage.load_tps_stats()?;
     let opcode_stats = storage.load_opcode_stats()?;
-    tracing::info!(path = %config.database_path().display(), "opened Actonscan database");
+    tracing::info!(
+        operation = "database_open",
+        path = %config.database_path().display(),
+        outcome = "opened",
+        "opened Actonscan database",
+    );
 
     let _indexer = spawn_indexer(
         config.indexer().clone(),
@@ -20,7 +25,12 @@ async fn main() -> anyhow::Result<()> {
         storage,
     );
     let listener = tokio::net::TcpListener::bind(config.bind_addr()).await?;
-    tracing::info!(address = %config.bind_addr(), "starting Actonscan backend");
+    tracing::info!(
+        operation = "http_server",
+        address = %config.bind_addr(),
+        outcome = "listening",
+        "starting Actonscan backend",
+    );
 
     axum::serve(listener, app(tps_stats, opcode_stats)).await?;
     Ok(())
