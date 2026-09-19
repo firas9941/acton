@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Testing
+
+- Mutation testing limits each mutant to 60 seconds by default, including compilation and tests.
+  Set `--mutation-timeout` or `[test.mutation] timeout` to change the limit.
+  Timed-out mutants appear as `TIMED OUT`, remain outside the mutation score,
+  and do not stop the remaining mutants. The final exit code is 1 if any mutant times out.
+- Mutation testing no longer hangs when a child process fills its stdout or stderr buffer.
+
 ## [1.2.0] - 16.09.2026
 
 This release introduces **Acton Studio**, a browser workspace for testing,

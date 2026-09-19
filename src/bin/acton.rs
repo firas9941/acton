@@ -479,6 +479,13 @@ enum Commands {
         mutation_workers: Option<usize>,
         #[arg(
             long,
+            help = "Time limit for compiling and testing each mutant in seconds (default: 60)",
+            help_heading = "Mutation Testing",
+            value_name = "SECONDS"
+        )]
+        mutation_timeout: Option<std::num::NonZeroU64>,
+        #[arg(
+            long,
             value_enum,
             help = "Limit mutation testing to changed lines in the selected diff scope",
             help_heading = "Mutation Testing",
@@ -2165,6 +2172,7 @@ fn main() {
             mutation_rules_file,
             mutation_session_id,
             mutation_workers,
+            mutation_timeout,
             mutation_diff,
             mutation_diff_ref,
             mutation_levels,
@@ -2222,6 +2230,7 @@ fn main() {
                     mutation_rules_file,
                     mutation_session_id,
                     mutation_workers,
+                    mutation_timeout,
                     mutation_diff,
                     mutation_diff_ref,
                     mutation_levels,
@@ -3091,6 +3100,7 @@ fn create_test_config(
     mutation_rules_file: Option<String>,
     mutation_session_id: Option<String>,
     mutation_workers: Option<usize>,
+    mutation_timeout: Option<std::num::NonZeroU64>,
     mutation_diff: Option<MutationDiffMode>,
     mutation_diff_ref: Option<String>,
     mutation_levels: Vec<MutationLevel>,
@@ -3175,6 +3185,9 @@ fn create_test_config(
         }
         config.mutation_session_id = mutation_session_id;
         config.mutation_workers = mutation_workers;
+        if let Some(seconds) = mutation_timeout {
+            config.mutation_timeout = std::time::Duration::from_secs(seconds.get());
+        }
         if no_studio_reporting {
             config.studio_reporting = false;
         }
@@ -3218,6 +3231,10 @@ fn create_test_config(
         mutation_rules_file,
         mutation_session_id,
         mutation_workers,
+        mutation_timeout: mutation_timeout
+            .map_or(acton_config::test::DEFAULT_MUTATION_TIMEOUT, |seconds| {
+                std::time::Duration::from_secs(seconds.get())
+            }),
         mutation_diff,
         mutation_diff_ref,
         mutation_levels,

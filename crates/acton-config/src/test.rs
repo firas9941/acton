@@ -1,7 +1,11 @@
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
+use std::time::Duration;
 
 use crate::config::Network;
+
+/// Bounds each mutant, including compilation, so one stalled process cannot stop the session.
+pub const DEFAULT_MUTATION_TIMEOUT: Duration = Duration::from_secs(60);
 
 /// Backtrace verbosity for failed tests
 #[derive(
@@ -186,6 +190,8 @@ pub struct TestConfig {
     pub mutation_rules_file: Option<String>,
     pub mutation_session_id: Option<String>,
     pub mutation_workers: Option<usize>,
+    /// Shared wall-clock budget for compiling and testing one mutant.
+    pub mutation_timeout: Duration,
     pub mutation_levels: Vec<MutationLevel>,
     pub mutation_minimum_percent: Option<f64>,
     pub mutation_ids: Vec<usize>,
@@ -239,6 +245,7 @@ impl Default for TestConfig {
             mutation_rules_file: None,
             mutation_session_id: None,
             mutation_workers: None,
+            mutation_timeout: DEFAULT_MUTATION_TIMEOUT,
             mutation_levels: Vec::new(),
             mutation_minimum_percent: None,
             mutation_ids: Vec::new(),

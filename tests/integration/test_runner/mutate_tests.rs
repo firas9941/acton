@@ -23,6 +23,81 @@ get fun addOne(x: int): int {
 }
 ";
 
+// Reproduces the self-message cascade from https://github.com/ton-blockchain/acton/issues/1282.
+// The batch keeps the mutant busy long enough for the deadline to stop it before stack overflow.
+const SELF_MESSAGE_CONTRACT: &str = r#"
+struct Storage {
+    cursor: uint32
+    batchHash: uint256
+}
+
+fun Storage.load(): Storage {
+    return Storage.fromCell(contract.getData());
+}
+
+fun Storage.save(self) {
+    contract.setData(self.toCell());
+}
+
+fun onInternalMessage(_: InMessage) {
+    var st = Storage.load();
+
+    // Hash one batch before advancing the persisted cursor.
+    repeat (10000) {
+        st.batchHash = beginCell().storeUint(st.batchHash, 256).endCell().hash();
+    }
+
+    st.cursor += 1;
+    st.save();
+
+    if (st.cursor < 3) {
+        createMessage({
+            bounce: false,
+            value: ton("1"),
+            dest: contract.getAddress(),
+        }).send(SEND_MODE_PAY_FEES_SEPARATELY);
+    }
+}
+
+fun onBouncedMessage(_: InMessageBounced) {}
+
+get fun cursor(): int {
+    return Storage.load().cursor;
+}
+
+get fun marker(): int {
+    assert (true) throw 5;
+    return 1;
+}
+"#;
+
+const SELF_MESSAGE_TEST: &str = r#"
+import "../../lib/testing/expect"
+import "../../lib/build"
+import "../../lib/types/big_array"
+import "../../lib/emulation/network"
+import "../../lib/emulation/testing"
+
+get fun `test self messages advance cursor and stop`() {
+    val init = ContractState {
+        code: build("main"),
+        data: beginCell().storeUint(0, 32).storeUint(0, 256).endCell(),
+    };
+    val address = AutoDeployAddress { stateInit: init }.calculateAddress();
+    val deployer = testing.treasury("deployer");
+
+    val txs = net.send(deployer.address, createMessage({
+        bounce: false,
+        value: ton("1000"),
+        dest: { stateInit: init },
+    }));
+
+    expect(txs).toHaveSuccessfulDeploy({ to: address });
+    expect(txs.size()).toEqual(3);
+    expect(net.runGetMethod<int>(address, "cursor")).toEqual(3);
+}
+"#;
+
 const PASSING_TEST: &str = r#"
 import "../../lib/testing/expect"
 
@@ -445,6 +520,179 @@ fn send_interrupt(child: &Child) {
 #[cfg(not(unix))]
 fn send_interrupt(child: &mut Child) {
     child.kill().expect("failed to kill child process");
+}
+
+#[test]
+fn mutate_self_message_cascade_times_out_and_continues() {
+    let project = ProjectBuilder::new("j-mutate-self-message-timeout")
+        .contract("main", SELF_MESSAGE_CONTRACT)
+        .test_file("cascade", SELF_MESSAGE_TEST)
+        .build();
+
+    project
+        .acton()
+        .test()
+        .run()
+        .success()
+        .assert_snapshot_matches(
+            "integration/snapshots/test-runner/test_runner_mutate/self_message_baseline.stdout.txt",
+        );
+
+    // The project default applies when the CLI does not supply a timeout.
+    let manifest_path = project.path().join("Acton.toml");
+    let manifest = fs::read_to_string(&manifest_path).unwrap();
+    fs::write(
+        &manifest_path,
+        format!("{manifest}\n[test.mutation]\ntimeout = 2\n"),
+    )
+    .unwrap();
+
+    let output = project
+        .acton()
+        .test()
+        .arg("--mutate")
+        .arg("--mutate-contract")
+        .arg("main")
+        .arg("--mutation-levels")
+        .arg("critical")
+        .arg("--mutation-disable-rules")
+        .arg("remove_set_data_call")
+        .arg("--mutation-id")
+        .arg("2,4")
+        .arg("--mutation-workers")
+        .arg("1")
+        .arg("--mutation-session-id")
+        .arg("cascade-timeout")
+        .run()
+        .code(1);
+
+    output.assert_snapshot_matches(
+        "integration/snapshots/test-runner/test_runner_mutate/self_message_timeout.stdout.txt",
+    );
+
+    let mut events = read_jsonl_events(&mutation_session_path(&project, "cascade-timeout"));
+    for event in &mut events {
+        event
+            .as_object_mut()
+            .unwrap()
+            .retain(|key, _| !key.ends_with("_at"));
+    }
+    fs::write(
+        project.path().join("session.json"),
+        serde_json::to_string_pretty(&events).unwrap(),
+    )
+    .unwrap();
+
+    output.assert_file_snapshot_matches(
+        "session.json",
+        "integration/snapshots/test-runner/test_runner_mutate/self_message_timeout.json",
+    );
+
+    // Resuming a finished session preserves its inconclusive result and does not rerun mutants.
+    project
+        .acton()
+        .test()
+        .arg("--mutate")
+        .arg("--mutate-contract")
+        .arg("main")
+        .arg("--mutation-levels")
+        .arg("critical")
+        .arg("--mutation-disable-rules")
+        .arg("remove_set_data_call")
+        .arg("--mutation-id")
+        .arg("2,4")
+        .arg("--mutation-session-id")
+        .arg("cascade-timeout")
+        .run()
+        .code(1)
+        .assert_snapshot_matches(
+            "integration/snapshots/test-runner/test_runner_mutate/self_message_timeout_resumed.stdout.txt",
+        );
+}
+
+#[test]
+fn mutate_large_child_output_does_not_block() {
+    let mut tests = String::from("import \"../../lib/testing/expect\"\n\n");
+    let padding = "x".repeat(1200);
+
+    for index in 0..150 {
+        writeln!(
+            tests,
+            "get fun `test {index} {padding}`() {{ expect(1).toEqual(1); }}"
+        )
+        .unwrap();
+    }
+
+    let project = ProjectBuilder::new("j-mutate-large-output")
+        .contract("simple", MUTATION_CONTRACT)
+        .test_file("output", &tests)
+        .build();
+
+    // Keep a different project default to exercise the CLI override during the same run.
+    let manifest_path = project.path().join("Acton.toml");
+    let manifest = fs::read_to_string(&manifest_path).unwrap();
+    fs::write(
+        &manifest_path,
+        format!("{manifest}\n[test.mutation]\ntimeout = 1\n"),
+    )
+    .unwrap();
+
+    project
+        .acton()
+        .test()
+        .arg("--mutate")
+        .arg("--mutate-contract")
+        .arg("simple")
+        .arg("--mutation-timeout")
+        .arg("10")
+        .arg("--mutation-workers")
+        .arg("1")
+        .run()
+        .success()
+        .assert_snapshot_matches(
+            "integration/snapshots/test-runner/test_runner_mutate/mutate_large_output.stdout.txt",
+        );
+}
+
+#[test]
+fn mutate_baseline_timeout_stops_before_creating_a_session() {
+    let project = ProjectBuilder::new("j-mutate-baseline-timeout")
+        .contract("simple", MUTATION_CONTRACT)
+        .test_file("endless", "get fun `test endless`() { while (true) {} }")
+        .build();
+
+    project
+        .acton()
+        .test()
+        .arg("--mutate")
+        .arg("--mutate-contract")
+        .arg("simple")
+        .arg("--mutation-timeout")
+        .arg("2")
+        .run()
+        .code(1)
+        .assert_stderr_snapshot_matches(
+            "integration/snapshots/test-runner/test_runner_mutate/mutate_baseline_timeout.stderr.txt",
+        );
+
+    assert!(!project.path().join("build/mutation-sessions").exists());
+}
+
+#[test]
+fn mutate_timeout_rejects_zero() {
+    mutation_project("j-mutate-zero-timeout")
+        .acton()
+        .test()
+        .arg("--mutate")
+        .arg("--mutate-contract")
+        .arg("simple")
+        .arg("--mutation-timeout")
+        .arg("0")
+        .run()
+        .failure()
+        .assert_stderr_snapshot_matches(
+            "integration/snapshots/test-runner/test_runner_mutate/mutate_timeout_zero.stderr.txt",
+        );
 }
 
 #[test]

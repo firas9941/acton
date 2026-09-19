@@ -322,6 +322,20 @@ Run tests in mutation testing mode.
 Contract name to mutate during mutation testing.
 {{/option}}
 
+{{#option "`--mutation-timeout` _seconds_" }}
+Available since trunk.
+
+Time limit for compiling and testing each mutant. The default is 60 seconds.
+The value must be greater than zero. Set `[test.mutation] timeout` to change the project default.
+
+The initial project build and baseline test suite each use the same time limit.
+If either times out, the mutation run stops before it starts any mutants.
+
+A timed-out mutant has the status `TIMED OUT`. The run continues with the remaining mutants.
+Timed-out mutants are excluded from the mutation score, listed in the summary, and saved in the mutation session.
+The command exits with code 1 if any mutant times out.
+{{/option}}
+
 {{#option "`--mutation-diff` _mode_" }}
 Limit mutation testing to changed lines in the selected diff scope.
 
@@ -538,6 +552,8 @@ include-tests = true
 include-wrappers = true
 
 [test.mutation]
+# Available since trunk: timeout
+timeout = 60
 diff = "branch"
 diff-ref = "origin/main"
 mutation-levels = ["critical", "major"]

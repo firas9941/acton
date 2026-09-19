@@ -1190,6 +1190,12 @@
         "rules-file": {
           "description": "Path to a JSON file with custom query-based mutation rules",
           "type": "string"
+        },
+        "timeout": {
+          "description": "Maximum seconds for compiling and testing one mutant; defaults to 60.",
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 1.0
         }
       }
     },

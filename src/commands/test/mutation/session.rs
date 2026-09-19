@@ -16,6 +16,7 @@ pub(crate) enum MutationStatus {
     Killed,
     Survived,
     CompileError,
+    TimedOut,
 }
 
 impl MutationStatus {
@@ -68,6 +69,8 @@ pub(crate) enum MutationSessionEvent {
         killed: usize,
         survived: usize,
         compile_errors: usize,
+        #[serde(default)]
+        timed_out: usize,
         mutation_score: f64,
         minimum_percent: Option<f64>,
         threshold_failed: bool,
@@ -90,6 +93,7 @@ pub(crate) struct MutationSummary {
     pub(crate) killed: usize,
     pub(crate) survived: usize,
     pub(crate) compile_errors: usize,
+    pub(crate) timed_out: usize,
     pub(crate) mutation_score: f64,
 }
 
@@ -292,6 +296,11 @@ pub(crate) fn mutation_summary(records: &[MutationRecord]) -> MutationSummary {
         .iter()
         .filter(|record| record.status.is_survived())
         .count();
+    let timed_out = records
+        .iter()
+        .filter(|record| record.status == MutationStatus::TimedOut)
+        .count();
+
     let scored_total = killed + survived;
     let mutation_score = if scored_total > 0 {
         (killed as f64 / scored_total as f64) * 100.0
@@ -304,6 +313,7 @@ pub(crate) fn mutation_summary(records: &[MutationRecord]) -> MutationSummary {
         killed,
         survived,
         compile_errors,
+        timed_out,
         mutation_score,
     }
 }

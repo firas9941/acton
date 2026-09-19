@@ -16,15 +16,14 @@ use acton_config::config::{
     ActonConfig, ContractConfig, manifest_path as configured_manifest_path,
     project_root as configured_project_root,
 };
-use anyhow::anyhow;
+use anyhow::{Context, anyhow};
 use crossbeam_channel::{Receiver, Sender, unbounded};
 use path_absolutize::Absolutize;
 use serde_json::Value;
 use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 use std::fmt::Write as _;
-use std::io::Read;
+use std::io::{Read, Seek};
 use std::path::{Path, PathBuf};
-use std::process::Stdio;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::thread;
 use std::time::{Duration, Instant};
@@ -472,6 +471,14 @@ fn run_single_mutation(
 
     let source = &context.sources[mutation.source_index];
     let dest_path = workspace_path.join(&source.relative_path);
+    let started_at = Instant::now();
+
+    log::info!(
+        "operation=mutation target={} mutant={} timeout_secs={} outcome=started",
+        context.mutate_contract,
+        mutation.id,
+        context.config.mutation_timeout.as_secs()
+    );
 
     // apply mutation
     let mutated_content = match &mutation.rule.edit {
@@ -485,10 +492,15 @@ fn run_single_mutation(
         fs::write(&dest_path, &mutated_content)?;
 
         let compile_workspace_contract =
-            |contract: &ContractConfig| -> anyhow::Result<Option<String>> {
+            |contract: &ContractConfig| -> anyhow::Result<InterruptibleOutput<String>> {
                 let contract_source_path =
                     workspace_contract_source_path(workspace_path, context.project_root, contract);
-                compile_file(workspace_path, &contract_source_path.to_string_lossy())
+                compile_file(
+                    workspace_path,
+                    &contract_source_path.to_string_lossy(),
+                    started_at,
+                    context.config.mutation_timeout,
+                )
             };
 
         let mut compiled_contracts = context.original_contract_bocs.clone();
@@ -504,8 +516,13 @@ fn run_single_mutation(
                         context.mutate_contract
                     )
                 })?;
-        let Some(code_b64) = compile_workspace_contract(mutate_contract_config)? else {
-            return Ok(MutationExecution::Interrupted);
+        let code_b64 = match compile_workspace_contract(mutate_contract_config)? {
+            InterruptibleOutput::Completed(code) => code,
+            InterruptibleOutput::Interrupted => return Ok(MutationExecution::Interrupted),
+            InterruptibleOutput::TimedOut => {
+                let record = mutation_record(mutation, source, MutationStatus::TimedOut);
+                return Ok(MutationExecution::Completed { record });
+            }
         };
         if code_b64.is_empty() {
             let record = mutation_record(mutation, source, MutationStatus::CompileError);
@@ -528,8 +545,13 @@ fn run_single_mutation(
                 workspace_path,
             )?;
 
-            let Some(code_b64) = compile_workspace_contract(contract_config)? else {
-                return Ok(MutationExecution::Interrupted);
+            let code_b64 = match compile_workspace_contract(contract_config)? {
+                InterruptibleOutput::Completed(code) => code,
+                InterruptibleOutput::Interrupted => return Ok(MutationExecution::Interrupted),
+                InterruptibleOutput::TimedOut => {
+                    let record = mutation_record(mutation, source, MutationStatus::TimedOut);
+                    return Ok(MutationExecution::Completed { record });
+                }
             };
             if code_b64.is_empty() {
                 let record = mutation_record(mutation, source, MutationStatus::CompileError);
@@ -550,9 +572,17 @@ fn run_single_mutation(
             cmd.env(INTERNAL_SKIP_BUILD_ENV, "1");
         }
 
-        let output = match run_command_output_interruptible(&mut cmd)? {
+        let output = match run_command_output_interruptible(
+            &mut cmd,
+            started_at,
+            context.config.mutation_timeout,
+        )? {
             InterruptibleOutput::Completed(output) => output,
             InterruptibleOutput::Interrupted => return Ok(MutationExecution::Interrupted),
+            InterruptibleOutput::TimedOut => {
+                let record = mutation_record(mutation, source, MutationStatus::TimedOut);
+                return Ok(MutationExecution::Completed { record });
+            }
         };
 
         let survived = output.status.success();
@@ -568,11 +598,30 @@ fn run_single_mutation(
     })();
 
     let restore_result = fs::write(&dest_path, &source.content);
-    match (result, restore_result) {
+    let result = match (result, restore_result) {
         (Ok(execution), Ok(())) => Ok(execution),
         (Ok(_), Err(err)) => Err(err.into()),
         (Err(err), Ok(()) | Err(_)) => Err(err),
-    }
+    };
+
+    let outcome = match &result {
+        Ok(MutationExecution::Completed { record }) => match record.status {
+            MutationStatus::Killed => "killed",
+            MutationStatus::Survived => "survived",
+            MutationStatus::CompileError => "compile_error",
+            MutationStatus::TimedOut => "timed_out",
+        },
+        Ok(MutationExecution::Interrupted) => "interrupted",
+        Err(_) => "error",
+    };
+    log::info!(
+        "operation=mutation target={} mutant={} duration_ms={} outcome={outcome}",
+        context.mutate_contract,
+        mutation.id,
+        started_at.elapsed().as_millis()
+    );
+
+    result
 }
 
 fn mutation_worker_loop(
@@ -657,6 +706,7 @@ fn mutation_status_label(status: MutationStatus) -> String {
         MutationStatus::Killed => "KILLED".green().to_string(),
         MutationStatus::Survived => "SURVIVED".red().bold().to_string(),
         MutationStatus::CompileError => "COMPILE ERROR".yellow().bold().to_string(),
+        MutationStatus::TimedOut => "TIMED OUT".yellow().bold().to_string(),
     }
 }
 
@@ -669,9 +719,10 @@ fn format_rule_level(level: &str) -> String {
     }
 }
 
-enum InterruptibleOutput {
-    Completed(process::Output),
+enum InterruptibleOutput<T> {
+    Completed(T),
     Interrupted,
+    TimedOut,
 }
 
 fn install_mutation_interrupt_handler() -> anyhow::Result<()> {
@@ -700,15 +751,25 @@ fn send_interrupt(child: &mut process::Child) {
     let _ = child.kill();
 }
 
+/// Keeps output off pipes so a verbose child cannot block before we can reap it.
+/// Callers share the start time across a mutant's subprocesses to enforce one budget.
 fn run_command_output_interruptible(
     cmd: &mut process::Command,
-) -> anyhow::Result<InterruptibleOutput> {
+    started_at: Instant,
+    timeout: Duration,
+) -> anyhow::Result<InterruptibleOutput<process::Output>> {
     if mutation_interrupted() {
         return Ok(InterruptibleOutput::Interrupted);
     }
 
-    cmd.stdout(Stdio::piped());
-    cmd.stderr(Stdio::piped());
+    if started_at.elapsed() >= timeout {
+        return Ok(InterruptibleOutput::TimedOut);
+    }
+
+    let mut stdout_file = tempfile::tempfile().context("Cannot capture mutation command stdout")?;
+    let mut stderr_file = tempfile::tempfile().context("Cannot capture mutation command stderr")?;
+    cmd.stdout(stdout_file.try_clone()?);
+    cmd.stderr(stderr_file.try_clone()?);
 
     let mut child = cmd.spawn()?;
     loop {
@@ -733,20 +794,28 @@ fn run_command_output_interruptible(
 
         if let Some(status) = child.try_wait()? {
             let mut stdout = Vec::new();
-            if let Some(mut pipe) = child.stdout.take() {
-                let _ = pipe.read_to_end(&mut stdout);
-            }
+            stdout_file.rewind()?;
+            stdout_file.read_to_end(&mut stdout)?;
 
             let mut stderr = Vec::new();
-            if let Some(mut pipe) = child.stderr.take() {
-                let _ = pipe.read_to_end(&mut stderr);
-            }
+            stderr_file.rewind()?;
+            stderr_file.read_to_end(&mut stderr)?;
 
             return Ok(InterruptibleOutput::Completed(process::Output {
                 status,
                 stdout,
                 stderr,
             }));
+        }
+
+        if started_at.elapsed() >= timeout {
+            child
+                .kill()
+                .context("Cannot stop timed-out mutation command")?;
+            child
+                .wait()
+                .context("Cannot reap timed-out mutation command")?;
+            return Ok(InterruptibleOutput::TimedOut);
         }
 
         thread::sleep(Duration::from_millis(25));
@@ -843,6 +912,11 @@ fn mutation_resume_command(paths: &[String], config: &TestConfig, session_id: &s
     if let Some(workers) = config.mutation_workers {
         args.push("--mutation-workers".to_owned());
         args.push(workers.to_string());
+    }
+
+    if config.mutation_timeout != acton_config::test::DEFAULT_MUTATION_TIMEOUT {
+        args.push("--mutation-timeout".to_owned());
+        args.push(config.mutation_timeout.as_secs().to_string());
     }
 
     if let Some(diff) = config.mutation_diff {
@@ -965,9 +1039,17 @@ fn prepare_project_for_mutation(config: &TestConfig) -> anyhow::Result<()> {
         cmd.arg("--clear-cache");
     }
 
-    let output = match run_command_output_interruptible(&mut cmd)? {
+    let output = match run_command_output_interruptible(
+        &mut cmd,
+        Instant::now(),
+        config.mutation_timeout,
+    )? {
         InterruptibleOutput::Completed(output) => output,
         InterruptibleOutput::Interrupted => return Ok(()),
+        InterruptibleOutput::TimedOut => anyhow::bail!(
+            "Project build timed out after {} seconds; increase --mutation-timeout",
+            config.mutation_timeout.as_secs()
+        ),
     };
     if output.status.success() {
         return Ok(());
@@ -985,9 +1067,17 @@ fn run_mutation_baseline_tests(paths: &[String], config: &TestConfig) -> anyhow:
     cmd.env(INTERNAL_SKIP_BUILD_ENV, "1");
     cmd.env(INTERNAL_REQUIRE_TESTS_ENV, "1");
 
-    let output = match run_command_output_interruptible(&mut cmd)? {
+    let output = match run_command_output_interruptible(
+        &mut cmd,
+        Instant::now(),
+        config.mutation_timeout,
+    )? {
         InterruptibleOutput::Completed(output) => output,
         InterruptibleOutput::Interrupted => return Ok(()),
+        InterruptibleOutput::TimedOut => anyhow::bail!(
+            "Baseline test suite timed out after {} seconds; increase --mutation-timeout",
+            config.mutation_timeout.as_secs()
+        ),
     };
 
     if output.status.success() {
@@ -1390,6 +1480,19 @@ pub fn test_mutate_cmd(paths: &[String], config: &TestConfig) -> anyhow::Result<
         summary.compile_errors.to_string().yellow()
     );
 
+    if summary.timed_out > 0 {
+        println!(
+            "  {} {:<20} {}",
+            "!".yellow(),
+            "Timed out".yellow(),
+            summary.timed_out.to_string().yellow()
+        );
+        println!(
+            "\nTimed-out mutants are excluded from the mutation score (timeout: {} seconds)",
+            config.mutation_timeout.as_secs()
+        );
+    }
+
     let score_str = format!("{:.1}%", summary.mutation_score);
     let (score_icon, score_label) = match summary.mutation_score as u32 {
         0..=50 => (
@@ -1470,13 +1573,27 @@ pub fn test_mutate_cmd(paths: &[String], config: &TestConfig) -> anyhow::Result<
         println!("{}", "─".repeat(60).dimmed());
         println!("These mutants were not caught by your tests!",);
         println!("Consider adding more test cases to improve mutation coverage.\n");
-    } else {
+    } else if summary.timed_out == 0 {
         println!(
             "\n{} {} All mutants were killed!\n",
             "✓".green().bold(),
             "Excellent!".green().bold()
         );
     }
+
+    if summary.timed_out > 0 {
+        println!("\nTimed-out Mutants");
+        for record in all_records
+            .iter()
+            .filter(|record| record.status == MutationStatus::TimedOut)
+        {
+            print_mutation_status_line(record, available_mutation_count);
+        }
+        println!("\nIncrease --mutation-timeout to allow more time for each mutant");
+    }
+
+    // A timeout is inconclusive, even when the score from completed mutants is high.
+    let exit_code = i32::from(mutation_threshold_failed || summary.timed_out > 0);
 
     if !session.finished {
         append_mutation_session_event(
@@ -1487,16 +1604,16 @@ pub fn test_mutate_cmd(paths: &[String], config: &TestConfig) -> anyhow::Result<
                 killed: summary.killed,
                 survived: summary.survived,
                 compile_errors: summary.compile_errors,
+                timed_out: summary.timed_out,
                 mutation_score: summary.mutation_score,
                 minimum_percent: config.mutation_minimum_percent,
                 threshold_failed: mutation_threshold_failed,
-                exit_code: i32::from(mutation_threshold_failed),
+                exit_code,
                 finished_at: session::now_rfc3339(),
             },
         )?;
     }
 
-    let exit_code = i32::from(mutation_threshold_failed);
     if exit_code != 0 {
         process::exit(exit_code);
     }
@@ -1504,7 +1621,12 @@ pub fn test_mutate_cmd(paths: &[String], config: &TestConfig) -> anyhow::Result<
     Ok(())
 }
 
-fn compile_file(project_root: &Path, path: &str) -> anyhow::Result<Option<String>> {
+fn compile_file(
+    project_root: &Path,
+    path: &str,
+    started_at: Instant,
+    timeout: Duration,
+) -> anyhow::Result<InterruptibleOutput<String>> {
     let exe = std::env::current_exe().unwrap_or_else(|_| PathBuf::from("acton"));
     let mut cmd = process::Command::new(exe);
     let cmd = cmd
@@ -1514,9 +1636,10 @@ fn compile_file(project_root: &Path, path: &str) -> anyhow::Result<Option<String
         .arg("--json")
         .arg(path);
 
-    let compilation_result = match run_command_output_interruptible(cmd)? {
+    let compilation_result = match run_command_output_interruptible(cmd, started_at, timeout)? {
         InterruptibleOutput::Completed(output) => output,
-        InterruptibleOutput::Interrupted => return Ok(None),
+        InterruptibleOutput::Interrupted => return Ok(InterruptibleOutput::Interrupted),
+        InterruptibleOutput::TimedOut => return Ok(InterruptibleOutput::TimedOut),
     };
     let compilation_result = String::from_utf8_lossy(&compilation_result.stdout);
     let compilation_result: Value = serde_json::from_str(compilation_result.as_ref())?;
@@ -1525,7 +1648,7 @@ fn compile_file(project_root: &Path, path: &str) -> anyhow::Result<Option<String
     };
     let success = success.as_bool().unwrap_or(false);
     if !success {
-        return Ok(Some(String::new()));
+        return Ok(InterruptibleOutput::Completed(String::new()));
     }
     let Some(code_b64) = compilation_result.get("code_boc64") else {
         anyhow::bail!("No code boc64 found in compilation result")
@@ -1533,7 +1656,7 @@ fn compile_file(project_root: &Path, path: &str) -> anyhow::Result<Option<String
     let Value::String(code_b64) = code_b64 else {
         anyhow::bail!("No code boc64 found in compilation result")
     };
-    Ok(Some(code_b64.clone()))
+    Ok(InterruptibleOutput::Completed(code_b64.clone()))
 }
 
 #[cfg(test)]

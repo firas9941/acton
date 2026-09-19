@@ -537,6 +537,8 @@ const fn default_localnet_port() -> Option<u16> {
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, Default)]
 #[serde(rename_all = "kebab-case")]
 pub struct MutationConfig {
+    /// Maximum seconds for compiling and testing one mutant; defaults to 60.
+    pub timeout: Option<std::num::NonZeroU64>,
     /// List of mutation rules to disable
     pub disable_rules: Option<Vec<String>>,
     /// Path to a JSON file with custom query-based mutation rules
@@ -1420,6 +1422,13 @@ impl TestSettings {
                 .and_then(|mutation| mutation.rules_file.clone()),
             mutation_session_id: None,
             mutation_workers: None,
+            mutation_timeout: self
+                .mutation
+                .as_ref()
+                .and_then(|mutation| mutation.timeout)
+                .map_or(crate::test::DEFAULT_MUTATION_TIMEOUT, |seconds| {
+                    std::time::Duration::from_secs(seconds.get())
+                }),
             mutation_levels: if mutation_levels_override.is_empty() {
                 self.mutation
                     .as_ref()

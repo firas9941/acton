@@ -308,6 +308,21 @@ Run tests in mutation testing mode.
 Contract name to mutate during mutation testing.
 .RE
 .sp
+\fB\-\-mutation\-timeout\fR \fIseconds\fR
+.RS 4
+Available since trunk.
+.sp
+Time limit for compiling and testing each mutant. The default is 60 seconds.
+The value must be greater than zero. Set \fB[test.mutation] timeout\fR to change the project default.
+.sp
+The initial project build and baseline test suite each use the same time limit.
+If either times out, the mutation run stops before it starts any mutants.
+.sp
+A timed\-out mutant has the status \fBTIMED OUT\fR\&. The run continues with the remaining mutants.
+Timed\-out mutants are excluded from the mutation score, listed in the summary, and saved in the mutation session.
+The command exits with code 1 if any mutant times out.
+.RE
+.sp
 \fB\-\-mutation\-diff\fR \fImode\fR
 .RS 4
 Limit mutation testing to changed lines in the selected diff scope.
@@ -651,6 +666,8 @@ include\-tests = true
 include\-wrappers = true
 
 [test.mutation]
+# Available since trunk: timeout
+timeout = 60
 diff = "branch"
 diff\-ref = "origin/main"
 mutation\-levels = ["critical", "major"]

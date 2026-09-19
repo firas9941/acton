@@ -1,0 +1,59 @@
+[
+  {
+    "contract_id": "main",
+    "event": "session_started",
+    "selected_ids": [
+      2,
+      4
+    ],
+    "session_id": "cascade-timeout",
+    "source_path": "contracts/main.tolk"
+  },
+  {
+    "event": "mutation_completed",
+    "record": {
+      "code_context": "    22 │ \n    23 │     st.cursor += 1;\n    24 │     st.save();\n    25 │ \n    26 │     if (st.cursor < 3) {\n",
+      "column": 5,
+      "id": 2,
+      "line": 24,
+      "rule_description": "Remove storage save() method calls",
+      "rule_explanation": "This storage save operation is not covered by tests. Without this call, data changes won't be persisted to storage.",
+      "rule_group": "storage",
+      "rule_level": "critical",
+      "rule_name": "remove_storage_save_call",
+      "source_path": "contracts/main.tolk",
+      "status": "timed_out"
+    },
+    "session_id": "cascade-timeout"
+  },
+  {
+    "event": "mutation_completed",
+    "record": {
+      "code_context": "    24 │     st.save();\n    25 │ \n    26 │     if (st.cursor < 3) {\n       │         false\n    27 │         createMessage({\n    28 │             bounce: false,\n",
+      "column": 9,
+      "id": 4,
+      "line": 26,
+      "rule_description": "Replace if condition with false",
+      "rule_explanation": "The conditional logic is not fully covered. Forcing the condition to false did not affect test results.",
+      "rule_group": "control-flow",
+      "rule_level": "critical",
+      "rule_name": "replace_if_condition_with_false",
+      "source_path": "contracts/main.tolk",
+      "status": "killed"
+    },
+    "session_id": "cascade-timeout"
+  },
+  {
+    "compile_errors": 0,
+    "event": "session_finished",
+    "exit_code": 1,
+    "killed": 1,
+    "minimum_percent": null,
+    "mutation_score": 100.0,
+    "session_id": "cascade-timeout",
+    "survived": 0,
+    "threshold_failed": false,
+    "timed_out": 1,
+    "total_mutants": 2
+  }
+]

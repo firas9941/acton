@@ -1,0 +1,27 @@
+Mutation Testing
+────────────────────────────────────────────────────────────
+Session:  cascade-timeout
+Contract: main
+Source:   contracts/main.tolk
+Levels:   critical
+IDs:      2, 4
+Files:    1
+Mutants:  2
+
+  ◉ Mutation 2/4 contracts/main[LINE] Remove storage save() method calls TIMED OUT
+  ◉ Mutation 4/4 contracts/main[LINE] Replace if condition with false KILLED
+
+    Total mutants        2
+  ✓ Killed               1
+  ✗ Survived             0
+  ! Compile errors       0
+  ! Timed out            1
+
+Timed-out mutants are excluded from the mutation score (timeout: 2 seconds)
+
+  ◆ Mutation Score       100.0%
+
+Timed-out Mutants
+  ◉ Mutation 2/4 contracts/main[LINE] Remove storage save() method calls TIMED OUT
+
+Increase --mutation-timeout to allow more time for each mutant
