@@ -15,7 +15,7 @@ COPY xtask /build/xtask
 COPY apps/actonscan-backend/Cargo.toml apps/actonscan-backend/Cargo.lock apps/actonscan-backend/rust-toolchain.toml ./
 COPY apps/actonscan-backend/src ./src
 
-RUN cargo build --release --locked --bin actonscan-backend
+RUN cargo build --release --locked --bin actonscan-backend --target-dir /build/target
 
 FROM debian:bookworm-slim AS runtime
 ARG BUILD_VERSION=dev

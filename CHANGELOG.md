@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Actonscan
+
+- Fix Docker image builds for the Actonscan backend.
+
 ### Testing
 
 - Mutation testing limits each mutant to 60 seconds by default, including compilation and tests.
