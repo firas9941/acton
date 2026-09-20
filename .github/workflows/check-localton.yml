@@ -6,13 +6,27 @@ on:
       - master
     paths:
       - ".github/workflows/check-localton.yml"
+      - "Cargo.toml"
+      - "Cargo.lock"
       - "apps/localton/**"
+      - "crates/ton-fullnode-master/**"
+      - "crates/ton-hardfork/**"
+      - "crates/ton-indexer-core/**"
+      - "crates/ton-indexer-liteserver/**"
+      - "crates/ton-liteapi/**"
   push:
     branches:
       - master
     paths:
       - ".github/workflows/check-localton.yml"
+      - "Cargo.toml"
+      - "Cargo.lock"
       - "apps/localton/**"
+      - "crates/ton-fullnode-master/**"
+      - "crates/ton-hardfork/**"
+      - "crates/ton-indexer-core/**"
+      - "crates/ton-indexer-liteserver/**"
+      - "crates/ton-liteapi/**"
   workflow_dispatch:
 
 concurrency:

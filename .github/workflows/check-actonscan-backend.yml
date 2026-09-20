@@ -9,8 +9,13 @@ on:
       - "Cargo.toml"
       - "Cargo.lock"
       - "apps/actonscan-backend/**"
+      - "crates/ton-fullnode-master/**"
       - "crates/ton-indexer-core/**"
       - "crates/ton-indexer-liteserver/**"
+      - "crates/ton-indexer-p2p/**"
+      - "crates/ton-liteapi/**"
+      - "crates/ton-p2p/**"
+      - "crates/tvm-ffi/**"
   push:
     branches:
       - master
@@ -19,8 +24,13 @@ on:
       - "Cargo.toml"
       - "Cargo.lock"
       - "apps/actonscan-backend/**"
+      - "crates/ton-fullnode-master/**"
       - "crates/ton-indexer-core/**"
       - "crates/ton-indexer-liteserver/**"
+      - "crates/ton-indexer-p2p/**"
+      - "crates/ton-liteapi/**"
+      - "crates/ton-p2p/**"
+      - "crates/tvm-ffi/**"
   workflow_dispatch:
 
 concurrency:
