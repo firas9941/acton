@@ -590,7 +590,10 @@ async fn robots_txt_disallows_crawling() {
     let body = to_bytes(response.into_body(), usize::MAX)
         .await
         .expect("robots.txt response body should be readable");
-    assert_eq!(body.as_ref(), b"User-agent: *\nDisallow: /\n");
+    assert_eq!(
+        body.as_ref(),
+        b"User-agent: meta-externalagent\nDisallow: /\n\nUser-agent: *\nDisallow: /\n"
+    );
 }
 
 #[tokio::test]
