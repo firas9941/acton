@@ -275,7 +275,7 @@
   font-weight: var(--acton-font-weight-normal);
   line-height: 1.45;
   overflow-wrap: anywhere;
-  user-select: all;
+  user-select: text;
 }
 
 .addressActions {
