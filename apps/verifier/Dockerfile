@@ -22,6 +22,7 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 COPY apps/verifier/Cargo.toml apps/verifier/Cargo.lock apps/verifier/rust-toolchain.toml apps/verifier/build.rs ./
+COPY apps/verifier/assets ./assets
 COPY apps/verifier/src ./src
 COPY apps/verifier/github-app-credential ./github-app-credential
 COPY --from=frontend-builder /workspace/packages/verifier-ui/dist /build/packages/verifier-ui/dist

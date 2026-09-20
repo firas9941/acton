@@ -11,6 +11,7 @@ apps/verifier/*
 !apps/verifier/Cargo.lock
 !apps/verifier/rust-toolchain.toml
 !apps/verifier/build.rs
+!apps/verifier/assets/
 !apps/verifier/src/
 !apps/verifier/github-app-credential/
 !apps/verifier/scripts/
