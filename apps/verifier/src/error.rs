@@ -287,11 +287,13 @@ impl IntoResponse for ApiError {
             code_hash_matches,
         } = self;
         let (message, code_hash_matches) = if expose_message {
-            tracing::warn!(
-                status = %status,
-                error = %message,
-                "verifier operation rejected"
-            );
+            if status != StatusCode::NOT_FOUND {
+                tracing::warn!(
+                    status = %status,
+                    error = %message,
+                    "verifier operation rejected"
+                );
+            }
             (message, code_hash_matches)
         } else {
             tracing::error!(
@@ -605,5 +607,22 @@ mod tests {
         assert!(content.contains("402 Payment Required"), "{content}");
         assert!(content.contains(message), "{content}");
         assert!(content.contains("verifier operation rejected"), "{content}");
+    }
+
+    #[tokio::test]
+    async fn not_found_errors_are_not_written_to_application_log() {
+        let logs = LogBuffer::default();
+        let subscriber = tracing_subscriber::fmt()
+            .with_ansi(false)
+            .without_time()
+            .with_writer(logs.clone())
+            .finish();
+
+        let response = tracing::subscriber::with_default(subscriber, || {
+            ApiError::not_found("verified source was not found".to_owned()).into_response()
+        });
+
+        assert_eq!(response.status(), StatusCode::NOT_FOUND);
+        assert!(logs.content().is_empty());
     }
 }
