@@ -287,6 +287,11 @@ impl IntoResponse for ApiError {
             code_hash_matches,
         } = self;
         let (message, code_hash_matches) = if expose_message {
+            tracing::warn!(
+                status = %status,
+                error = %message,
+                "verifier operation rejected"
+            );
             (message, code_hash_matches)
         } else {
             tracing::error!(
@@ -578,5 +583,27 @@ mod tests {
         let body = response_body(response).await;
         assert!(!body.contains(secret));
         assert!(logs.content().contains(secret));
+    }
+
+    #[tokio::test]
+    async fn exposed_error_details_are_written_to_application_log() {
+        let logs = LogBuffer::default();
+        let subscriber = tracing_subscriber::fmt()
+            .with_ansi(false)
+            .without_time()
+            .with_writer(logs.clone())
+            .finish();
+        let message = "payment_not_found: transaction was not found";
+
+        let response = tracing::subscriber::with_default(subscriber, || {
+            ApiError::payment_required(message.to_owned()).into_response()
+        });
+
+        assert_eq!(response.status(), StatusCode::PAYMENT_REQUIRED);
+        let content = logs.content();
+        assert!(content.contains("WARN"), "{content}");
+        assert!(content.contains("402 Payment Required"), "{content}");
+        assert!(content.contains(message), "{content}");
+        assert!(content.contains("verifier operation rejected"), "{content}");
     }
 }
