@@ -145,7 +145,7 @@ fn accepts_supported_authentication_modes() {
         concat!(
             "3\n",
             "credential.helper=\n",
-            "credential.helper=!/usr/local/bin/verifier-github-app-credential\n",
+            "credential.helper=!/usr/local/bin/github-app-credential\n",
             "credential.useHttpPath=true\n",
             "0\n",
         )

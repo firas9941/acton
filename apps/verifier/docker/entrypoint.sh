@@ -126,7 +126,7 @@ configure_git_auth() {
             export GIT_CONFIG_KEY_0=credential.helper
             export GIT_CONFIG_VALUE_0=
             export GIT_CONFIG_KEY_1=credential.helper
-            export GIT_CONFIG_VALUE_1="!/usr/local/bin/verifier-github-app-credential"
+            export GIT_CONFIG_VALUE_1="!/usr/local/bin/github-app-credential"
             export GIT_CONFIG_KEY_2=credential.useHttpPath
             export GIT_CONFIG_VALUE_2=true
             export GIT_TERMINAL_PROMPT=0

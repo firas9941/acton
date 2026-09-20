@@ -11,8 +11,8 @@ repository = { workspace = true }
 license = { workspace = true }
 
 [[bin]]
-name = "verifier-github-app-credential"
-path = "verifier-github-app-credential/main.rs"
+name = "github-app-credential"
+path = "github-app-credential/main.rs"
 
 [workspace]
 

@@ -23,7 +23,7 @@ RUN apt-get update \
 
 COPY apps/verifier/Cargo.toml apps/verifier/Cargo.lock apps/verifier/rust-toolchain.toml apps/verifier/build.rs ./
 COPY apps/verifier/src ./src
-COPY apps/verifier/verifier-github-app-credential ./verifier-github-app-credential
+COPY apps/verifier/github-app-credential ./github-app-credential
 COPY --from=frontend-builder /workspace/packages/verifier-ui/dist /build/packages/verifier-ui/dist
 
 RUN VERIFIER_GIT_HASH="${VCS_REF}" cargo build --release --locked --bins
@@ -64,7 +64,7 @@ RUN groupadd --gid 10002 verifier \
 WORKDIR /app
 
 COPY --from=rust-builder /build/apps/verifier/target/release/verifier /usr/local/bin/verifier
-COPY --from=rust-builder /build/apps/verifier/target/release/verifier-github-app-credential /usr/local/bin/verifier-github-app-credential
+COPY --from=rust-builder /build/apps/verifier/target/release/github-app-credential /usr/local/bin/github-app-credential
 COPY --from=yq /usr/bin/yq /usr/local/bin/yq
 COPY --chown=verifier:verifier --from=compiler-worker /compiler-worker /app/compiler-worker
 COPY apps/verifier/docker/entrypoint.sh /usr/local/bin/verifier-entrypoint

@@ -12,7 +12,7 @@ apps/verifier/*
 !apps/verifier/rust-toolchain.toml
 !apps/verifier/build.rs
 !apps/verifier/src/
-!apps/verifier/verifier-github-app-credential/
+!apps/verifier/github-app-credential/
 !apps/verifier/scripts/
 apps/verifier/scripts/*
 !apps/verifier/scripts/prepare-source-repository.sh
