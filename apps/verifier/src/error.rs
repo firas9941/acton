@@ -305,7 +305,7 @@ impl IntoResponse for ApiError {
             code_hash,
         } = self;
         let (message, code_hash_matches) = if expose_message {
-            if status != StatusCode::NOT_FOUND {
+            if !matches!(status, StatusCode::NOT_FOUND | StatusCode::CONFLICT) {
                 tracing::warn!(
                     status = %status,
                     code_hash = %code_hash.as_deref().unwrap_or("<unknown>"),
@@ -538,12 +538,19 @@ mod tests {
 
     #[tokio::test]
     async fn address_found_on_both_networks_is_an_exposed_conflict() {
+        let logs = LogBuffer::default();
+        let subscriber = tracing_subscriber::fmt()
+            .with_ansi(false)
+            .without_time()
+            .with_writer(logs.clone())
+            .finish();
         let error = VerificationError::from(BlockchainError::AddressFoundOnBothNetworks {
             address: "EQduplicate".to_owned(),
             mainnet_code_hash: "a".repeat(64),
             testnet_code_hash: "b".repeat(64),
         });
-        let response = ApiError::from(error).into_response();
+        let response =
+            tracing::subscriber::with_default(subscriber, || ApiError::from(error).into_response());
 
         assert_eq!(response.status(), StatusCode::CONFLICT);
         assert_eq!(
@@ -554,6 +561,7 @@ mod tests {
                 "b".repeat(64),
             )
         );
+        assert!(logs.content().is_empty());
     }
 
     #[tokio::test]
@@ -643,6 +651,24 @@ mod tests {
         });
 
         assert_eq!(response.status(), StatusCode::NOT_FOUND);
+        assert!(logs.content().is_empty());
+    }
+
+    #[tokio::test]
+    async fn conflict_errors_are_not_written_to_application_log() {
+        let logs = LogBuffer::default();
+        let subscriber = tracing_subscriber::fmt()
+            .with_ansi(false)
+            .without_time()
+            .with_writer(logs.clone())
+            .finish();
+
+        let response = tracing::subscriber::with_default(subscriber, || {
+            ApiError::conflict("payment_used: transaction has already been used".to_owned())
+                .into_response()
+        });
+
+        assert_eq!(response.status(), StatusCode::CONFLICT);
         assert!(logs.content().is_empty());
     }
 }
