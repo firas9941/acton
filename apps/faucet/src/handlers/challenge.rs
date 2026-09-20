@@ -124,7 +124,12 @@ pub(super) async fn create_challenge(
     let wallet_subject = antifraud_subject::wallet(&address);
     let client_subject = antifraud_subject::client_ip(client_ip.ip());
     let device_subject = antifraud_subject::device_uid(&client.device_uid);
-    check_blacklist(&state, &[&wallet_subject, &client_subject, &device_subject]).await?;
+    check_blacklist(
+        &state,
+        &address,
+        &[&wallet_subject, &client_subject, &device_subject],
+    )
+    .await?;
 
     let identity = auth::optional_identity(&state, &headers, &client)
         .await
@@ -143,9 +148,18 @@ pub(super) async fn create_challenge(
                 )
             })?;
 
-        if state.antifraud.check_wallet_balance(balance).is_err() {
+        if let Err(err) = state.antifraud.check_wallet_balance(balance) {
+            warn!(
+                module = AntifraudModule::WalletBalance.name(),
+                reason = "wallet-balance-exceeds-limit",
+                address = %address,
+                wallet_balance_nanocoins = balance,
+                max_wallet_balance_nanocoins = state.config.antifraud.wallet_balance.max_wallet_balance,
+                error = ?err,
+                "Antifraud module triggered"
+            );
             state
-                .record_antifraud_trigger(AntifraudModule::WalletBalance)
+                .record_antifraud_trigger(AntifraudModule::WalletBalance, &address)
                 .await;
             return Err(response_error(
                 StatusCode::FORBIDDEN,
@@ -210,16 +224,20 @@ pub(super) async fn create_challenge(
 
 async fn check_blacklist(
     state: &AppState,
+    address: &str,
     subjects: &[&str],
 ) -> Result<(), (StatusCode, Json<ErrorResponse>)> {
     match state.blacklist.check(subjects).await {
         Ok(Some(entry)) => {
             warn!(
+                module = "blacklist",
+                reason = "subject-blacklisted",
+                address,
                 source = entry.source.as_str(),
-                subject = %entry.subject,
-                reason = %entry.reason,
+                matched_subject = %entry.subject,
+                blacklist_reason = %entry.reason,
                 expires_at = ?entry.expires_at,
-                "Challenge blocked by antifraud blacklist"
+                "Antifraud module triggered"
             );
             Err(response_error(
                 StatusCode::FORBIDDEN,

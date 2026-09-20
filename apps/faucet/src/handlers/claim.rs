@@ -155,28 +155,31 @@ pub(super) async fn create_claim(
         return Err(bad_request("Invalid PoW solution"));
     }
 
-    check_successful_claim_window(&state, &address, max_requests).await?;
+    check_successful_claim_window(&state, &address, &address, max_requests).await?;
     let client_window_subject = antifraud_subject::client_ip(client_ip.ip());
     let device_window_subject = antifraud_subject::device_uid(&client.device_uid);
     if let Some(github_user_id) = github_user_id {
         check_successful_claim_window(
             &state,
+            &address,
             &antifraud_subject::github(github_user_id),
             max_requests,
         )
         .await?;
     }
-    check_successful_claim_window(&state, &device_window_subject, max_requests).await?;
+    check_successful_claim_window(&state, &address, &device_window_subject, max_requests).await?;
     if tier == FaucetTier::Guest {
         check_successful_claim_window(
             &state,
+            &address,
             &client_window_subject,
             state.config.antifraud.successful_claim_window.max_requests,
         )
         .await?;
     }
 
-    let subnet_amount_window_subject = check_subnet_amount_window(&state, client_ip.ip()).await?;
+    let subnet_amount_window_subject =
+        check_subnet_amount_window(&state, &address, client_ip.ip()).await?;
 
     let consumed_context = state
         .valkey
@@ -219,6 +222,7 @@ pub(super) async fn create_claim(
 
 async fn check_subnet_amount_window(
     state: &AppState,
+    address: &str,
     client_ip: std::net::IpAddr,
 ) -> Result<Option<String>, (StatusCode, Json<ErrorResponse>)> {
     let Some(window) = state.antifraud.subnet_amount_window() else {
@@ -228,16 +232,19 @@ async fn check_subnet_amount_window(
     let subject = antifraud_subject::client_subnet(client_ip, window.ipv4_prefix_length);
 
     if let Err(err) = state.antifraud.check_subnet_amount_window_transfer(amount) {
-        state
-            .record_antifraud_trigger(AntifraudModule::SubnetAmountWindow)
-            .await;
         error!(
+            module = AntifraudModule::SubnetAmountWindow.name(),
+            reason = "claim-amount-exceeds-window-limit",
+            address,
             subject,
             amount,
             max_amount = window.max_amount,
             error = ?err,
-            "Claim amount exceeds subnet amount window limit"
+            "Antifraud module triggered"
         );
+        state
+            .record_antifraud_trigger(AntifraudModule::SubnetAmountWindow, address)
+            .await;
         return Err(response_error(
             StatusCode::TOO_MANY_REQUESTS,
             "Subnet amount limit exceeded",
@@ -272,18 +279,21 @@ async fn check_subnet_amount_window(
             window_seconds,
             retry_after_ms,
         }) => {
-            state
-                .record_antifraud_trigger(AntifraudModule::SubnetAmountWindow)
-                .await;
             warn!(
+                module = AntifraudModule::SubnetAmountWindow.name(),
+                reason = "subnet-amount-window-limit-reached",
+                address,
                 subject,
                 current_sent_nanocoins = current,
                 attempted_amount = attempted,
                 max_amount = max,
                 window_seconds,
                 retry_after_ms,
-                "Subnet amount sliding window limit reached"
+                "Antifraud module triggered"
             );
+            state
+                .record_antifraud_trigger(AntifraudModule::SubnetAmountWindow, address)
+                .await;
             Err(response_error(
                 StatusCode::TOO_MANY_REQUESTS,
                 "Subnet amount limit exceeded",
@@ -306,6 +316,7 @@ async fn check_subnet_amount_window(
 // TODO: сделать по другому
 async fn check_successful_claim_window(
     state: &AppState,
+    address: &str,
     subject: &str,
     max_requests: u32,
 ) -> ClaimLimitResult {
@@ -338,17 +349,20 @@ async fn check_successful_claim_window(
             window_seconds,
             retry_after_ms,
         }) => {
-            state
-                .record_antifraud_trigger(AntifraudModule::SuccessfulClaimWindow)
-                .await;
             warn!(
+                module = AntifraudModule::SuccessfulClaimWindow.name(),
+                reason = "successful-claim-window-limit-reached",
+                address,
                 subject,
                 successful_claims = current,
                 max_requests = max,
                 window_seconds,
                 retry_after_ms,
-                "Successful claim window limit reached"
+                "Antifraud module triggered"
             );
+            state
+                .record_antifraud_trigger(AntifraudModule::SuccessfulClaimWindow, address)
+                .await;
             Err(response_error(
                 StatusCode::TOO_MANY_REQUESTS,
                 "Successful claim limit exceeded",

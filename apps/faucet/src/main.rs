@@ -314,21 +314,14 @@ pub(crate) struct AppState {
 }
 
 impl AppState {
-    pub(crate) async fn record_antifraud_trigger(&self, module: AntifraudModule) {
-        match self.valkey.increment_antifraud_trigger_count(module).await {
-            Ok(trigger_count) => {
-                info!(
-                    module = module.name(),
-                    trigger_count, "Recorded antifraud trigger in Valkey"
-                );
-            }
-            Err(err) => {
-                warn!(
-                    module = module.name(),
-                    error = %err,
-                    "Failed to record antifraud trigger in Valkey"
-                );
-            }
+    pub(crate) async fn record_antifraud_trigger(&self, module: AntifraudModule, address: &str) {
+        if let Err(err) = self.valkey.increment_antifraud_trigger_count(module).await {
+            warn!(
+                module = module.name(),
+                address,
+                error = %err,
+                "Failed to record antifraud trigger in Valkey"
+            );
         }
     }
 }
@@ -435,17 +428,19 @@ async fn can_process_subnet_amount_window(
     };
 
     if let Err(err) = state.antifraud.check_subnet_amount_window_transfer(amount) {
-        state
-            .record_antifraud_trigger(AntifraudModule::SubnetAmountWindow)
-            .await;
         error!(
+            module = AntifraudModule::SubnetAmountWindow.name(),
+            reason = "claim-amount-exceeds-window-limit",
             address = %task.address,
             subject,
             amount,
             max_amount = window.max_amount,
             error = ?err,
-            "Claim amount exceeds subnet amount window limit"
+            "Antifraud module triggered"
         );
+        state
+            .record_antifraud_trigger(AntifraudModule::SubnetAmountWindow, &task.address)
+            .await;
         return Ok(false);
     }
 
@@ -478,10 +473,9 @@ async fn can_process_subnet_amount_window(
             window_seconds,
             retry_after_ms,
         } => {
-            state
-                .record_antifraud_trigger(AntifraudModule::SubnetAmountWindow)
-                .await;
             warn!(
+                module = AntifraudModule::SubnetAmountWindow.name(),
+                reason = "subnet-amount-window-limit-reached",
                 address = %task.address,
                 subject,
                 current_sent_nanocoins = current,
@@ -489,8 +483,11 @@ async fn can_process_subnet_amount_window(
                 max_amount = max,
                 window_seconds,
                 retry_after_ms,
-                "Subnet amount sliding window limit reached, skipping queued claim"
+                "Antifraud module triggered"
             );
+            state
+                .record_antifraud_trigger(AntifraudModule::SubnetAmountWindow, &task.address)
+                .await;
             Ok(false)
         }
     }
@@ -635,18 +632,20 @@ async fn claim_window_allows(
             window_seconds,
             retry_after_ms,
         } => {
-            state
-                .record_antifraud_trigger(AntifraudModule::SuccessfulClaimWindow)
-                .await;
             warn!(
+                module = AntifraudModule::SuccessfulClaimWindow.name(),
+                reason = "successful-claim-window-limit-reached",
                 address = %address,
                 subject,
                 successful_claims = current,
                 max_requests = max,
                 window_seconds,
                 retry_after_ms,
-                "Successful claim window limit reached, skipping queued claim"
+                "Antifraud module triggered"
             );
+            state
+                .record_antifraud_trigger(AntifraudModule::SuccessfulClaimWindow, address)
+                .await;
             Ok(false)
         }
     }
@@ -747,16 +746,18 @@ async fn wait_for_sent_amount_window(
     };
 
     if let Err(err) = state.antifraud.check_sent_amount_window_transfer(amount) {
-        state
-            .record_antifraud_trigger(AntifraudModule::SentAmountWindow)
-            .await;
         error!(
+            module = AntifraudModule::SentAmountWindow.name(),
+            reason = "claim-amount-exceeds-window-limit",
             address = %address,
             amount,
             max_amount = window.max_amount,
             error = ?err,
-            "Claim amount exceeds sent amount window limit"
+            "Antifraud module triggered"
         );
+        state
+            .record_antifraud_trigger(AntifraudModule::SentAmountWindow, address)
+            .await;
         anyhow::bail!("Claim amount exceeds sent amount window limit: {err:?}");
     }
 
@@ -786,20 +787,22 @@ async fn wait_for_sent_amount_window(
                 retry_after_ms,
             } => {
                 if !trigger_recorded {
+                    warn!(
+                        module = AntifraudModule::SentAmountWindow.name(),
+                        reason = "sent-amount-window-limit-reached",
+                        address = %address,
+                        current_sent_nanocoins = current,
+                        attempted_amount = attempted,
+                        max_amount = max,
+                        window_seconds,
+                        retry_after_ms,
+                        "Antifraud module triggered"
+                    );
                     state
-                        .record_antifraud_trigger(AntifraudModule::SentAmountWindow)
+                        .record_antifraud_trigger(AntifraudModule::SentAmountWindow, address)
                         .await;
                     trigger_recorded = true;
                 }
-                warn!(
-                    address = %address,
-                    current_sent_nanocoins = current,
-                    attempted_amount = attempted,
-                    max_amount = max,
-                    window_seconds,
-                    retry_after_ms,
-                    "Sent amount sliding window limit reached, waiting"
-                );
                 tokio::time::sleep(StdDuration::from_millis(retry_after_ms.max(1))).await;
             }
         }
