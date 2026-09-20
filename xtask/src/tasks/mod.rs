@@ -9,5 +9,6 @@ pub(crate) mod retag;
 pub(crate) mod schema;
 pub(crate) mod sync_artifacts;
 pub(crate) mod ubicloud_cleanup;
+pub(crate) mod update_abi_catalog;
 pub(crate) mod update_default_config;
 pub(crate) mod update_template_wrappers;

@@ -25,6 +25,7 @@ enum CliCommand {
     Schema(tasks::schema::SchemaArgs),
     SyncArtifacts,
     UbicloudCleanup(tasks::ubicloud_cleanup::UbicloudCleanupArgs),
+    UpdateAbiCatalog,
     UpdateDefaultConfig(tasks::update_default_config::UpdateDefaultConfigArgs),
     UpdateTemplateWrappers,
 }
@@ -44,6 +45,7 @@ fn main() -> Result<()> {
         CliCommand::Schema(args) => tasks::schema::run(args),
         CliCommand::SyncArtifacts => tasks::sync_artifacts::run(),
         CliCommand::UbicloudCleanup(args) => tasks::ubicloud_cleanup::run(args),
+        CliCommand::UpdateAbiCatalog => tasks::update_abi_catalog::run(),
         CliCommand::UpdateDefaultConfig(args) => tasks::update_default_config::run(args),
         CliCommand::UpdateTemplateWrappers => tasks::update_template_wrappers::run(),
     }

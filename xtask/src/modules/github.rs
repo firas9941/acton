@@ -86,6 +86,19 @@ impl Github {
             .map(|_| ())
     }
 
+    pub(crate) fn dispatch_workflow(self, workflow: &str) -> Result<String> {
+        let output = self.command_output(&["workflow", "run", workflow])?;
+        let url = String::from_utf8(output.stdout)
+            .context("workflow dispatch output is not valid UTF-8")?;
+        let url = url.trim();
+
+        if url.is_empty() {
+            bail!("gh did not return a URL for the dispatched workflow run");
+        }
+
+        Ok(url.to_owned())
+    }
+
     pub(crate) fn ensure_release_does_not_exist(self, tag: &str) -> Result<()> {
         let output = Command::new("gh")
             .args(["release", "view", tag])

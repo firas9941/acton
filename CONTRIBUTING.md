@@ -619,6 +619,7 @@ Mostly maintainer-facing tasks:
 - `cargo xtask release`
 - `cargo xtask retag`
 - `cargo xtask dist ...`
+- `cargo xtask update-abi-catalog`
 - `cargo xtask github-cleanup`
 - `cargo xtask ubicloud-cleanup`
 
