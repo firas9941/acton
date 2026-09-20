@@ -359,7 +359,18 @@ impl PaymentVerifier for OnchainPaymentVerifier {
             lt: transaction.lt,
             transaction_time: transaction.timestamp,
         };
-        self.ledger.reserve(&recovered)
+        let claim = self.ledger.reserve(&recovered)?;
+        if claim.claim_version == 1 {
+            tracing::info!(
+                transaction_hash = %recovered.transaction_hash,
+                code_hash = %recovered.code_hash,
+                amount_nano = recovered.amount_nano,
+                payment_address = %self.payment_address,
+                network = %self.network,
+                "new payment found and reserved"
+            );
+        }
+        Ok(claim)
     }
 
     fn finish(
