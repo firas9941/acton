@@ -3,6 +3,7 @@ mod support;
 use axum::http::StatusCode;
 use support::{
     app_state, failing_compiler_app_state, file_part, post_verify_with_user_agent, text_part,
+    timing_out_compiler_app_state_with_payment_outcomes,
 };
 
 const CODE_HASH_ONE: &str = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
@@ -58,22 +59,30 @@ async fn verification_logs_report_outcomes_without_uploading_source_payloads_to_
         valid_verify_parts(),
         "blueprint/0.42.0",
     )
-    .with_subscriber(subscriber)
+    .with_subscriber(subscriber.clone())
     .await;
     assert_eq!(failure.status(), StatusCode::BAD_REQUEST);
+    let (timeout_state, _) = timing_out_compiler_app_state_with_payment_outcomes(20_000);
+    let timeout =
+        post_verify_with_user_agent(timeout_state, valid_verify_parts(), "acton/timeout-test")
+            .with_subscriber(subscriber)
+            .await;
+    assert_eq!(timeout.status(), StatusCode::BAD_GATEWAY);
     let content = std::fs::read_to_string(log.path()).expect("logs");
     assert!(!content.contains("audit-payload-must-not-be-logged"));
     let events: Vec<_> = content
         .lines()
         .filter(|line| line.contains("operation=\"verify\""))
         .collect();
-    assert_eq!(events.len(), 5, "{content}");
+    assert_eq!(events.len(), 7, "{content}");
     for (event, (outcome, user_agent)) in events.iter().zip([
         ("started", "acton/1.2.3"),
         ("match", "acton/1.2.3"),
         ("completed", "acton/1.2.3"),
         ("started", "blueprint/0.42.0"),
         ("failed", "blueprint/0.42.0"),
+        ("started", "acton/timeout-test"),
+        ("failed", "acton/timeout-test"),
     ]) {
         assert!(
             event.contains("operation=\"verify\"") && event.contains(CODE_HASH_ONE),
@@ -90,4 +99,13 @@ async fn verification_logs_report_outcomes_without_uploading_source_payloads_to_
         );
     }
     assert!(events.last().unwrap().contains("duration_ms="));
+    let timeout_error = content
+        .lines()
+        .find(|line| line.contains("compiler worker timed out after 20000 ms"))
+        .expect("compiler timeout should be logged");
+    assert!(timeout_error.contains("502 Bad Gateway"), "{timeout_error}");
+    assert!(
+        timeout_error.contains(&format!("code_hash={CODE_HASH_ONE}")),
+        "{timeout_error}"
+    );
 }

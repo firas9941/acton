@@ -169,7 +169,10 @@ async fn handle_multipart(
     let target = VerificationTarget { address, code_hash };
 
     let resolved_target = state.verification_service().resolve_target(target).await?;
-    let verified_bundle = find_verified_bundle(state, &resolved_target.code_hash).await?;
+    let request_code_hash = resolved_target.code_hash.clone();
+    let verified_bundle = find_verified_bundle(state, &request_code_hash)
+        .await
+        .map_err(|error| error.with_code_hash(&request_code_hash))?;
 
     let has_submitted_payment = !has_valid_api_key
         && tx_hash
@@ -181,7 +184,7 @@ async fn handle_multipart(
     }
 
     if verified_bundle.is_none() && state.read_only() {
-        return Err(ApiError::read_only());
+        return Err(ApiError::read_only().with_code_hash(&request_code_hash));
     }
 
     let payment_claim = if has_valid_api_key {
@@ -189,13 +192,16 @@ async fn handle_multipart(
     } else {
         let tx_hash = non_empty_text(tx_hash).ok_or_else(|| {
             ApiError::payment_required("missing required field: tx_hash".to_owned())
+                .with_code_hash(&request_code_hash)
         })?;
-        let tx_hash = normalize_payment_transaction_hash(&tx_hash)?;
+        let tx_hash = normalize_payment_transaction_hash(&tx_hash)
+            .map_err(|error| error.with_code_hash(&request_code_hash))?;
         Some(
             state
                 .payment_verifier()
-                .claim(&tx_hash, &resolved_target.code_hash)
-                .await?,
+                .claim(&tx_hash, &request_code_hash)
+                .await
+                .map_err(|error| ApiError::from(error).with_code_hash(&request_code_hash))?,
         )
     };
     let payment_tx_hash = payment_claim
@@ -207,9 +213,10 @@ async fn handle_multipart(
         .to_owned();
 
     let task_state = state.clone();
+    let task_code_hash = request_code_hash.clone();
     let task = state.spawn_background_task(async move {
         let started = Instant::now();
-        let target_hash = resolved_target.code_hash.clone();
+        let target_hash = task_code_hash;
         let result = verify_target(
             &task_state,
             resolved_target,
@@ -237,6 +244,7 @@ async fn handle_multipart(
         } else {
             result
         };
+        let result = result.map_err(|error| error.with_code_hash(&target_hash));
 
         tracing::info!(
             operation = "verify",
@@ -250,8 +258,10 @@ async fn handle_multipart(
         result
     });
 
-    task.await
-        .map_err(|error| ApiError::internal(format!("verification task failed: {error}")))?
+    task.await.map_err(|error| {
+        ApiError::internal(format!("verification task failed: {error}"))
+            .with_code_hash(&request_code_hash)
+    })?
 }
 
 #[allow(clippy::too_many_arguments)]

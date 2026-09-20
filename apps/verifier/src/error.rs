@@ -27,6 +27,7 @@ pub struct ApiError {
     public_fallback: &'static str,
     payment_retryable: bool,
     code_hash_matches: Option<Vec<CodeHashMatch>>,
+    code_hash: Option<String>,
 }
 
 impl ApiError {
@@ -38,6 +39,7 @@ impl ApiError {
             public_fallback: INTERNAL_ERROR_MESSAGE,
             payment_retryable: false,
             code_hash_matches: None,
+            code_hash: None,
         }
     }
 
@@ -49,6 +51,7 @@ impl ApiError {
             public_fallback: INTERNAL_ERROR_MESSAGE,
             payment_retryable: false,
             code_hash_matches: None,
+            code_hash: None,
         }
     }
 
@@ -60,6 +63,7 @@ impl ApiError {
             public_fallback: INTERNAL_ERROR_MESSAGE,
             payment_retryable: false,
             code_hash_matches: None,
+            code_hash: None,
         }
     }
 
@@ -75,6 +79,7 @@ impl ApiError {
             public_fallback: RETRYABLE_SOURCE_STORAGE_ERROR,
             payment_retryable: true,
             code_hash_matches: None,
+            code_hash: None,
         }
     }
 
@@ -86,6 +91,7 @@ impl ApiError {
             public_fallback: INTERNAL_ERROR_MESSAGE,
             payment_retryable: false,
             code_hash_matches: None,
+            code_hash: None,
         }
     }
 
@@ -97,6 +103,7 @@ impl ApiError {
             public_fallback: INTERNAL_ERROR_MESSAGE,
             payment_retryable: false,
             code_hash_matches: None,
+            code_hash: None,
         }
     }
 
@@ -108,6 +115,7 @@ impl ApiError {
             public_fallback: INTERNAL_ERROR_MESSAGE,
             payment_retryable: false,
             code_hash_matches: None,
+            code_hash: None,
         }
     }
 
@@ -119,6 +127,7 @@ impl ApiError {
             public_fallback: INTERNAL_ERROR_MESSAGE,
             payment_retryable: false,
             code_hash_matches: None,
+            code_hash: None,
         }
     }
 
@@ -131,6 +140,12 @@ impl ApiError {
         self.payment_retryable
     }
 
+    #[must_use]
+    pub(crate) fn with_code_hash(mut self, code_hash: &str) -> Self {
+        self.code_hash = Some(code_hash.to_owned());
+        self
+    }
+
     pub const fn not_found(message: String) -> Self {
         Self {
             status: StatusCode::NOT_FOUND,
@@ -139,6 +154,7 @@ impl ApiError {
             public_fallback: INTERNAL_ERROR_MESSAGE,
             payment_retryable: false,
             code_hash_matches: None,
+            code_hash: None,
         }
     }
 
@@ -163,6 +179,7 @@ impl ApiError {
                     code_hash: testnet_code_hash,
                 },
             ]),
+            code_hash: None,
         }
     }
 }
@@ -285,11 +302,13 @@ impl IntoResponse for ApiError {
             public_fallback,
             payment_retryable: _,
             code_hash_matches,
+            code_hash,
         } = self;
         let (message, code_hash_matches) = if expose_message {
             if status != StatusCode::NOT_FOUND {
                 tracing::warn!(
                     status = %status,
+                    code_hash = %code_hash.as_deref().unwrap_or("<unknown>"),
                     error = %message,
                     "verifier operation rejected"
                 );
@@ -298,6 +317,7 @@ impl IntoResponse for ApiError {
         } else {
             tracing::error!(
                 status = %status,
+                code_hash = %code_hash.as_deref().unwrap_or("<unknown>"),
                 error = %message,
                 "verifier operation failed"
             );
