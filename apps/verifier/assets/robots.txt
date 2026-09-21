@@ -1,5 +1,11 @@
 User-agent: meta-externalagent
 Disallow: /
 
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: Claude-User
+Allow: /
+
 User-agent: *
 Disallow: /

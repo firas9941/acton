@@ -576,7 +576,7 @@ async fn read_only_mode_keeps_already_verified_contracts_available() {
 }
 
 #[tokio::test]
-async fn robots_txt_disallows_crawling() {
+async fn robots_txt_configures_crawler_access() {
     let response = get(app_state(&[], CODE_HASH_ONE), "/robots.txt").await;
 
     assert_eq!(response.status(), StatusCode::OK);
@@ -592,7 +592,7 @@ async fn robots_txt_disallows_crawling() {
         .expect("robots.txt response body should be readable");
     assert_eq!(
         body.as_ref(),
-        b"User-agent: meta-externalagent\nDisallow: /\n\nUser-agent: *\nDisallow: /\n"
+        b"User-agent: meta-externalagent\nDisallow: /\n\nUser-agent: ChatGPT-User\nAllow: /\n\nUser-agent: Claude-User\nAllow: /\n\nUser-agent: *\nDisallow: /\n"
     );
 }
 
