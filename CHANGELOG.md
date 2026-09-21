@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Rust libraries
+
+- Add the MIT-licensed `toncenter` crate with typed TON Center v2 requests and responses,
+  field documentation, generated OpenAPI, and opt-in live contract tests.
+
 ### Actonscan
 
 - Fix Docker image builds for the Actonscan backend.

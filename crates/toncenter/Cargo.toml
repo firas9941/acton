@@ -1,0 +1,42 @@
+[package]
+name = "toncenter"
+version = "2.1.15"
+edition = "2024"
+authors = ["TON Core"]
+license = "MIT"
+description = "Transport-independent TON Center API types and OpenAPI definitions"
+repository = "https://github.com/ton-blockchain/acton"
+documentation = "https://docs.rs/toncenter"
+readme = "README.md"
+keywords = ["ton", "toncenter", "blockchain", "openapi"]
+categories = ["api-bindings", "cryptography::cryptocurrencies"]
+include = ["src/**", "examples/**", "tests/**", "openapi.json", "README.md", "LICENSE-*", "Cargo.toml"]
+
+[features]
+default = []
+openapi = ["dep:utoipa"]
+live-tests = ["openapi"]
+
+[dependencies]
+serde = { version = "1.0.228", features = ["derive"] }
+serde_json = "1.0.145"
+utoipa = { version = "5.5", optional = true }
+
+[dev-dependencies]
+expect-test = "1.5.0"
+jsonschema = { version = "0.45.0", default-features = false }
+reqwest = { version = "0.12", default-features = false, features = ["blocking", "json", "rustls-tls-native-roots"] }
+
+[[example]]
+name = "openapi"
+required-features = ["openapi"]
+
+[[test]]
+name = "live"
+required-features = ["live-tests"]
+
+[package.metadata.docs.rs]
+features = ["openapi"]
+
+[lints]
+workspace = true

@@ -1,0 +1,3216 @@
+{
+  "AccountAddress": [
+    {
+      "@type": "accountAddress",
+      "account_address": "sample"
+    }
+  ],
+  "AccountState": [
+    {
+      "@type": "raw.accountState",
+      "code": "sample",
+      "data": "sample",
+      "frozen_hash": "sample"
+    },
+    {
+      "@type": "wallet.v3.accountState",
+      "seqno": 123,
+      "wallet_id": 123
+    },
+    {
+      "@type": "wallet.v4.accountState",
+      "seqno": 123,
+      "wallet_id": 123
+    },
+    {
+      "@type": "wallet.highload.v1.accountState",
+      "seqno": 123,
+      "wallet_id": 123
+    },
+    {
+      "@type": "wallet.highload.v2.accountState",
+      "wallet_id": 123
+    },
+    {
+      "@type": "dns.accountState",
+      "wallet_id": 123
+    },
+    {
+      "@type": "rwallet.accountState",
+      "config": {
+        "@type": "rwallet.config",
+        "limits": [
+          {
+            "@type": "rwallet.limit",
+            "seconds": 123,
+            "value": 123
+          }
+        ],
+        "start_at": 123
+      },
+      "seqno": 123,
+      "unlocked_balance": 123,
+      "wallet_id": 123
+    },
+    {
+      "@type": "pchan.accountState",
+      "config": {
+        "@type": "pchan.config",
+        "alice_address": {
+          "@type": "accountAddress",
+          "account_address": "sample"
+        },
+        "alice_public_key": "sample",
+        "bob_address": {
+          "@type": "accountAddress",
+          "account_address": "sample"
+        },
+        "bob_public_key": "sample",
+        "channel_id": 123,
+        "close_timeout": 123,
+        "init_timeout": 123
+      },
+      "description": "sample",
+      "state": {
+        "@type": "pchan.stateInit",
+        "A": 123,
+        "B": 123,
+        "expire_at": 123,
+        "min_A": 123,
+        "min_B": 123,
+        "signed_A": true,
+        "signed_B": true
+      }
+    },
+    {
+      "@type": "uninited.accountState",
+      "frozen_hash": "sample"
+    }
+  ],
+  "AccountStateDns": [
+    {
+      "@type": "dns.accountState",
+      "wallet_id": 123
+    }
+  ],
+  "AccountStateEnum": [
+    "uninitialized",
+    "active",
+    "frozen"
+  ],
+  "AccountStatePChan": [
+    {
+      "@type": "pchan.accountState",
+      "config": {
+        "@type": "pchan.config",
+        "alice_address": {
+          "@type": "accountAddress",
+          "account_address": "sample"
+        },
+        "alice_public_key": "sample",
+        "bob_address": {
+          "@type": "accountAddress",
+          "account_address": "sample"
+        },
+        "bob_public_key": "sample",
+        "channel_id": 123,
+        "close_timeout": 123,
+        "init_timeout": 123
+      },
+      "description": "sample",
+      "state": {
+        "@type": "pchan.stateInit",
+        "A": 123,
+        "B": 123,
+        "expire_at": 123,
+        "min_A": 123,
+        "min_B": 123,
+        "signed_A": true,
+        "signed_B": true
+      }
+    }
+  ],
+  "AccountStateRWallet": [
+    {
+      "@type": "rwallet.accountState",
+      "config": {
+        "@type": "rwallet.config",
+        "limits": [
+          {
+            "@type": "rwallet.limit",
+            "seconds": 123,
+            "value": 123
+          }
+        ],
+        "start_at": 123
+      },
+      "seqno": 123,
+      "unlocked_balance": 123,
+      "wallet_id": 123
+    }
+  ],
+  "AccountStateRaw": [
+    {
+      "@type": "raw.accountState",
+      "code": "sample",
+      "data": "sample",
+      "frozen_hash": "sample"
+    }
+  ],
+  "AccountStateUninited": [
+    {
+      "@type": "uninited.accountState",
+      "frozen_hash": "sample"
+    }
+  ],
+  "AccountStateWalletHighloadV1": [
+    {
+      "@type": "wallet.highload.v1.accountState",
+      "seqno": 123,
+      "wallet_id": 123
+    }
+  ],
+  "AccountStateWalletHighloadV2": [
+    {
+      "@type": "wallet.highload.v2.accountState",
+      "wallet_id": 123
+    }
+  ],
+  "AccountStateWalletV3": [
+    {
+      "@type": "wallet.v3.accountState",
+      "seqno": 123,
+      "wallet_id": 123
+    }
+  ],
+  "AccountStateWalletV4": [
+    {
+      "@type": "wallet.v4.accountState",
+      "seqno": 123,
+      "wallet_id": 123
+    }
+  ],
+  "AddressBalance": [
+    "9223372036854775808"
+  ],
+  "AddressBalanceRequest": [
+    {
+      "address": "sample"
+    },
+    {
+      "address": "sample",
+      "seqno": "sample"
+    }
+  ],
+  "AddressInformation": [
+    {
+      "@type": "raw.fullAccountState",
+      "balance": "9223372036854775808",
+      "block_id": {
+        "@type": "ton.blockIdExt",
+        "file_hash": "sample",
+        "root_hash": "sample",
+        "seqno": 123,
+        "shard": "sample",
+        "workchain": 123
+      },
+      "code": "sample",
+      "data": "sample",
+      "extra_currencies": [
+        {
+          "@type": "extraCurrency",
+          "amount": "9223372036854775808",
+          "id": 123
+        }
+      ],
+      "frozen_hash": "sample",
+      "last_transaction_id": {
+        "@type": "internal.transactionId",
+        "hash": "sample",
+        "lt": "sample"
+      },
+      "state": "uninitialized",
+      "sync_utime": 123
+    },
+    {
+      "@type": "raw.fullAccountState",
+      "balance": "9223372036854775808",
+      "block_id": {
+        "@type": "ton.blockIdExt",
+        "file_hash": "sample",
+        "root_hash": "sample",
+        "seqno": 123,
+        "shard": "sample",
+        "workchain": 123
+      },
+      "code": "sample",
+      "data": "sample",
+      "extra_currencies": [
+        {
+          "@type": "extraCurrency",
+          "amount": "9223372036854775808",
+          "id": 123
+        }
+      ],
+      "frozen_hash": "sample",
+      "last_transaction_id": {
+        "@type": "internal.transactionId",
+        "hash": "sample",
+        "lt": "sample"
+      },
+      "state": "uninitialized",
+      "suspended": true,
+      "sync_utime": 123
+    }
+  ],
+  "AddressInformationRequest": [
+    {
+      "address": "sample"
+    },
+    {
+      "address": "sample",
+      "seqno": "sample"
+    }
+  ],
+  "AddressRequest": [
+    {
+      "address": "sample"
+    }
+  ],
+  "AddressState": [
+    "uninitialized",
+    "active",
+    "frozen"
+  ],
+  "AddressStateRequest": [
+    {
+      "address": "sample"
+    },
+    {
+      "address": "sample",
+      "seqno": "sample"
+    }
+  ],
+  "AddressWithSeqnoRequest": [
+    {
+      "address": "sample"
+    },
+    {
+      "address": "sample",
+      "seqno": "sample"
+    }
+  ],
+  "AdnlAddress": [
+    {
+      "@type": "adnlAddress",
+      "adnl_address": "sample"
+    }
+  ],
+  "BlockData": [
+    {
+      "@type": "blocks.blockData",
+      "data": "sample",
+      "id": {
+        "@type": "ton.blockIdExt",
+        "file_hash": "sample",
+        "root_hash": "sample",
+        "seqno": 123,
+        "shard": "sample",
+        "workchain": 123
+      }
+    }
+  ],
+  "BlockDataRequest": [
+    {
+      "seqno": "sample",
+      "shard": "sample",
+      "workchain": "sample"
+    },
+    {
+      "archival": "sample",
+      "file_hash": "sample",
+      "root_hash": "sample",
+      "seqno": "sample",
+      "shard": "sample",
+      "workchain": "sample"
+    }
+  ],
+  "BlockHeader": [
+    {
+      "@type": "blocks.header",
+      "after_merge": true,
+      "after_split": true,
+      "before_split": true,
+      "catchain_seqno": 123,
+      "end_lt": "sample",
+      "gen_utime": 123,
+      "global_id": 123,
+      "id": {
+        "@type": "ton.blockIdExt",
+        "file_hash": "sample",
+        "root_hash": "sample",
+        "seqno": 123,
+        "shard": "sample",
+        "workchain": 123
+      },
+      "is_key_block": true,
+      "min_ref_mc_seqno": 123,
+      "prev_blocks": [
+        {
+          "@type": "ton.blockIdExt",
+          "file_hash": "sample",
+          "root_hash": "sample",
+          "seqno": 123,
+          "shard": "sample",
+          "workchain": 123
+        }
+      ],
+      "prev_key_block_seqno": 123,
+      "start_lt": "sample",
+      "validator_list_hash_short": 123,
+      "version": 123,
+      "want_merge": true,
+      "want_split": true
+    }
+  ],
+  "BlockHeaderRequest": [
+    {
+      "seqno": "sample",
+      "shard": "sample",
+      "workchain": "sample"
+    },
+    {
+      "file_hash": "sample",
+      "root_hash": "sample",
+      "seqno": "sample",
+      "shard": "sample",
+      "workchain": "sample"
+    }
+  ],
+  "BlockLinkBack": [
+    {
+      "@type": "blocks.blockLinkBack",
+      "dest_proof": "sample",
+      "from": {
+        "@type": "ton.blockIdExt",
+        "file_hash": "sample",
+        "root_hash": "sample",
+        "seqno": 123,
+        "shard": "sample",
+        "workchain": 123
+      },
+      "proof": "sample",
+      "state_proof": "sample",
+      "to": {
+        "@type": "ton.blockIdExt",
+        "file_hash": "sample",
+        "root_hash": "sample",
+        "seqno": 123,
+        "shard": "sample",
+        "workchain": 123
+      },
+      "to_key_block": true
+    }
+  ],
+  "BlockSignature": [
+    {
+      "@type": "blocks.signature",
+      "node_id_short": "sample",
+      "signature": "sample"
+    }
+  ],
+  "BlockSignatures": [
+    {
+      "@type": "blocks.blockSignatures",
+      "id": {
+        "@type": "ton.blockIdExt",
+        "file_hash": "sample",
+        "root_hash": "sample",
+        "seqno": 123,
+        "shard": "sample",
+        "workchain": 123
+      },
+      "signatures": [
+        {
+          "@type": "blocks.signature",
+          "node_id_short": "sample",
+          "signature": "sample"
+        }
+      ]
+    }
+  ],
+  "BlockSignaturesSimplex": [
+    {
+      "@type": "blocks.blockSignatures.simplex",
+      "candidate": "sample",
+      "id": {
+        "@type": "ton.blockIdExt",
+        "file_hash": "sample",
+        "root_hash": "sample",
+        "seqno": 123,
+        "shard": "sample",
+        "workchain": 123
+      },
+      "session_id": "sample",
+      "signatures": [
+        {
+          "@type": "blocks.signature",
+          "node_id_short": "sample",
+          "signature": "sample"
+        }
+      ],
+      "slot": 123
+    }
+  ],
+  "BlockTransactions": [
+    {
+      "@type": "blocks.transactions",
+      "id": {
+        "@type": "ton.blockIdExt",
+        "file_hash": "sample",
+        "root_hash": "sample",
+        "seqno": 123,
+        "shard": "sample",
+        "workchain": 123
+      },
+      "incomplete": true,
+      "req_count": 123,
+      "transactions": [
+        {
+          "@type": "blocks.shortTxId",
+          "account": "sample",
+          "hash": "sample",
+          "lt": "sample",
+          "mode": 123
+        }
+      ]
+    }
+  ],
+  "BlockTransactionsExt": [
+    {
+      "@type": "blocks.transactionsExt",
+      "id": {
+        "@type": "ton.blockIdExt",
+        "file_hash": "sample",
+        "root_hash": "sample",
+        "seqno": 123,
+        "shard": "sample",
+        "workchain": 123
+      },
+      "incomplete": true,
+      "req_count": 123,
+      "transactions": [
+        {
+          "@type": "raw.transactionExt",
+          "account": "sample",
+          "address": {
+            "@type": "accountAddress",
+            "account_address": "sample"
+          },
+          "data": "sample",
+          "fee": "9223372036854775808",
+          "other_fee": "9223372036854775808",
+          "out_msgs": [
+            {
+              "@type": "raw.message",
+              "body_hash": "sample",
+              "created_lt": "sample",
+              "destination": {
+                "@type": "accountAddress",
+                "account_address": "sample"
+              },
+              "extra_currencies": [],
+              "fwd_fee": "9223372036854775808",
+              "hash": "sample",
+              "ihr_fee": "9223372036854775808",
+              "msg_data": {
+                "@type": "msg.dataRaw"
+              },
+              "source": {
+                "@type": "accountAddress",
+                "account_address": "sample"
+              },
+              "value": "9223372036854775808"
+            }
+          ],
+          "storage_fee": "9223372036854775808",
+          "transaction_id": {
+            "@type": "internal.transactionId",
+            "hash": "sample",
+            "lt": "sample"
+          },
+          "utime": 123
+        }
+      ]
+    }
+  ],
+  "BlockTransactionsExtRequest": [
+    {
+      "seqno": "sample",
+      "shard": "sample",
+      "workchain": "sample"
+    },
+    {
+      "after_hash": "sample",
+      "after_lt": "sample",
+      "count": "sample",
+      "file_hash": "sample",
+      "root_hash": "sample",
+      "seqno": "sample",
+      "shard": "sample",
+      "workchain": "sample"
+    }
+  ],
+  "BlockTransactionsRequest": [
+    {
+      "seqno": "sample",
+      "shard": "sample",
+      "workchain": "sample"
+    },
+    {
+      "after_hash": "sample",
+      "after_lt": "sample",
+      "count": "sample",
+      "file_hash": "sample",
+      "root_hash": "sample",
+      "seqno": "sample",
+      "shard": "sample",
+      "workchain": "sample"
+    }
+  ],
+  "ConfigAllRequest": [
+    {},
+    {
+      "seqno": "sample"
+    }
+  ],
+  "ConfigInfo": [
+    {
+      "@type": "configInfo",
+      "config": {
+        "@type": "tvm.cell",
+        "bytes": "sample"
+      }
+    }
+  ],
+  "ConfigParamRequest": [
+    {},
+    {
+      "config_id": "sample",
+      "param": "sample",
+      "seqno": "sample"
+    }
+  ],
+  "ConsensusBlock": [
+    {
+      "@type": "ext.blocks.consensusBlock",
+      "consensus_block": 123,
+      "timestamp": 123
+    }
+  ],
+  "ConsensusBlockRequest": [
+    {}
+  ],
+  "DetectAddress": [
+    {
+      "@type": "ext.utils.detectedAddress",
+      "bounceable": {
+        "@type": "ext.utils.detectedAddressVariant",
+        "b64": "sample",
+        "b64url": "sample"
+      },
+      "given_type": "raw_form",
+      "non_bounceable": {
+        "@type": "ext.utils.detectedAddressVariant",
+        "b64": "sample",
+        "b64url": "sample"
+      },
+      "raw_form": "sample",
+      "test_only": true
+    }
+  ],
+  "DetectAddressBase64Variant": [
+    {
+      "@type": "ext.utils.detectedAddressVariant",
+      "b64": "sample",
+      "b64url": "sample"
+    }
+  ],
+  "DetectAddressGivenType": [
+    "raw_form",
+    "friendly_bounceable",
+    "friendly_non_bounceable"
+  ],
+  "DetectAddressRequest": [
+    {
+      "address": "sample"
+    }
+  ],
+  "DetectHash": [
+    {
+      "@type": "ext.utils.detectedHash",
+      "b64": "sample",
+      "b64url": "sample",
+      "hex": "sample"
+    }
+  ],
+  "DetectHashRequest": [
+    {
+      "hash": "sample"
+    }
+  ],
+  "DnsContent": [
+    {
+      "data": {},
+      "domain": "sample"
+    },
+    {
+      "data": {
+        "dns_next_resolver": {
+          "@type": "dns_storage_address",
+          "bag_id": "sample"
+        },
+        "site": {
+          "@type": "dns_storage_address",
+          "bag_id": "sample"
+        },
+        "storage": {
+          "@type": "dns_storage_address",
+          "bag_id": "sample"
+        },
+        "wallet": {
+          "@type": "dns_storage_address",
+          "bag_id": "sample"
+        }
+      },
+      "domain": "sample"
+    }
+  ],
+  "DnsEntry": [
+    {
+      "@type": "dns.entry",
+      "category": "sample",
+      "entry": {
+        "@type": "dns.entryDataUnknown",
+        "bytes": "sample"
+      },
+      "name": "sample"
+    }
+  ],
+  "DnsEntryData": [
+    {
+      "@type": "dns.entryDataUnknown",
+      "bytes": "sample"
+    },
+    {
+      "@type": "dns.entryDataText",
+      "text": "sample"
+    },
+    {
+      "@type": "dns.entryDataNextResolver",
+      "resolver": {
+        "@type": "accountAddress",
+        "account_address": "sample"
+      }
+    },
+    {
+      "@type": "dns.entryDataSmcAddress",
+      "smc_address": {
+        "@type": "accountAddress",
+        "account_address": "sample"
+      }
+    },
+    {
+      "@type": "dns.entryDataAdnlAddress",
+      "adnl_address": {
+        "@type": "adnlAddress",
+        "adnl_address": "sample"
+      }
+    },
+    {
+      "@type": "dns.entryDataStorageAddress",
+      "bag_id": "sample"
+    }
+  ],
+  "DnsEntryDataAdnlAddress": [
+    {
+      "@type": "dns.entryDataAdnlAddress",
+      "adnl_address": {
+        "@type": "adnlAddress",
+        "adnl_address": "sample"
+      }
+    }
+  ],
+  "DnsEntryDataNextResolver": [
+    {
+      "@type": "dns.entryDataNextResolver",
+      "resolver": {
+        "@type": "accountAddress",
+        "account_address": "sample"
+      }
+    }
+  ],
+  "DnsEntryDataSmcAddress": [
+    {
+      "@type": "dns.entryDataSmcAddress",
+      "smc_address": {
+        "@type": "accountAddress",
+        "account_address": "sample"
+      }
+    }
+  ],
+  "DnsEntryDataStorageAddress": [
+    {
+      "@type": "dns.entryDataStorageAddress",
+      "bag_id": "sample"
+    }
+  ],
+  "DnsEntryDataText": [
+    {
+      "@type": "dns.entryDataText",
+      "text": "sample"
+    }
+  ],
+  "DnsEntryDataUnknown": [
+    {
+      "@type": "dns.entryDataUnknown",
+      "bytes": "sample"
+    }
+  ],
+  "DnsRecord": [
+    {
+      "@type": "dns_storage_address",
+      "bag_id": "sample"
+    },
+    {
+      "@type": "dns_smc_address",
+      "smc_addr": {
+        "@type": "addr_std",
+        "address": "sample",
+        "workchain_id": 123
+      }
+    },
+    {
+      "@type": "dns_adnl_address",
+      "adnl_addr": "sample"
+    },
+    {
+      "@type": "dns_next_resolver",
+      "resolver": {
+        "@type": "addr_std",
+        "address": "sample",
+        "workchain_id": 123
+      }
+    }
+  ],
+  "DnsRecordAdnlAddress": [
+    {
+      "@type": "dns_adnl_address",
+      "adnl_addr": "sample"
+    }
+  ],
+  "DnsRecordNextResolver": [
+    {
+      "@type": "dns_next_resolver",
+      "resolver": {
+        "@type": "addr_std",
+        "address": "sample",
+        "workchain_id": 123
+      }
+    }
+  ],
+  "DnsRecordSet": [
+    {},
+    {
+      "dns_next_resolver": {
+        "@type": "dns_storage_address",
+        "bag_id": "sample"
+      },
+      "site": {
+        "@type": "dns_storage_address",
+        "bag_id": "sample"
+      },
+      "storage": {
+        "@type": "dns_storage_address",
+        "bag_id": "sample"
+      },
+      "wallet": {
+        "@type": "dns_storage_address",
+        "bag_id": "sample"
+      }
+    }
+  ],
+  "DnsRecordSmcAddress": [
+    {
+      "@type": "dns_smc_address",
+      "smc_addr": {
+        "@type": "addr_std",
+        "address": "sample",
+        "workchain_id": 123
+      }
+    }
+  ],
+  "DnsRecordStorageAddress": [
+    {
+      "@type": "dns_storage_address",
+      "bag_id": "sample"
+    }
+  ],
+  "DnsResolveRequest": [
+    {
+      "address": "sample"
+    },
+    {
+      "address": "sample",
+      "category": "sample",
+      "name": "sample",
+      "seqno": 123,
+      "ttl": 123
+    }
+  ],
+  "DnsResolved": [
+    {
+      "@type": "dns.resolved",
+      "entries": [
+        {
+          "@type": "dns.entry",
+          "category": "sample",
+          "entry": {
+            "@type": "dns.entryDataUnknown",
+            "bytes": "sample"
+          },
+          "name": "sample"
+        }
+      ]
+    }
+  ],
+  "EmptyRequest": [
+    {}
+  ],
+  "ErrorEnvelope": [
+    {
+      "code": 422,
+      "error": "invalid address",
+      "ok": false
+    },
+    {
+      "@extra": "opaque",
+      "code": 429,
+      "error": "rate limit",
+      "ok": false
+    }
+  ],
+  "EstimateFeeRequest": [
+    {
+      "address": "sample",
+      "body": "sample"
+    },
+    {
+      "address": "sample",
+      "body": "sample",
+      "ignore_chksig": true,
+      "init_code": "sample",
+      "init_data": "sample"
+    }
+  ],
+  "ExtMessageInfo": [
+    {
+      "@type": "raw.extMessageInfo",
+      "hash": "sample",
+      "hash_norm": "sample"
+    }
+  ],
+  "ExtendedAddressInformation": [
+    {
+      "@type": "fullAccountState",
+      "account_state": {
+        "@type": "raw.accountState",
+        "code": "sample",
+        "data": "sample",
+        "frozen_hash": "sample"
+      },
+      "address": {
+        "@type": "accountAddress",
+        "account_address": "sample"
+      },
+      "balance": "9223372036854775808",
+      "block_id": {
+        "@type": "ton.blockIdExt",
+        "file_hash": "sample",
+        "root_hash": "sample",
+        "seqno": 123,
+        "shard": "sample",
+        "workchain": 123
+      },
+      "extra_currencies": [
+        {
+          "@type": "extraCurrency",
+          "amount": "9223372036854775808",
+          "id": 123
+        }
+      ],
+      "last_transaction_id": {
+        "@type": "internal.transactionId",
+        "hash": "sample",
+        "lt": "sample"
+      },
+      "revision": 123,
+      "sync_utime": 123
+    }
+  ],
+  "ExtendedAddressInformationRequest": [
+    {
+      "address": "sample"
+    },
+    {
+      "address": "sample",
+      "seqno": "sample"
+    }
+  ],
+  "ExtraCurrencyBalance": [
+    {
+      "@type": "extraCurrency",
+      "amount": "9223372036854775808",
+      "id": 123
+    }
+  ],
+  "Fees": [
+    {
+      "@type": "fees",
+      "fwd_fee": 123,
+      "gas_fee": 123,
+      "in_fwd_fee": 123,
+      "storage_fee": 123
+    }
+  ],
+  "InternalTransactionId": [
+    {
+      "@type": "internal.transactionId",
+      "hash": "sample",
+      "lt": "sample"
+    }
+  ],
+  "JettonMasterData": [
+    {
+      "@type": "ext.tokens.jettonMasterData",
+      "address": "sample",
+      "contract_type": "jetton_master",
+      "jetton_content": {
+        "data": "sample",
+        "type": "onchain"
+      },
+      "jetton_wallet_code": "sample",
+      "mintable": true,
+      "total_supply": "9223372036854775808"
+    },
+    {
+      "@type": "ext.tokens.jettonMasterData",
+      "address": "sample",
+      "admin_address": "sample",
+      "contract_type": "jetton_master",
+      "jetton_content": {
+        "data": "sample",
+        "type": "onchain"
+      },
+      "jetton_wallet_code": "sample",
+      "mintable": true,
+      "total_supply": "9223372036854775808"
+    }
+  ],
+  "JettonMasterDataContractType": [
+    "jetton_master"
+  ],
+  "JettonWalletData": [
+    {
+      "@type": "ext.tokens.jettonWalletData",
+      "address": "sample",
+      "balance": "9223372036854775808",
+      "contract_type": "jetton_wallet",
+      "jetton": "sample",
+      "jetton_wallet_code": "sample",
+      "owner": "sample"
+    },
+    {
+      "@type": "ext.tokens.jettonWalletData",
+      "address": "sample",
+      "balance": "9223372036854775808",
+      "contract_type": "jetton_wallet",
+      "jetton": "sample",
+      "jetton_wallet_code": "sample",
+      "mintless_is_claimed": true,
+      "owner": "sample"
+    }
+  ],
+  "JettonWalletDataContractType": [
+    "jetton_wallet"
+  ],
+  "JsonRpcRequest": [
+    {
+      "id": {
+        "opaque": 1
+      },
+      "jsonrpc": "2.0",
+      "method": "detectAddress",
+      "params": {
+        "address": "sample"
+      }
+    },
+    {
+      "id": {
+        "opaque": 1
+      },
+      "jsonrpc": "2.0",
+      "method": "detectHash",
+      "params": {
+        "hash": "sample"
+      }
+    },
+    {
+      "id": {
+        "opaque": 1
+      },
+      "jsonrpc": "2.0",
+      "method": "packAddress",
+      "params": {
+        "address": "sample"
+      }
+    },
+    {
+      "id": {
+        "opaque": 1
+      },
+      "jsonrpc": "2.0",
+      "method": "unpackAddress",
+      "params": {
+        "address": "sample"
+      }
+    },
+    {
+      "id": {
+        "opaque": 1
+      },
+      "jsonrpc": "2.0",
+      "method": "getAddressInformation",
+      "params": {
+        "address": "sample"
+      }
+    },
+    {
+      "id": {
+        "opaque": 1
+      },
+      "jsonrpc": "2.0",
+      "method": "getExtendedAddressInformation",
+      "params": {
+        "address": "sample"
+      }
+    },
+    {
+      "id": {
+        "opaque": 1
+      },
+      "jsonrpc": "2.0",
+      "method": "getShardAccountCell",
+      "params": {
+        "address": "sample"
+      }
+    },
+    {
+      "id": {
+        "opaque": 1
+      },
+      "jsonrpc": "2.0",
+      "method": "getWalletInformation",
+      "params": {
+        "address": "sample"
+      }
+    },
+    {
+      "id": {
+        "opaque": 1
+      },
+      "jsonrpc": "2.0",
+      "method": "getAddressBalance",
+      "params": {
+        "address": "sample"
+      }
+    },
+    {
+      "id": {
+        "opaque": 1
+      },
+      "jsonrpc": "2.0",
+      "method": "getAddressState",
+      "params": {
+        "address": "sample"
+      }
+    },
+    {
+      "id": {
+        "opaque": 1
+      },
+      "jsonrpc": "2.0",
+      "method": "getTokenData",
+      "params": {
+        "address": "sample"
+      }
+    },
+    {
+      "id": {
+        "opaque": 1
+      },
+      "jsonrpc": "2.0",
+      "method": "dnsResolve",
+      "params": {
+        "address": "sample"
+      }
+    },
+    {
+      "id": {
+        "opaque": 1
+      },
+      "jsonrpc": "2.0",
+      "method": "getMasterchainInfo",
+      "params": {}
+    },
+    {
+      "id": {
+        "opaque": 1
+      },
+      "jsonrpc": "2.0",
+      "method": "getMasterchainBlockSignatures",
+      "params": {
+        "seqno": "sample"
+      }
+    },
+    {
+      "id": {
+        "opaque": 1
+      },
+      "jsonrpc": "2.0",
+      "method": "getShardBlockProof",
+      "params": {
+        "seqno": "sample",
+        "shard": "sample",
+        "workchain": "sample"
+      }
+    },
+    {
+      "id": {
+        "opaque": 1
+      },
+      "jsonrpc": "2.0",
+      "method": "getConsensusBlock",
+      "params": {}
+    },
+    {
+      "id": {
+        "opaque": 1
+      },
+      "jsonrpc": "2.0",
+      "method": "lookupBlock",
+      "params": {
+        "shard": "sample",
+        "workchain": "sample"
+      }
+    },
+    {
+      "id": {
+        "opaque": 1
+      },
+      "jsonrpc": "2.0",
+      "method": "getShards",
+      "params": {
+        "seqno": "sample"
+      }
+    },
+    {
+      "id": {
+        "opaque": 1
+      },
+      "jsonrpc": "2.0",
+      "method": "getBlock",
+      "params": {
+        "seqno": "sample",
+        "shard": "sample",
+        "workchain": "sample"
+      }
+    },
+    {
+      "id": {
+        "opaque": 1
+      },
+      "jsonrpc": "2.0",
+      "method": "getBlockHeader",
+      "params": {
+        "seqno": "sample",
+        "shard": "sample",
+        "workchain": "sample"
+      }
+    },
+    {
+      "id": {
+        "opaque": 1
+      },
+      "jsonrpc": "2.0",
+      "method": "getOutMsgQueueSize",
+      "params": {}
+    },
+    {
+      "id": {
+        "opaque": 1
+      },
+      "jsonrpc": "2.0",
+      "method": "getBlockTransactions",
+      "params": {
+        "seqno": "sample",
+        "shard": "sample",
+        "workchain": "sample"
+      }
+    },
+    {
+      "id": {
+        "opaque": 1
+      },
+      "jsonrpc": "2.0",
+      "method": "getBlockTransactionsExt",
+      "params": {
+        "seqno": "sample",
+        "shard": "sample",
+        "workchain": "sample"
+      }
+    },
+    {
+      "id": {
+        "opaque": 1
+      },
+      "jsonrpc": "2.0",
+      "method": "getTransactions",
+      "params": {
+        "address": "sample"
+      }
+    },
+    {
+      "id": {
+        "opaque": 1
+      },
+      "jsonrpc": "2.0",
+      "method": "getTransactionsStd",
+      "params": {
+        "address": "sample"
+      }
+    },
+    {
+      "id": {
+        "opaque": 1
+      },
+      "jsonrpc": "2.0",
+      "method": "tryLocateTx",
+      "params": {
+        "created_lt": "sample",
+        "destination": "sample",
+        "source": "sample"
+      }
+    },
+    {
+      "id": {
+        "opaque": 1
+      },
+      "jsonrpc": "2.0",
+      "method": "tryLocateResultTx",
+      "params": {
+        "created_lt": "sample",
+        "destination": "sample",
+        "source": "sample"
+      }
+    },
+    {
+      "id": {
+        "opaque": 1
+      },
+      "jsonrpc": "2.0",
+      "method": "tryLocateSourceTx",
+      "params": {
+        "created_lt": "sample",
+        "destination": "sample",
+        "source": "sample"
+      }
+    },
+    {
+      "id": {
+        "opaque": 1
+      },
+      "jsonrpc": "2.0",
+      "method": "getConfigParam",
+      "params": {}
+    },
+    {
+      "id": {
+        "opaque": 1
+      },
+      "jsonrpc": "2.0",
+      "method": "getConfigAll",
+      "params": {}
+    },
+    {
+      "id": {
+        "opaque": 1
+      },
+      "jsonrpc": "2.0",
+      "method": "getLibraries",
+      "params": {}
+    },
+    {
+      "id": {
+        "opaque": 1
+      },
+      "jsonrpc": "2.0",
+      "method": "runGetMethod",
+      "params": {
+        "address": "sample",
+        "method": "sample",
+        "stack": [
+          [
+            "num",
+            "-0x10000000000000000"
+          ]
+        ]
+      }
+    },
+    {
+      "id": {
+        "opaque": 1
+      },
+      "jsonrpc": "2.0",
+      "method": "runGetMethodStd",
+      "params": {
+        "address": "sample",
+        "method": "sample",
+        "stack": [
+          {
+            "@type": "tvm.stackEntrySlice",
+            "slice": {
+              "@type": "tvm.slice",
+              "bytes": "sample"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": {
+        "opaque": 1
+      },
+      "jsonrpc": "2.0",
+      "method": "sendBoc",
+      "params": {
+        "boc": "sample"
+      }
+    },
+    {
+      "id": {
+        "opaque": 1
+      },
+      "jsonrpc": "2.0",
+      "method": "sendBocReturnHash",
+      "params": {
+        "boc": "sample"
+      }
+    },
+    {
+      "id": {
+        "opaque": 1
+      },
+      "jsonrpc": "2.0",
+      "method": "estimateFee",
+      "params": {
+        "address": "sample",
+        "body": "sample"
+      }
+    },
+    {
+      "id": {
+        "opaque": 1
+      },
+      "jsonrpc": "2.0",
+      "method": "shards",
+      "params": {
+        "seqno": "sample"
+      }
+    },
+    {
+      "id": {
+        "opaque": 1
+      },
+      "jsonrpc": "2.0",
+      "method": "sendBocReturnHashNoError",
+      "params": {
+        "boc": "sample"
+      }
+    }
+  ],
+  "LegacyStackEntry": [
+    [
+      "num",
+      "-0x100000000000000000"
+    ],
+    [
+      "int",
+      -9223372036854775808
+    ],
+    [
+      "number",
+      "123"
+    ],
+    [
+      "integer",
+      9223372036854775807
+    ],
+    [
+      "cell",
+      {
+        "bytes": "te6ccgEBAQEAAgAAAA==",
+        "object": {
+          "data": {
+            "b64": "",
+            "len": 0
+          },
+          "refs": [],
+          "special": false
+        }
+      }
+    ],
+    [
+      "slice",
+      {
+        "bytes": "te6ccgEBAQEAAgAAAA=="
+      }
+    ],
+    [
+      "tvm.Cell",
+      "te6ccgEBAQEAAgAAAA=="
+    ],
+    [
+      "tvm.Slice",
+      "te6ccgEBAQEAAgAAAA=="
+    ],
+    [
+      "tuple",
+      {
+        "@type": "tvm.tuple",
+        "elements": [
+          {
+            "@type": "tvm.stackEntryTuple",
+            "tuple": {
+              "@type": "tvm.tuple",
+              "elements": [
+                {
+                  "@type": "tvm.stackEntryUnsupported"
+                }
+              ]
+            }
+          }
+        ]
+      }
+    ],
+    [
+      "list",
+      {
+        "@type": "tvm.list",
+        "elements": []
+      }
+    ],
+    [
+      "tvm.Tuple",
+      {
+        "@type": "tvm.tuple",
+        "elements": []
+      }
+    ],
+    [
+      "tvm.List",
+      {
+        "@type": "tvm.list",
+        "elements": []
+      }
+    ],
+    [
+      "unsupported",
+      ""
+    ]
+  ],
+  "LegacyStackEntryCell": [
+    {
+      "bytes": "sample"
+    },
+    {
+      "bytes": "sample",
+      "object": {
+        "data": {
+          "b64": "sample",
+          "len": 123
+        },
+        "refs": [
+          {
+            "data": {
+              "b64": "sample",
+              "len": 123
+            },
+            "refs": [
+              {
+                "data": {
+                  "b64": "sample",
+                  "len": 123
+                },
+                "refs": [],
+                "special": true
+              }
+            ],
+            "special": true
+          }
+        ],
+        "special": true
+      }
+    }
+  ],
+  "LegacyTvmCell": [
+    {
+      "data": {
+        "b64": "sample",
+        "len": 123
+      },
+      "refs": [
+        {
+          "data": {
+            "b64": "sample",
+            "len": 123
+          },
+          "refs": [
+            {
+              "data": {
+                "b64": "sample",
+                "len": 123
+              },
+              "refs": [],
+              "special": true
+            }
+          ],
+          "special": true
+        }
+      ],
+      "special": true
+    }
+  ],
+  "LegacyTvmCellData": [
+    {
+      "b64": "sample",
+      "len": 123
+    }
+  ],
+  "LibrariesRequest": [
+    {},
+    {
+      "libraries": [
+        "sample"
+      ]
+    }
+  ],
+  "LibraryEntry": [
+    {
+      "@type": "smc.libraryEntry",
+      "data": "sample",
+      "hash": "sample"
+    }
+  ],
+  "LibraryResult": [
+    {
+      "@type": "smc.libraryResult",
+      "result": [
+        {
+          "@type": "smc.libraryEntry",
+          "data": "sample",
+          "hash": "sample"
+        }
+      ]
+    }
+  ],
+  "LookupBlock": [
+    {
+      "@type": "ton.blockIdExt",
+      "file_hash": "sample",
+      "root_hash": "sample",
+      "seqno": 123,
+      "shard": "sample",
+      "workchain": 123
+    }
+  ],
+  "LookupBlockRequest": [
+    {
+      "shard": "sample",
+      "workchain": "sample"
+    },
+    {
+      "lt": "sample",
+      "seqno": "sample",
+      "shard": "sample",
+      "unixtime": "sample",
+      "workchain": "sample"
+    }
+  ],
+  "MasterchainBlockSignatures": [
+    {
+      "@type": "blocks.blockSignatures",
+      "id": {
+        "@type": "ton.blockIdExt",
+        "file_hash": "sample",
+        "root_hash": "sample",
+        "seqno": 123,
+        "shard": "sample",
+        "workchain": 123
+      },
+      "signatures": [
+        {
+          "@type": "blocks.signature",
+          "node_id_short": "sample",
+          "signature": "sample"
+        }
+      ]
+    },
+    {
+      "@type": "blocks.blockSignatures.simplex",
+      "candidate": "sample",
+      "id": {
+        "@type": "ton.blockIdExt",
+        "file_hash": "sample",
+        "root_hash": "sample",
+        "seqno": 123,
+        "shard": "sample",
+        "workchain": 123
+      },
+      "session_id": "sample",
+      "signatures": [
+        {
+          "@type": "blocks.signature",
+          "node_id_short": "sample",
+          "signature": "sample"
+        }
+      ],
+      "slot": 123
+    }
+  ],
+  "MasterchainBlockSignaturesRequest": [
+    {
+      "seqno": "sample"
+    }
+  ],
+  "MasterchainInfo": [
+    {
+      "@type": "blocks.masterchainInfo",
+      "init": {
+        "@type": "ton.blockIdExt",
+        "file_hash": "sample",
+        "root_hash": "sample",
+        "seqno": 123,
+        "shard": "sample",
+        "workchain": 123
+      },
+      "last": {
+        "@type": "ton.blockIdExt",
+        "file_hash": "sample",
+        "root_hash": "sample",
+        "seqno": 123,
+        "shard": "sample",
+        "workchain": 123
+      },
+      "state_root_hash": "sample"
+    }
+  ],
+  "MasterchainInfoRequest": [
+    {}
+  ],
+  "Message": [
+    {
+      "@type": "ext.message",
+      "body_hash": "sample",
+      "created_lt": "sample",
+      "destination": "sample",
+      "extra_currencies": [
+        {
+          "@type": "extraCurrency",
+          "amount": "9223372036854775808",
+          "id": 123
+        }
+      ],
+      "fwd_fee": "9223372036854775808",
+      "hash": "sample",
+      "ihr_fee": "9223372036854775808",
+      "msg_data": {
+        "@type": "msg.dataRaw"
+      },
+      "source": "sample",
+      "value": "9223372036854775808"
+    },
+    {
+      "@type": "ext.message",
+      "body_hash": "sample",
+      "created_lt": "sample",
+      "destination": "sample",
+      "extra_currencies": [
+        {
+          "@type": "extraCurrency",
+          "amount": "9223372036854775808",
+          "id": 123
+        }
+      ],
+      "fwd_fee": "9223372036854775808",
+      "hash": "sample",
+      "ihr_fee": "9223372036854775808",
+      "message": "sample",
+      "message_decode_error": "sample",
+      "msg_data": {
+        "@type": "msg.dataRaw",
+        "body": "sample",
+        "init_state": "sample"
+      },
+      "source": "sample",
+      "value": "9223372036854775808"
+    }
+  ],
+  "MessageStd": [
+    {
+      "@type": "raw.message",
+      "body_hash": "sample",
+      "created_lt": "sample",
+      "destination": {
+        "@type": "accountAddress",
+        "account_address": "sample"
+      },
+      "extra_currencies": [
+        {
+          "@type": "extraCurrency",
+          "amount": "9223372036854775808",
+          "id": 123
+        }
+      ],
+      "fwd_fee": "9223372036854775808",
+      "hash": "sample",
+      "ihr_fee": "9223372036854775808",
+      "msg_data": {
+        "@type": "msg.dataRaw"
+      },
+      "source": {
+        "@type": "accountAddress",
+        "account_address": "sample"
+      },
+      "value": "9223372036854775808"
+    },
+    {
+      "@type": "raw.message",
+      "body_hash": "sample",
+      "created_lt": "sample",
+      "destination": {
+        "@type": "accountAddress",
+        "account_address": "sample"
+      },
+      "extra_currencies": [
+        {
+          "@type": "extraCurrency",
+          "amount": "9223372036854775808",
+          "id": 123
+        }
+      ],
+      "fwd_fee": "9223372036854775808",
+      "hash": "sample",
+      "ihr_fee": "9223372036854775808",
+      "msg_data": {
+        "@type": "msg.dataRaw",
+        "body": "sample",
+        "init_state": "sample"
+      },
+      "source": {
+        "@type": "accountAddress",
+        "account_address": "sample"
+      },
+      "value": "9223372036854775808"
+    }
+  ],
+  "MsgData": [
+    {
+      "@type": "msg.dataRaw",
+      "body": "sample",
+      "init_state": "sample"
+    },
+    {
+      "@type": "msg.dataText",
+      "text": "sample"
+    },
+    {
+      "@type": "msg.dataDecryptedText",
+      "text": "sample"
+    },
+    {
+      "@type": "msg.dataEncryptedText",
+      "text": "sample"
+    }
+  ],
+  "MsgDataDecryptedText": [
+    {
+      "@type": "msg.dataDecryptedText"
+    },
+    {
+      "@type": "msg.dataDecryptedText",
+      "text": "sample"
+    }
+  ],
+  "MsgDataEncryptedText": [
+    {
+      "@type": "msg.dataEncryptedText"
+    },
+    {
+      "@type": "msg.dataEncryptedText",
+      "text": "sample"
+    }
+  ],
+  "MsgDataRaw": [
+    {
+      "@type": "msg.dataRaw"
+    },
+    {
+      "@type": "msg.dataRaw",
+      "body": "sample",
+      "init_state": "sample"
+    }
+  ],
+  "MsgDataText": [
+    {
+      "@type": "msg.dataText"
+    },
+    {
+      "@type": "msg.dataText",
+      "text": "sample"
+    }
+  ],
+  "NftCollectionData": [
+    {
+      "@type": "ext.tokens.nftCollectionData",
+      "address": "sample",
+      "collection_content": {
+        "data": "sample",
+        "type": "onchain"
+      },
+      "contract_type": "nft_collection",
+      "next_item_index": "9223372036854775808"
+    },
+    {
+      "@type": "ext.tokens.nftCollectionData",
+      "address": "sample",
+      "collection_content": {
+        "data": "sample",
+        "type": "onchain"
+      },
+      "contract_type": "nft_collection",
+      "next_item_index": "9223372036854775808",
+      "owner_address": "sample"
+    }
+  ],
+  "NftCollectionDataContractType": [
+    "nft_collection"
+  ],
+  "NftItemData": [
+    {
+      "@type": "ext.tokens.nftItemData",
+      "address": "sample",
+      "content": {
+        "data": "sample",
+        "type": "onchain"
+      },
+      "contract_type": "nft_item",
+      "index": "9223372036854775808",
+      "init": true
+    },
+    {
+      "@type": "ext.tokens.nftItemData",
+      "address": "sample",
+      "collection_address": "sample",
+      "content": {
+        "data": "sample",
+        "type": "onchain"
+      },
+      "contract_type": "nft_item",
+      "index": "9223372036854775808",
+      "init": true,
+      "owner_address": "sample"
+    }
+  ],
+  "NftItemDataContent": [
+    {
+      "data": "sample",
+      "type": "onchain"
+    },
+    {
+      "data": {
+        "dns_next_resolver": {
+          "@type": "dns_storage_address",
+          "bag_id": "sample"
+        },
+        "site": {
+          "@type": "dns_storage_address",
+          "bag_id": "sample"
+        },
+        "storage": {
+          "@type": "dns_storage_address",
+          "bag_id": "sample"
+        },
+        "wallet": {
+          "@type": "dns_storage_address",
+          "bag_id": "sample"
+        }
+      },
+      "domain": "sample"
+    }
+  ],
+  "NftItemDataContractType": [
+    "nft_item"
+  ],
+  "OutMsgQueueSize": [
+    {
+      "@type": "blocks.outMsgQueueSize",
+      "id": {
+        "@type": "ton.blockIdExt",
+        "file_hash": "sample",
+        "root_hash": "sample",
+        "seqno": 123,
+        "shard": "sample",
+        "workchain": 123
+      },
+      "size": 123
+    }
+  ],
+  "OutMsgQueueSizeRequest": [
+    {}
+  ],
+  "OutMsgQueueSizes": [
+    {
+      "@type": "blocks.outMsgQueueSizes",
+      "ext_msg_queue_size_limit": 123,
+      "shards": [
+        {
+          "@type": "blocks.outMsgQueueSize",
+          "id": {
+            "@type": "ton.blockIdExt",
+            "file_hash": "sample",
+            "root_hash": "sample",
+            "seqno": 123,
+            "shard": "sample",
+            "workchain": 123
+          },
+          "size": 123
+        }
+      ]
+    }
+  ],
+  "PChanConfig": [
+    {
+      "@type": "pchan.config",
+      "alice_address": {
+        "@type": "accountAddress",
+        "account_address": "sample"
+      },
+      "alice_public_key": "sample",
+      "bob_address": {
+        "@type": "accountAddress",
+        "account_address": "sample"
+      },
+      "bob_public_key": "sample",
+      "channel_id": 123,
+      "close_timeout": 123,
+      "init_timeout": 123
+    }
+  ],
+  "PChanState": [
+    {
+      "@type": "pchan.stateInit",
+      "A": 123,
+      "B": 123,
+      "expire_at": 123,
+      "min_A": 123,
+      "min_B": 123,
+      "signed_A": true,
+      "signed_B": true
+    },
+    {
+      "@type": "pchan.stateClose",
+      "A": 123,
+      "B": 123,
+      "expire_at": 123,
+      "min_A": 123,
+      "min_B": 123,
+      "signed_A": true,
+      "signed_B": true
+    },
+    {
+      "@type": "pchan.statePayout",
+      "A": 123,
+      "B": 123
+    }
+  ],
+  "PChanStateClose": [
+    {
+      "@type": "pchan.stateClose",
+      "A": 123,
+      "B": 123,
+      "expire_at": 123,
+      "min_A": 123,
+      "min_B": 123,
+      "signed_A": true,
+      "signed_B": true
+    }
+  ],
+  "PChanStateInit": [
+    {
+      "@type": "pchan.stateInit",
+      "A": 123,
+      "B": 123,
+      "expire_at": 123,
+      "min_A": 123,
+      "min_B": 123,
+      "signed_A": true,
+      "signed_B": true
+    }
+  ],
+  "PChanStatePayout": [
+    {
+      "@type": "pchan.statePayout",
+      "A": 123,
+      "B": 123
+    }
+  ],
+  "PackAddress": [
+    "sample"
+  ],
+  "PackAddressRequest": [
+    {
+      "address": "sample"
+    }
+  ],
+  "QueryFees": [
+    {
+      "@type": "query.fees",
+      "destination_fees": [
+        {
+          "@type": "fees",
+          "fwd_fee": 123,
+          "gas_fee": 123,
+          "in_fwd_fee": 123,
+          "storage_fee": 123
+        }
+      ],
+      "source_fees": {
+        "@type": "fees",
+        "fwd_fee": 123,
+        "gas_fee": 123,
+        "in_fwd_fee": 123,
+        "storage_fee": 123
+      }
+    }
+  ],
+  "RWalletConfig": [
+    {
+      "@type": "rwallet.config",
+      "limits": [
+        {
+          "@type": "rwallet.limit",
+          "seconds": 123,
+          "value": 123
+        }
+      ],
+      "start_at": 123
+    }
+  ],
+  "RWalletLimit": [
+    {
+      "@type": "rwallet.limit",
+      "seconds": 123,
+      "value": 123
+    }
+  ],
+  "ResultOk": [
+    {
+      "@type": "ok"
+    }
+  ],
+  "RunGetMethodRequest": [
+    {
+      "address": "sample",
+      "method": "sample",
+      "stack": [
+        [
+          "num",
+          "-0x10000000000000000"
+        ]
+      ]
+    },
+    {
+      "address": "sample",
+      "method": "sample",
+      "seqno": 123,
+      "stack": [
+        [
+          "num",
+          "-0x10000000000000000"
+        ]
+      ]
+    }
+  ],
+  "RunGetMethodResult": [
+    {
+      "@type": "smc.runResult",
+      "block_id": {
+        "@type": "ton.blockIdExt",
+        "file_hash": "sample",
+        "root_hash": "sample",
+        "seqno": 123,
+        "shard": "sample",
+        "workchain": 123
+      },
+      "exit_code": 123,
+      "gas_used": 123,
+      "last_transaction_id": {
+        "@type": "internal.transactionId",
+        "hash": "sample",
+        "lt": "sample"
+      },
+      "stack": [
+        [
+          "num",
+          "-0x10000000000000000"
+        ]
+      ]
+    }
+  ],
+  "RunGetMethodStdRequest": [
+    {
+      "address": "sample",
+      "method": "sample",
+      "stack": [
+        {
+          "@type": "tvm.stackEntrySlice",
+          "slice": {
+            "@type": "tvm.slice",
+            "bytes": "sample"
+          }
+        }
+      ]
+    },
+    {
+      "address": "sample",
+      "method": "sample",
+      "seqno": 123,
+      "stack": [
+        {
+          "@type": "tvm.stackEntrySlice",
+          "slice": {
+            "@type": "tvm.slice",
+            "bytes": "sample"
+          }
+        }
+      ]
+    }
+  ],
+  "RunGetMethodStdResult": [
+    {
+      "@type": "smc.runResult",
+      "exit_code": 123,
+      "gas_used": 123,
+      "stack": [
+        {
+          "@type": "tvm.stackEntrySlice",
+          "slice": {
+            "@type": "tvm.slice",
+            "bytes": "sample"
+          }
+        }
+      ]
+    }
+  ],
+  "SendBocRequest": [
+    {
+      "boc": "sample"
+    }
+  ],
+  "SeqnoRequest": [
+    {
+      "seqno": "sample"
+    }
+  ],
+  "ShardAccountCellRequest": [
+    {
+      "address": "sample"
+    },
+    {
+      "address": "sample",
+      "seqno": "sample"
+    }
+  ],
+  "ShardBlockLink": [
+    {
+      "@type": "blocks.shardBlockLink",
+      "id": {
+        "@type": "ton.blockIdExt",
+        "file_hash": "sample",
+        "root_hash": "sample",
+        "seqno": 123,
+        "shard": "sample",
+        "workchain": 123
+      },
+      "proof": "sample"
+    }
+  ],
+  "ShardBlockProof": [
+    {
+      "@type": "blocks.shardBlockProof",
+      "from": {
+        "@type": "ton.blockIdExt",
+        "file_hash": "sample",
+        "root_hash": "sample",
+        "seqno": 123,
+        "shard": "sample",
+        "workchain": 123
+      },
+      "links": [
+        {
+          "@type": "blocks.shardBlockLink",
+          "id": {
+            "@type": "ton.blockIdExt",
+            "file_hash": "sample",
+            "root_hash": "sample",
+            "seqno": 123,
+            "shard": "sample",
+            "workchain": 123
+          },
+          "proof": "sample"
+        }
+      ],
+      "mc_id": {
+        "@type": "ton.blockIdExt",
+        "file_hash": "sample",
+        "root_hash": "sample",
+        "seqno": 123,
+        "shard": "sample",
+        "workchain": 123
+      },
+      "mc_proof": [
+        {
+          "@type": "blocks.blockLinkBack",
+          "dest_proof": "sample",
+          "from": {
+            "@type": "ton.blockIdExt",
+            "file_hash": "sample",
+            "root_hash": "sample",
+            "seqno": 123,
+            "shard": "sample",
+            "workchain": 123
+          },
+          "proof": "sample",
+          "state_proof": "sample",
+          "to": {
+            "@type": "ton.blockIdExt",
+            "file_hash": "sample",
+            "root_hash": "sample",
+            "seqno": 123,
+            "shard": "sample",
+            "workchain": 123
+          },
+          "to_key_block": true
+        }
+      ]
+    }
+  ],
+  "ShardBlockProofRequest": [
+    {
+      "seqno": "sample",
+      "shard": "sample",
+      "workchain": "sample"
+    },
+    {
+      "from_seqno": "sample",
+      "seqno": "sample",
+      "shard": "sample",
+      "workchain": "sample"
+    }
+  ],
+  "Shards": [
+    {
+      "@type": "blocks.shards",
+      "shards": [
+        {
+          "@type": "ton.blockIdExt",
+          "file_hash": "sample",
+          "root_hash": "sample",
+          "seqno": 123,
+          "shard": "sample",
+          "workchain": 123
+        }
+      ]
+    }
+  ],
+  "ShardsRequest": [
+    {
+      "seqno": "sample"
+    }
+  ],
+  "ShortTxId": [
+    {
+      "@type": "blocks.shortTxId",
+      "account": "sample",
+      "hash": "sample",
+      "lt": "sample",
+      "mode": 123
+    }
+  ],
+  "SmcAddr": [
+    {
+      "@type": "addr_std",
+      "address": "sample",
+      "workchain_id": 123
+    }
+  ],
+  "SuccessEnvelope": [
+    {
+      "@extra": "opaque",
+      "ok": true,
+      "result": {
+        "@type": "blocks.masterchainInfo",
+        "init": {
+          "@type": "ton.blockIdExt",
+          "file_hash": "sample",
+          "root_hash": "sample",
+          "seqno": 123,
+          "shard": "sample",
+          "workchain": 123
+        },
+        "last": {
+          "@type": "ton.blockIdExt",
+          "file_hash": "sample",
+          "root_hash": "sample",
+          "seqno": 123,
+          "shard": "sample",
+          "workchain": 123
+        },
+        "state_root_hash": "sample"
+      }
+    }
+  ],
+  "TokenContent": [
+    {
+      "data": "sample",
+      "type": "onchain"
+    }
+  ],
+  "TokenContentData": [
+    "sample",
+    {
+      "name": "Fixture",
+      "nested": {
+        "nullable": null,
+        "number": 123
+      }
+    }
+  ],
+  "TokenContentDict": [
+    {
+      "name": "Fixture",
+      "nested": {
+        "nullable": null,
+        "number": 123
+      }
+    }
+  ],
+  "TokenContentType": [
+    "onchain",
+    "offchain"
+  ],
+  "TokenData": [
+    {
+      "@type": "ext.tokens.jettonMasterData",
+      "address": "sample",
+      "admin_address": "sample",
+      "contract_type": "jetton_master",
+      "jetton_content": {
+        "data": "sample",
+        "type": "onchain"
+      },
+      "jetton_wallet_code": "sample",
+      "mintable": true,
+      "total_supply": "9223372036854775808"
+    },
+    {
+      "@type": "ext.tokens.jettonWalletData",
+      "address": "sample",
+      "balance": "9223372036854775808",
+      "contract_type": "jetton_wallet",
+      "jetton": "sample",
+      "jetton_wallet_code": "sample",
+      "mintless_is_claimed": true,
+      "owner": "sample"
+    },
+    {
+      "@type": "ext.tokens.nftCollectionData",
+      "address": "sample",
+      "collection_content": {
+        "data": "sample",
+        "type": "onchain"
+      },
+      "contract_type": "nft_collection",
+      "next_item_index": "9223372036854775808",
+      "owner_address": "sample"
+    },
+    {
+      "@type": "ext.tokens.nftItemData",
+      "address": "sample",
+      "collection_address": "sample",
+      "content": {
+        "data": "sample",
+        "type": "onchain"
+      },
+      "contract_type": "nft_item",
+      "index": "9223372036854775808",
+      "init": true,
+      "owner_address": "sample"
+    }
+  ],
+  "TokenDataRequest": [
+    {
+      "address": "sample"
+    },
+    {
+      "address": "sample",
+      "seqno": "sample"
+    }
+  ],
+  "TonBlockIdExt": [
+    {
+      "@type": "ton.blockIdExt",
+      "file_hash": "sample",
+      "root_hash": "sample",
+      "seqno": 123,
+      "shard": "sample",
+      "workchain": 123
+    }
+  ],
+  "Transaction": [
+    {
+      "@type": "ext.transaction",
+      "account": "sample",
+      "address": {
+        "@type": "accountAddress",
+        "account_address": "sample"
+      },
+      "data": "sample",
+      "fee": "9223372036854775808",
+      "other_fee": "9223372036854775808",
+      "out_msgs": [
+        {
+          "@type": "ext.message",
+          "body_hash": "sample",
+          "created_lt": "sample",
+          "destination": "sample",
+          "extra_currencies": [
+            {
+              "@type": "extraCurrency",
+              "amount": "9223372036854775808",
+              "id": 123
+            }
+          ],
+          "fwd_fee": "9223372036854775808",
+          "hash": "sample",
+          "ihr_fee": "9223372036854775808",
+          "msg_data": {
+            "@type": "msg.dataRaw"
+          },
+          "source": "sample",
+          "value": "9223372036854775808"
+        }
+      ],
+      "storage_fee": "9223372036854775808",
+      "transaction_id": {
+        "@type": "internal.transactionId",
+        "hash": "sample",
+        "lt": "sample"
+      },
+      "utime": 123
+    },
+    {
+      "@type": "ext.transaction",
+      "account": "sample",
+      "address": {
+        "@type": "accountAddress",
+        "account_address": "sample"
+      },
+      "data": "sample",
+      "fee": "9223372036854775808",
+      "in_msg": {
+        "@type": "ext.message",
+        "body_hash": "sample",
+        "created_lt": "sample",
+        "destination": "sample",
+        "extra_currencies": [
+          {
+            "@type": "extraCurrency",
+            "amount": "9223372036854775808",
+            "id": 123
+          }
+        ],
+        "fwd_fee": "9223372036854775808",
+        "hash": "sample",
+        "ihr_fee": "9223372036854775808",
+        "message": "sample",
+        "message_decode_error": "sample",
+        "msg_data": {
+          "@type": "msg.dataRaw",
+          "body": "sample",
+          "init_state": "sample"
+        },
+        "source": "sample",
+        "value": "9223372036854775808"
+      },
+      "other_fee": "9223372036854775808",
+      "out_msgs": [
+        {
+          "@type": "ext.message",
+          "body_hash": "sample",
+          "created_lt": "sample",
+          "destination": "sample",
+          "extra_currencies": [
+            {
+              "@type": "extraCurrency",
+              "amount": "9223372036854775808",
+              "id": 123
+            }
+          ],
+          "fwd_fee": "9223372036854775808",
+          "hash": "sample",
+          "ihr_fee": "9223372036854775808",
+          "msg_data": {
+            "@type": "msg.dataRaw"
+          },
+          "source": "sample",
+          "value": "9223372036854775808"
+        }
+      ],
+      "storage_fee": "9223372036854775808",
+      "transaction_id": {
+        "@type": "internal.transactionId",
+        "hash": "sample",
+        "lt": "sample"
+      },
+      "utime": 123
+    }
+  ],
+  "TransactionExt": [
+    {
+      "@type": "raw.transactionExt",
+      "account": "sample",
+      "address": {
+        "@type": "accountAddress",
+        "account_address": "sample"
+      },
+      "data": "sample",
+      "fee": "9223372036854775808",
+      "other_fee": "9223372036854775808",
+      "out_msgs": [
+        {
+          "@type": "raw.message",
+          "body_hash": "sample",
+          "created_lt": "sample",
+          "destination": {
+            "@type": "accountAddress",
+            "account_address": "sample"
+          },
+          "extra_currencies": [
+            {
+              "@type": "extraCurrency",
+              "amount": "9223372036854775808",
+              "id": 123
+            }
+          ],
+          "fwd_fee": "9223372036854775808",
+          "hash": "sample",
+          "ihr_fee": "9223372036854775808",
+          "msg_data": {
+            "@type": "msg.dataRaw"
+          },
+          "source": {
+            "@type": "accountAddress",
+            "account_address": "sample"
+          },
+          "value": "9223372036854775808"
+        }
+      ],
+      "storage_fee": "9223372036854775808",
+      "transaction_id": {
+        "@type": "internal.transactionId",
+        "hash": "sample",
+        "lt": "sample"
+      },
+      "utime": 123
+    },
+    {
+      "@type": "raw.transactionExt",
+      "account": "sample",
+      "address": {
+        "@type": "accountAddress",
+        "account_address": "sample"
+      },
+      "data": "sample",
+      "fee": "9223372036854775808",
+      "in_msg": {
+        "@type": "raw.message",
+        "body_hash": "sample",
+        "created_lt": "sample",
+        "destination": {
+          "@type": "accountAddress",
+          "account_address": "sample"
+        },
+        "extra_currencies": [
+          {
+            "@type": "extraCurrency",
+            "amount": "9223372036854775808",
+            "id": 123
+          }
+        ],
+        "fwd_fee": "9223372036854775808",
+        "hash": "sample",
+        "ihr_fee": "9223372036854775808",
+        "msg_data": {
+          "@type": "msg.dataRaw",
+          "body": "sample",
+          "init_state": "sample"
+        },
+        "source": {
+          "@type": "accountAddress",
+          "account_address": "sample"
+        },
+        "value": "9223372036854775808"
+      },
+      "other_fee": "9223372036854775808",
+      "out_msgs": [
+        {
+          "@type": "raw.message",
+          "body_hash": "sample",
+          "created_lt": "sample",
+          "destination": {
+            "@type": "accountAddress",
+            "account_address": "sample"
+          },
+          "extra_currencies": [
+            {
+              "@type": "extraCurrency",
+              "amount": "9223372036854775808",
+              "id": 123
+            }
+          ],
+          "fwd_fee": "9223372036854775808",
+          "hash": "sample",
+          "ihr_fee": "9223372036854775808",
+          "msg_data": {
+            "@type": "msg.dataRaw"
+          },
+          "source": {
+            "@type": "accountAddress",
+            "account_address": "sample"
+          },
+          "value": "9223372036854775808"
+        }
+      ],
+      "storage_fee": "9223372036854775808",
+      "transaction_id": {
+        "@type": "internal.transactionId",
+        "hash": "sample",
+        "lt": "sample"
+      },
+      "utime": 123
+    }
+  ],
+  "TransactionStd": [
+    {
+      "@type": "raw.transaction",
+      "address": {
+        "@type": "accountAddress",
+        "account_address": "sample"
+      },
+      "data": "sample",
+      "fee": "9223372036854775808",
+      "other_fee": "9223372036854775808",
+      "out_msgs": [
+        {
+          "@type": "raw.message",
+          "body_hash": "sample",
+          "created_lt": "sample",
+          "destination": {
+            "@type": "accountAddress",
+            "account_address": "sample"
+          },
+          "extra_currencies": [
+            {
+              "@type": "extraCurrency",
+              "amount": "9223372036854775808",
+              "id": 123
+            }
+          ],
+          "fwd_fee": "9223372036854775808",
+          "hash": "sample",
+          "ihr_fee": "9223372036854775808",
+          "msg_data": {
+            "@type": "msg.dataRaw"
+          },
+          "source": {
+            "@type": "accountAddress",
+            "account_address": "sample"
+          },
+          "value": "9223372036854775808"
+        }
+      ],
+      "storage_fee": "9223372036854775808",
+      "transaction_id": {
+        "@type": "internal.transactionId",
+        "hash": "sample",
+        "lt": "sample"
+      },
+      "utime": 123
+    },
+    {
+      "@type": "raw.transaction",
+      "address": {
+        "@type": "accountAddress",
+        "account_address": "sample"
+      },
+      "data": "sample",
+      "fee": "9223372036854775808",
+      "in_msg": {
+        "@type": "raw.message",
+        "body_hash": "sample",
+        "created_lt": "sample",
+        "destination": {
+          "@type": "accountAddress",
+          "account_address": "sample"
+        },
+        "extra_currencies": [
+          {
+            "@type": "extraCurrency",
+            "amount": "9223372036854775808",
+            "id": 123
+          }
+        ],
+        "fwd_fee": "9223372036854775808",
+        "hash": "sample",
+        "ihr_fee": "9223372036854775808",
+        "msg_data": {
+          "@type": "msg.dataRaw",
+          "body": "sample",
+          "init_state": "sample"
+        },
+        "source": {
+          "@type": "accountAddress",
+          "account_address": "sample"
+        },
+        "value": "9223372036854775808"
+      },
+      "other_fee": "9223372036854775808",
+      "out_msgs": [
+        {
+          "@type": "raw.message",
+          "body_hash": "sample",
+          "created_lt": "sample",
+          "destination": {
+            "@type": "accountAddress",
+            "account_address": "sample"
+          },
+          "extra_currencies": [
+            {
+              "@type": "extraCurrency",
+              "amount": "9223372036854775808",
+              "id": 123
+            }
+          ],
+          "fwd_fee": "9223372036854775808",
+          "hash": "sample",
+          "ihr_fee": "9223372036854775808",
+          "msg_data": {
+            "@type": "msg.dataRaw"
+          },
+          "source": {
+            "@type": "accountAddress",
+            "account_address": "sample"
+          },
+          "value": "9223372036854775808"
+        }
+      ],
+      "storage_fee": "9223372036854775808",
+      "transaction_id": {
+        "@type": "internal.transactionId",
+        "hash": "sample",
+        "lt": "sample"
+      },
+      "utime": 123
+    }
+  ],
+  "Transactions": [
+    [
+      {
+        "@type": "ext.transaction",
+        "account": "sample",
+        "address": {
+          "@type": "accountAddress",
+          "account_address": "sample"
+        },
+        "data": "sample",
+        "fee": "9223372036854775808",
+        "other_fee": "9223372036854775808",
+        "out_msgs": [
+          {
+            "@type": "ext.message",
+            "body_hash": "sample",
+            "created_lt": "sample",
+            "destination": "sample",
+            "extra_currencies": [
+              {
+                "@type": "extraCurrency",
+                "amount": "9223372036854775808",
+                "id": 123
+              }
+            ],
+            "fwd_fee": "9223372036854775808",
+            "hash": "sample",
+            "ihr_fee": "9223372036854775808",
+            "msg_data": {
+              "@type": "msg.dataRaw"
+            },
+            "source": "sample",
+            "value": "9223372036854775808"
+          }
+        ],
+        "storage_fee": "9223372036854775808",
+        "transaction_id": {
+          "@type": "internal.transactionId",
+          "hash": "sample",
+          "lt": "sample"
+        },
+        "utime": 123
+      }
+    ]
+  ],
+  "TransactionsRequest": [
+    {
+      "address": "sample"
+    },
+    {
+      "address": "sample",
+      "archival": "sample",
+      "hash": "sample",
+      "limit": "sample",
+      "lt": "sample",
+      "to_lt": "sample"
+    }
+  ],
+  "TransactionsStd": [
+    {
+      "@type": "raw.transactions",
+      "previous_transaction_id": {
+        "@type": "internal.transactionId",
+        "hash": "sample",
+        "lt": "sample"
+      },
+      "transactions": [
+        {
+          "@type": "raw.transaction",
+          "address": {
+            "@type": "accountAddress",
+            "account_address": "sample"
+          },
+          "data": "sample",
+          "fee": "9223372036854775808",
+          "other_fee": "9223372036854775808",
+          "out_msgs": [
+            {
+              "@type": "raw.message",
+              "body_hash": "sample",
+              "created_lt": "sample",
+              "destination": {
+                "@type": "accountAddress",
+                "account_address": "sample"
+              },
+              "extra_currencies": [],
+              "fwd_fee": "9223372036854775808",
+              "hash": "sample",
+              "ihr_fee": "9223372036854775808",
+              "msg_data": {
+                "@type": "msg.dataRaw"
+              },
+              "source": {
+                "@type": "accountAddress",
+                "account_address": "sample"
+              },
+              "value": "9223372036854775808"
+            }
+          ],
+          "storage_fee": "9223372036854775808",
+          "transaction_id": {
+            "@type": "internal.transactionId",
+            "hash": "sample",
+            "lt": "sample"
+          },
+          "utime": 123
+        }
+      ]
+    }
+  ],
+  "TryLocateResultTxRequest": [
+    {
+      "created_lt": "sample",
+      "destination": "sample",
+      "source": "sample"
+    }
+  ],
+  "TryLocateSourceTxRequest": [
+    {
+      "created_lt": "sample",
+      "destination": "sample",
+      "source": "sample"
+    }
+  ],
+  "TryLocateTxRequest": [
+    {
+      "created_lt": "sample",
+      "destination": "sample",
+      "source": "sample"
+    }
+  ],
+  "TvmCell": [
+    {
+      "@type": "tvm.cell",
+      "bytes": "sample"
+    }
+  ],
+  "TvmList": [
+    {
+      "@type": "tvm.list",
+      "elements": [
+        {
+          "@type": "tvm.stackEntrySlice",
+          "slice": {
+            "@type": "tvm.slice",
+            "bytes": "sample"
+          }
+        }
+      ]
+    }
+  ],
+  "TvmNumberDecimal": [
+    {
+      "@type": "tvm.numberDecimal",
+      "number": "9223372036854775808"
+    }
+  ],
+  "TvmSlice": [
+    {
+      "@type": "tvm.slice",
+      "bytes": "sample"
+    }
+  ],
+  "TvmStackEntry": [
+    {
+      "@type": "tvm.stackEntrySlice",
+      "slice": {
+        "@type": "tvm.slice",
+        "bytes": "sample"
+      }
+    },
+    {
+      "@type": "tvm.stackEntryCell",
+      "cell": {
+        "@type": "tvm.cell",
+        "bytes": "sample"
+      }
+    },
+    {
+      "@type": "tvm.stackEntryNumber",
+      "number": {
+        "@type": "tvm.numberDecimal",
+        "number": "9223372036854775808"
+      }
+    },
+    {
+      "@type": "tvm.stackEntryTuple",
+      "tuple": {
+        "@type": "tvm.tuple",
+        "elements": [
+          {
+            "@type": "tvm.stackEntrySlice",
+            "slice": {
+              "@type": "tvm.slice",
+              "bytes": "sample"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "@type": "tvm.stackEntryList",
+      "list": {
+        "@type": "tvm.list",
+        "elements": [
+          {
+            "@type": "tvm.stackEntrySlice",
+            "slice": {
+              "@type": "tvm.slice",
+              "bytes": "sample"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "@type": "tvm.stackEntryUnsupported"
+    }
+  ],
+  "TvmStackEntryCell": [
+    {
+      "@type": "tvm.stackEntryCell",
+      "cell": {
+        "@type": "tvm.cell",
+        "bytes": "sample"
+      }
+    }
+  ],
+  "TvmStackEntryList": [
+    {
+      "@type": "tvm.stackEntryList",
+      "list": {
+        "@type": "tvm.list",
+        "elements": [
+          {
+            "@type": "tvm.stackEntrySlice",
+            "slice": {
+              "@type": "tvm.slice",
+              "bytes": "sample"
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "TvmStackEntryNumber": [
+    {
+      "@type": "tvm.stackEntryNumber",
+      "number": {
+        "@type": "tvm.numberDecimal",
+        "number": "9223372036854775808"
+      }
+    }
+  ],
+  "TvmStackEntrySlice": [
+    {
+      "@type": "tvm.stackEntrySlice",
+      "slice": {
+        "@type": "tvm.slice",
+        "bytes": "sample"
+      }
+    }
+  ],
+  "TvmStackEntryTuple": [
+    {
+      "@type": "tvm.stackEntryTuple",
+      "tuple": {
+        "@type": "tvm.tuple",
+        "elements": [
+          {
+            "@type": "tvm.stackEntrySlice",
+            "slice": {
+              "@type": "tvm.slice",
+              "bytes": "sample"
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "TvmStackEntryUnsupported": [
+    {
+      "@type": "tvm.stackEntryUnsupported"
+    }
+  ],
+  "TvmTuple": [
+    {
+      "@type": "tvm.tuple",
+      "elements": [
+        {
+          "@type": "tvm.stackEntrySlice",
+          "slice": {
+            "@type": "tvm.slice",
+            "bytes": "sample"
+          }
+        }
+      ]
+    }
+  ],
+  "UnpackAddress": [
+    "sample"
+  ],
+  "UnpackAddressRequest": [
+    {
+      "address": "sample"
+    }
+  ],
+  "WalletInformation": [
+    {
+      "@type": "ext.accounts.walletInformation",
+      "account_state": "uninitialized",
+      "balance": "9223372036854775808",
+      "last_transaction_id": {
+        "@type": "internal.transactionId",
+        "hash": "sample",
+        "lt": "sample"
+      },
+      "wallet": true
+    },
+    {
+      "@type": "ext.accounts.walletInformation",
+      "account_state": "uninitialized",
+      "balance": "9223372036854775808",
+      "is_signature_allowed": true,
+      "last_transaction_id": {
+        "@type": "internal.transactionId",
+        "hash": "sample",
+        "lt": "sample"
+      },
+      "seqno": 123,
+      "wallet": true,
+      "wallet_id": 123,
+      "wallet_type": "wallet v1 r1"
+    }
+  ],
+  "WalletInformationRequest": [
+    {
+      "address": "sample"
+    },
+    {
+      "address": "sample",
+      "seqno": "sample"
+    }
+  ],
+  "WalletInformationWalletType": [
+    "wallet v1 r1",
+    "wallet v1 r2",
+    "wallet v1 r3",
+    "wallet v2 r1",
+    "wallet v2 r2",
+    "wallet v3 r1",
+    "wallet v3 r2",
+    "wallet v4 r1",
+    "wallet v4 r2",
+    "wallet v5 beta",
+    "wallet v5 r1",
+    "tg-wallet"
+  ]
+}

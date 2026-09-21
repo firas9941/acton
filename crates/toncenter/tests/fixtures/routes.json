@@ -1,0 +1,344 @@
+{
+  "detectAddress": {
+    "get": true,
+    "request": {
+      "$ref": "#/components/schemas/AddressRequest"
+    },
+    "response": {
+      "$ref": "#/components/schemas/detectAddressResponse"
+    }
+  },
+  "detectHash": {
+    "get": true,
+    "request": {
+      "$ref": "#/components/schemas/DetectHashRequest"
+    },
+    "response": {
+      "$ref": "#/components/schemas/detectHashResponse"
+    }
+  },
+  "dnsResolve": {
+    "get": true,
+    "request": {
+      "$ref": "#/components/schemas/DnsResolveRequest"
+    },
+    "response": {
+      "$ref": "#/components/schemas/dnsResolveResponse"
+    }
+  },
+  "estimateFee": {
+    "get": false,
+    "request": {
+      "$ref": "#/components/schemas/EstimateFeeRequest"
+    },
+    "response": {
+      "$ref": "#/components/schemas/estimateFeeResponse"
+    }
+  },
+  "getAddressBalance": {
+    "get": true,
+    "request": {
+      "$ref": "#/components/schemas/AddressWithSeqnoRequest"
+    },
+    "response": {
+      "$ref": "#/components/schemas/getAddressBalanceResponse"
+    }
+  },
+  "getAddressInformation": {
+    "get": true,
+    "request": {
+      "$ref": "#/components/schemas/AddressWithSeqnoRequest"
+    },
+    "response": {
+      "$ref": "#/components/schemas/getAddressInformationResponse"
+    }
+  },
+  "getAddressState": {
+    "get": true,
+    "request": {
+      "$ref": "#/components/schemas/AddressWithSeqnoRequest"
+    },
+    "response": {
+      "$ref": "#/components/schemas/getAddressStateResponse"
+    }
+  },
+  "getBlock": {
+    "get": true,
+    "request": {
+      "$ref": "#/components/schemas/BlockDataRequest"
+    },
+    "response": {
+      "$ref": "#/components/schemas/getBlockResponse"
+    }
+  },
+  "getBlockHeader": {
+    "get": true,
+    "request": {
+      "$ref": "#/components/schemas/BlockHeaderRequest"
+    },
+    "response": {
+      "$ref": "#/components/schemas/getBlockHeaderResponse"
+    }
+  },
+  "getBlockTransactions": {
+    "get": true,
+    "request": {
+      "$ref": "#/components/schemas/BlockTransactionsRequest"
+    },
+    "response": {
+      "$ref": "#/components/schemas/getBlockTransactionsResponse"
+    }
+  },
+  "getBlockTransactionsExt": {
+    "get": true,
+    "request": {
+      "$ref": "#/components/schemas/BlockTransactionsRequest"
+    },
+    "response": {
+      "$ref": "#/components/schemas/getBlockTransactionsExtResponse"
+    }
+  },
+  "getConfigAll": {
+    "get": true,
+    "request": {
+      "$ref": "#/components/schemas/ConfigAllRequest"
+    },
+    "response": {
+      "$ref": "#/components/schemas/getConfigAllResponse"
+    }
+  },
+  "getConfigParam": {
+    "get": true,
+    "request": {
+      "$ref": "#/components/schemas/ConfigParamRequest"
+    },
+    "response": {
+      "$ref": "#/components/schemas/getConfigParamResponse"
+    }
+  },
+  "getConsensusBlock": {
+    "get": true,
+    "request": {
+      "$ref": "#/components/schemas/EmptyRequest"
+    },
+    "response": {
+      "$ref": "#/components/schemas/getConsensusBlockResponse"
+    }
+  },
+  "getExtendedAddressInformation": {
+    "get": true,
+    "request": {
+      "$ref": "#/components/schemas/AddressWithSeqnoRequest"
+    },
+    "response": {
+      "$ref": "#/components/schemas/getExtendedAddressInformationResponse"
+    }
+  },
+  "getLibraries": {
+    "get": true,
+    "request": {
+      "$ref": "#/components/schemas/LibrariesRequest"
+    },
+    "response": {
+      "$ref": "#/components/schemas/getLibrariesResponse"
+    }
+  },
+  "getMasterchainBlockSignatures": {
+    "get": true,
+    "request": {
+      "$ref": "#/components/schemas/SeqnoRequest"
+    },
+    "response": {
+      "$ref": "#/components/schemas/getMasterchainBlockSignaturesResponse"
+    }
+  },
+  "getMasterchainInfo": {
+    "get": true,
+    "request": {
+      "$ref": "#/components/schemas/EmptyRequest"
+    },
+    "response": {
+      "$ref": "#/components/schemas/getMasterchainInfoResponse"
+    }
+  },
+  "getOutMsgQueueSize": {
+    "get": true,
+    "request": {
+      "$ref": "#/components/schemas/EmptyRequest"
+    },
+    "response": {
+      "$ref": "#/components/schemas/getOutMsgQueueSizeResponse"
+    }
+  },
+  "getShardAccountCell": {
+    "get": true,
+    "request": {
+      "$ref": "#/components/schemas/AddressWithSeqnoRequest"
+    },
+    "response": {
+      "$ref": "#/components/schemas/getShardAccountCellResponse"
+    }
+  },
+  "getShardBlockProof": {
+    "get": true,
+    "request": {
+      "$ref": "#/components/schemas/ShardBlockProofRequest"
+    },
+    "response": {
+      "$ref": "#/components/schemas/getShardBlockProofResponse"
+    }
+  },
+  "getShards": {
+    "get": true,
+    "request": {
+      "$ref": "#/components/schemas/SeqnoRequest"
+    },
+    "response": {
+      "$ref": "#/components/schemas/getShardsResponse"
+    }
+  },
+  "getTokenData": {
+    "get": true,
+    "request": {
+      "$ref": "#/components/schemas/AddressWithSeqnoRequest"
+    },
+    "response": {
+      "$ref": "#/components/schemas/getTokenDataResponse"
+    }
+  },
+  "getTransactions": {
+    "get": true,
+    "request": {
+      "$ref": "#/components/schemas/TransactionsRequest"
+    },
+    "response": {
+      "$ref": "#/components/schemas/getTransactionsResponse"
+    }
+  },
+  "getTransactionsStd": {
+    "get": true,
+    "request": {
+      "$ref": "#/components/schemas/TransactionsRequest"
+    },
+    "response": {
+      "$ref": "#/components/schemas/getTransactionsStdResponse"
+    }
+  },
+  "getWalletInformation": {
+    "get": true,
+    "request": {
+      "$ref": "#/components/schemas/AddressWithSeqnoRequest"
+    },
+    "response": {
+      "$ref": "#/components/schemas/getWalletInformationResponse"
+    }
+  },
+  "lookupBlock": {
+    "get": true,
+    "request": {
+      "$ref": "#/components/schemas/LookupBlockRequest"
+    },
+    "response": {
+      "$ref": "#/components/schemas/lookupBlockResponse"
+    }
+  },
+  "packAddress": {
+    "get": true,
+    "request": {
+      "$ref": "#/components/schemas/AddressRequest"
+    },
+    "response": {
+      "$ref": "#/components/schemas/packAddressResponse"
+    }
+  },
+  "runGetMethod": {
+    "get": false,
+    "request": {
+      "$ref": "#/components/schemas/RunGetMethodRequest"
+    },
+    "response": {
+      "$ref": "#/components/schemas/runGetMethodResponse"
+    }
+  },
+  "runGetMethodStd": {
+    "get": false,
+    "request": {
+      "$ref": "#/components/schemas/RunGetMethodStdRequest"
+    },
+    "response": {
+      "$ref": "#/components/schemas/runGetMethodStdResponse"
+    }
+  },
+  "sendBoc": {
+    "get": false,
+    "request": {
+      "$ref": "#/components/schemas/SendBocRequest"
+    },
+    "response": {
+      "$ref": "#/components/schemas/sendBocResponse"
+    }
+  },
+  "sendBocReturnHash": {
+    "get": false,
+    "request": {
+      "$ref": "#/components/schemas/SendBocRequest"
+    },
+    "response": {
+      "$ref": "#/components/schemas/sendBocReturnHashResponse"
+    }
+  },
+  "sendBocReturnHashNoError": {
+    "get": false,
+    "request": {
+      "$ref": "#/components/schemas/SendBocRequest"
+    },
+    "response": {
+      "$ref": "#/components/schemas/sendBocReturnHashNoErrorResponse"
+    }
+  },
+  "shards": {
+    "get": true,
+    "request": {
+      "$ref": "#/components/schemas/SeqnoRequest"
+    },
+    "response": {
+      "$ref": "#/components/schemas/shardsResponse"
+    }
+  },
+  "tryLocateResultTx": {
+    "get": true,
+    "request": {
+      "$ref": "#/components/schemas/TryLocateTxRequest"
+    },
+    "response": {
+      "$ref": "#/components/schemas/tryLocateResultTxResponse"
+    }
+  },
+  "tryLocateSourceTx": {
+    "get": true,
+    "request": {
+      "$ref": "#/components/schemas/TryLocateTxRequest"
+    },
+    "response": {
+      "$ref": "#/components/schemas/tryLocateSourceTxResponse"
+    }
+  },
+  "tryLocateTx": {
+    "get": true,
+    "request": {
+      "$ref": "#/components/schemas/TryLocateTxRequest"
+    },
+    "response": {
+      "$ref": "#/components/schemas/tryLocateTxResponse"
+    }
+  },
+  "unpackAddress": {
+    "get": true,
+    "request": {
+      "$ref": "#/components/schemas/AddressRequest"
+    },
+    "response": {
+      "$ref": "#/components/schemas/unpackAddressResponse"
+    }
+  }
+}

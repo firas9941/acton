@@ -1,0 +1,15 @@
+{
+  "floating_point_integer": true,
+  "long_stack_pair": true,
+  "missing_object_tag": true,
+  "missing_required_request_field": true,
+  "overflow_i32": true,
+  "short_stack_pair": true,
+  "unknown_request_field": true,
+  "unknown_stack_tag": true,
+  "wrong_error_flag": true,
+  "wrong_nested_stack_tag": true,
+  "wrong_object_tag": true,
+  "wrong_stack_payload": true,
+  "wrong_success_flag": true
+}

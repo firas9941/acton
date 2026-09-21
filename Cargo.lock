@@ -6161,6 +6161,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "toncenter"
+version = "2.1.15"
+dependencies = [
+ "expect-test",
+ "jsonschema",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "utoipa",
+]
+
+[[package]]
 name = "toncenter-keys"
 version = "1.2.0"
 dependencies = [
