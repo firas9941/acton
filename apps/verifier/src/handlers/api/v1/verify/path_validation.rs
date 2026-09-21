@@ -148,11 +148,63 @@ fn validate_relative_path(name: &str, value: &str) -> Result<(), ApiError> {
 
 #[cfg(test)]
 mod tests {
-    use super::{validate_relative_path, validate_source_path};
+    use std::collections::BTreeMap;
+
+    use super::{
+        MAX_SOURCE_DIRECTORY_DEPTH, MAX_SOURCE_PATH_CHARS, validate_import_mappings,
+        validate_relative_path, validate_source_path,
+    };
+
+    #[test]
+    fn source_path_accepts_portable_paths() {
+        for path in [
+            "main.tolk",
+            "Contracts_123/lib-name.v1.tolk",
+            "@scope/lib+name.v1.tolk",
+            "contracts.tolk/main.fc",
+        ] {
+            assert!(
+                validate_source_path(path).is_ok(),
+                "path should be accepted: {path:?}"
+            );
+        }
+    }
+
+    #[test]
+    fn source_path_enforces_length_limit() {
+        let path_at_limit = format!("{}.tolk", "a".repeat(MAX_SOURCE_PATH_CHARS - ".tolk".len()));
+        let path_over_limit = format!("a{path_at_limit}");
+
+        assert_eq!(path_at_limit.chars().count(), MAX_SOURCE_PATH_CHARS);
+        assert!(validate_source_path(&path_at_limit).is_ok());
+        assert!(validate_source_path(&path_over_limit).is_err());
+    }
+
+    #[test]
+    fn source_path_enforces_directory_depth_limit() {
+        let path_at_limit = format!(
+            "{}/main.tolk",
+            ["dir"; MAX_SOURCE_DIRECTORY_DEPTH].join("/")
+        );
+        let path_over_limit = format!("dir/{path_at_limit}");
+
+        assert_eq!(
+            path_at_limit.matches('/').count(),
+            MAX_SOURCE_DIRECTORY_DEPTH
+        );
+        assert!(validate_source_path(&path_at_limit).is_ok());
+        assert!(validate_source_path(&path_over_limit).is_err());
+    }
 
     #[test]
     fn source_path_rejects_control_characters() {
-        for path in ["main\0.tolk", "main\n.tolk", "main\r.tolk", "main\t.tolk"] {
+        for path in [
+            "main\0.tolk",
+            "main\n.tolk",
+            "main\r.tolk",
+            "main\t.tolk",
+            "main\u{7f}.tolk",
+        ] {
             assert!(
                 validate_source_path(path).is_err(),
                 "path should be rejected: {path:?}"
@@ -161,8 +213,66 @@ mod tests {
     }
 
     #[test]
-    fn import_mapping_rejects_unsafe_paths() {
+    fn source_path_rejects_unsafe_relative_paths() {
         for path in [
+            "",
+            " ",
+            "../main.tolk",
+            "/main.tolk",
+            "~/main.tolk",
+            "C:/main.tolk",
+            "./main.tolk",
+            "contracts/./main.tolk",
+            "contracts//main.tolk",
+            ".git/main.tolk",
+            "main.tolk ",
+            "contracts\\main.tolk",
+        ] {
+            assert!(
+                validate_source_path(path).is_err(),
+                "path should be rejected: {path:?}"
+            );
+        }
+    }
+
+    #[test]
+    fn source_path_rejects_unsupported_characters_and_trailing_dots() {
+        for path in [
+            "контракт.tolk",
+            "contracts/file name.tolk",
+            "contracts/file=name.tolk",
+            "main.tolk.",
+            "contracts./main.tolk",
+        ] {
+            assert!(
+                validate_source_path(path).is_err(),
+                "path should be rejected: {path:?}"
+            );
+        }
+    }
+
+    #[test]
+    fn source_path_rejects_multiple_source_extensions() {
+        for path in [
+            "main.tolk.fc",
+            "main.func.fc",
+            "main.fc.tolk",
+            "contract.tact.pkg",
+            "main.FC.ToLk",
+        ] {
+            assert!(
+                validate_source_path(path).is_err(),
+                "path should be rejected: {path:?}"
+            );
+        }
+
+        assert!(validate_source_path("contracts/my.contract.tolk").is_ok());
+    }
+
+    #[test]
+    fn relative_path_rejects_unsafe_import_mapping_paths() {
+        for path in [
+            "",
             "../contracts",
             "~/contracts",
             "C:/contracts",
@@ -176,5 +286,20 @@ mod tests {
                 "import mapping path should be rejected: {path:?}"
             );
         }
+    }
+
+    #[test]
+    fn import_mappings_validate_both_prefixes_and_targets() {
+        let valid = BTreeMap::from([
+            ("@contracts".to_owned(), "contracts".to_owned()),
+            ("shared/lib".to_owned(), "src/shared".to_owned()),
+        ]);
+        assert!(validate_import_mappings(&valid).is_ok());
+
+        let invalid_prefix = BTreeMap::from([("../contracts".to_owned(), "contracts".to_owned())]);
+        assert!(validate_import_mappings(&invalid_prefix).is_err());
+
+        let invalid_target = BTreeMap::from([("@contracts".to_owned(), "../contracts".to_owned())]);
+        assert!(validate_import_mappings(&invalid_target).is_err());
     }
 }
