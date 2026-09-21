@@ -1,5 +1,4 @@
-use self::toncenter::v3;
-use ::toncenter::v2;
+use ::toncenter::{v2, v3};
 use anyhow::{Context, anyhow};
 use num_bigint::BigInt;
 use reqwest::blocking::Response;

@@ -1121,7 +1121,7 @@ impl Localnet {
         &self,
         requested_seqno: Option<i32>,
         raw_query: String,
-    ) -> anyhow::Result<Option<ton_api::toncenter::v3::BlocksResponse>> {
+    ) -> anyhow::Result<Option<toncenter::v3::BlocksResponse>> {
         let Some(provider) = self.historical_provider(requested_seqno).await? else {
             return Ok(None);
         };
@@ -1132,7 +1132,7 @@ impl Localnet {
         &self,
         requested_seqno: Option<i32>,
         raw_query: String,
-    ) -> anyhow::Result<Option<ton_api::toncenter::v3::TransactionsResponse>> {
+    ) -> anyhow::Result<Option<toncenter::v3::TransactionsResponse>> {
         let Some(provider) = self.historical_provider(requested_seqno).await? else {
             return Ok(None);
         };
@@ -1144,7 +1144,7 @@ impl Localnet {
     pub async fn get_unpinned_historical_transactions_v3(
         &self,
         raw_query: String,
-    ) -> anyhow::Result<Option<ton_api::toncenter::v3::TransactionsResponse>> {
+    ) -> anyhow::Result<Option<toncenter::v3::TransactionsResponse>> {
         let StateSource::Remote(provider) = self.state_source().await? else {
             return Ok(None);
         };

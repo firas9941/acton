@@ -1,0 +1,6494 @@
+{
+  "StringOrNumber": [
+    {
+      "accepted": true,
+      "output": "0"
+    },
+    {
+      "accepted": true,
+      "output": "-1"
+    },
+    {
+      "accepted": true,
+      "output": "18446744073709551616"
+    },
+    {
+      "accepted": true,
+      "output": -9223372036854775808
+    },
+    {
+      "accepted": true,
+      "output": 9223372036854775807
+    },
+    {
+      "accepted": true,
+      "output": 18446744073709551615
+    },
+    {
+      "accepted": false
+    },
+    {
+      "accepted": false
+    },
+    {
+      "accepted": false
+    }
+  ],
+  "requests::AccountStatesQuery": [
+    {
+      "accepted": true,
+      "output": {
+        "address": [
+          "value"
+        ],
+        "include_boc": true
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "address": [],
+        "include_boc": null
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "address": [],
+        "include_boc": null
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "address": [],
+        "include_boc": null
+      }
+    },
+    {
+      "accepted": false
+    }
+  ],
+  "requests::AddressInformationQuery": [
+    {
+      "accepted": true,
+      "output": {
+        "address": "value",
+        "use_v2": true
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "address": "value",
+        "use_v2": null
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "address": "value",
+        "use_v2": null
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "address": "value",
+        "use_v2": null
+      }
+    },
+    {
+      "accepted": false
+    }
+  ],
+  "requests::AddressesQuery": [
+    {
+      "accepted": true,
+      "output": {
+        "address": [
+          "value"
+        ]
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "address": []
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "address": []
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "address": []
+      }
+    }
+  ],
+  "requests::AdjacentTransactionsQuery": [
+    {
+      "accepted": true,
+      "output": {
+        "direction": "value",
+        "hash": "value"
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "direction": null,
+        "hash": "value"
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "direction": null,
+        "hash": "value"
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "direction": null,
+        "hash": "value"
+      }
+    },
+    {
+      "accepted": false
+    }
+  ],
+  "requests::BlocksQuery": [
+    {
+      "accepted": true,
+      "output": {
+        "end_lt": 42,
+        "end_utime": -1,
+        "file_hash": "value",
+        "limit": -1,
+        "mc_seqno": -1,
+        "offset": -1,
+        "root_hash": "value",
+        "seqno": -1,
+        "shard": "value",
+        "sort": "value",
+        "start_lt": 42,
+        "start_utime": -1,
+        "workchain": -1
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "end_lt": null,
+        "end_utime": null,
+        "file_hash": null,
+        "limit": null,
+        "mc_seqno": null,
+        "offset": null,
+        "root_hash": null,
+        "seqno": null,
+        "shard": null,
+        "sort": null,
+        "start_lt": null,
+        "start_utime": null,
+        "workchain": null
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "end_lt": null,
+        "end_utime": null,
+        "file_hash": null,
+        "limit": null,
+        "mc_seqno": null,
+        "offset": null,
+        "root_hash": null,
+        "seqno": null,
+        "shard": null,
+        "sort": null,
+        "start_lt": null,
+        "start_utime": null,
+        "workchain": null
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "end_lt": null,
+        "end_utime": null,
+        "file_hash": null,
+        "limit": null,
+        "mc_seqno": null,
+        "offset": null,
+        "root_hash": null,
+        "seqno": null,
+        "shard": null,
+        "sort": null,
+        "start_lt": null,
+        "start_utime": null,
+        "workchain": null
+      }
+    }
+  ],
+  "requests::DnsRecordsQuery": [
+    {
+      "accepted": true,
+      "output": {
+        "domain": "value",
+        "limit": -1,
+        "offset": -1,
+        "wallet": "value"
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "domain": null,
+        "limit": null,
+        "offset": null,
+        "wallet": null
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "domain": null,
+        "limit": null,
+        "offset": null,
+        "wallet": null
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "domain": null,
+        "limit": null,
+        "offset": null,
+        "wallet": null
+      }
+    }
+  ],
+  "requests::EstimateFeeRequest": [
+    {
+      "accepted": true,
+      "output": {
+        "address": "value",
+        "body": "value",
+        "ignore_chksig": true,
+        "init_code": "value",
+        "init_data": "value"
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "address": "value",
+        "body": "value",
+        "ignore_chksig": null,
+        "init_code": null,
+        "init_data": null
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "address": "value",
+        "body": "value",
+        "ignore_chksig": null,
+        "init_code": null,
+        "init_data": null
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "address": "value",
+        "body": "value",
+        "ignore_chksig": null,
+        "init_code": null,
+        "init_data": null
+      }
+    },
+    {
+      "accepted": false
+    }
+  ],
+  "requests::JettonBurnsQuery": [
+    {
+      "accepted": true,
+      "output": {
+        "address": [
+          "value"
+        ],
+        "end_lt": 42,
+        "end_utime": -1,
+        "jetton_master": "value",
+        "jetton_wallet": [
+          "value"
+        ],
+        "limit": -1,
+        "offset": -1,
+        "sort": "value",
+        "start_lt": 42,
+        "start_utime": -1
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "address": [],
+        "end_lt": null,
+        "end_utime": null,
+        "jetton_master": null,
+        "jetton_wallet": [],
+        "limit": null,
+        "offset": null,
+        "sort": null,
+        "start_lt": null,
+        "start_utime": null
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "address": [],
+        "end_lt": null,
+        "end_utime": null,
+        "jetton_master": null,
+        "jetton_wallet": [],
+        "limit": null,
+        "offset": null,
+        "sort": null,
+        "start_lt": null,
+        "start_utime": null
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "address": [],
+        "end_lt": null,
+        "end_utime": null,
+        "jetton_master": null,
+        "jetton_wallet": [],
+        "limit": null,
+        "offset": null,
+        "sort": null,
+        "start_lt": null,
+        "start_utime": null
+      }
+    }
+  ],
+  "requests::JettonMastersQuery": [
+    {
+      "accepted": true,
+      "output": {
+        "address": [
+          "value"
+        ],
+        "admin_address": [
+          "value"
+        ],
+        "limit": -1,
+        "offset": -1
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "address": [],
+        "admin_address": [],
+        "limit": null,
+        "offset": null
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "address": [],
+        "admin_address": [],
+        "limit": null,
+        "offset": null
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "address": [],
+        "admin_address": [],
+        "limit": null,
+        "offset": null
+      }
+    }
+  ],
+  "requests::JettonTransfersQuery": [
+    {
+      "accepted": true,
+      "output": {
+        "direction": "value",
+        "end_lt": 42,
+        "end_utime": -1,
+        "jetton_master": "value",
+        "jetton_wallet": [
+          "value"
+        ],
+        "limit": -1,
+        "offset": -1,
+        "owner_address": [
+          "value"
+        ],
+        "sort": "value",
+        "start_lt": 42,
+        "start_utime": -1
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "direction": null,
+        "end_lt": null,
+        "end_utime": null,
+        "jetton_master": null,
+        "jetton_wallet": [],
+        "limit": null,
+        "offset": null,
+        "owner_address": [],
+        "sort": null,
+        "start_lt": null,
+        "start_utime": null
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "direction": null,
+        "end_lt": null,
+        "end_utime": null,
+        "jetton_master": null,
+        "jetton_wallet": [],
+        "limit": null,
+        "offset": null,
+        "owner_address": [],
+        "sort": null,
+        "start_lt": null,
+        "start_utime": null
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "direction": null,
+        "end_lt": null,
+        "end_utime": null,
+        "jetton_master": null,
+        "jetton_wallet": [],
+        "limit": null,
+        "offset": null,
+        "owner_address": [],
+        "sort": null,
+        "start_lt": null,
+        "start_utime": null
+      }
+    }
+  ],
+  "requests::JettonWalletsQuery": [
+    {
+      "accepted": true,
+      "output": {
+        "address": [
+          "value"
+        ],
+        "exclude_zero_balance": true,
+        "jetton_address": [
+          "value"
+        ],
+        "limit": -1,
+        "offset": -1,
+        "owner_address": [
+          "value"
+        ],
+        "sort": "value"
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "address": [],
+        "exclude_zero_balance": null,
+        "jetton_address": [],
+        "limit": null,
+        "offset": null,
+        "owner_address": [],
+        "sort": null
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "address": [],
+        "exclude_zero_balance": null,
+        "jetton_address": [],
+        "limit": null,
+        "offset": null,
+        "owner_address": [],
+        "sort": null
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "address": [],
+        "exclude_zero_balance": null,
+        "jetton_address": [],
+        "limit": null,
+        "offset": null,
+        "owner_address": [],
+        "sort": null
+      }
+    }
+  ],
+  "requests::MasterchainBlockShardStateQuery": [
+    {
+      "accepted": true,
+      "output": {
+        "seqno": -1
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "seqno": -1
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "seqno": -1
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "seqno": -1
+      }
+    },
+    {
+      "accepted": false
+    }
+  ],
+  "requests::MasterchainBlockShardsQuery": [
+    {
+      "accepted": true,
+      "output": {
+        "limit": -1,
+        "offset": -1,
+        "seqno": -1
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "limit": null,
+        "offset": null,
+        "seqno": -1
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "limit": null,
+        "offset": null,
+        "seqno": -1
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "limit": null,
+        "offset": null,
+        "seqno": -1
+      }
+    },
+    {
+      "accepted": false
+    }
+  ],
+  "requests::MasterchainInfoQuery": [
+    {
+      "accepted": true,
+      "output": {}
+    },
+    {
+      "accepted": true,
+      "output": {}
+    },
+    {
+      "accepted": true,
+      "output": {}
+    },
+    {
+      "accepted": true,
+      "output": {}
+    }
+  ],
+  "requests::MessagesQuery": [
+    {
+      "accepted": true,
+      "output": {
+        "body_hash": "value",
+        "destination": "value",
+        "direction": "value",
+        "end_lt": 42,
+        "end_utime": -1,
+        "exclude_externals": true,
+        "limit": -1,
+        "msg_hash": [
+          "value"
+        ],
+        "offset": -1,
+        "only_externals": true,
+        "opcode": "value",
+        "sort": "value",
+        "source": "value",
+        "start_lt": 42,
+        "start_utime": -1
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "body_hash": null,
+        "destination": null,
+        "direction": null,
+        "end_lt": null,
+        "end_utime": null,
+        "exclude_externals": null,
+        "limit": null,
+        "msg_hash": [],
+        "offset": null,
+        "only_externals": null,
+        "opcode": null,
+        "sort": null,
+        "source": null,
+        "start_lt": null,
+        "start_utime": null
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "body_hash": null,
+        "destination": null,
+        "direction": null,
+        "end_lt": null,
+        "end_utime": null,
+        "exclude_externals": null,
+        "limit": null,
+        "msg_hash": [],
+        "offset": null,
+        "only_externals": null,
+        "opcode": null,
+        "sort": null,
+        "source": null,
+        "start_lt": null,
+        "start_utime": null
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "body_hash": null,
+        "destination": null,
+        "direction": null,
+        "end_lt": null,
+        "end_utime": null,
+        "exclude_externals": null,
+        "limit": null,
+        "msg_hash": [],
+        "offset": null,
+        "only_externals": null,
+        "opcode": null,
+        "sort": null,
+        "source": null,
+        "start_lt": null,
+        "start_utime": null
+      }
+    }
+  ],
+  "requests::MultisigOrdersQuery": [
+    {
+      "accepted": true,
+      "output": {
+        "address": [
+          "value"
+        ],
+        "limit": -1,
+        "multisig_address": [
+          "value"
+        ],
+        "offset": -1,
+        "parse_actions": true,
+        "sort": "value"
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "address": [],
+        "limit": null,
+        "multisig_address": [],
+        "offset": null,
+        "parse_actions": null,
+        "sort": null
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "address": [],
+        "limit": null,
+        "multisig_address": [],
+        "offset": null,
+        "parse_actions": null,
+        "sort": null
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "address": [],
+        "limit": null,
+        "multisig_address": [],
+        "offset": null,
+        "parse_actions": null,
+        "sort": null
+      }
+    }
+  ],
+  "requests::MultisigWalletsQuery": [
+    {
+      "accepted": true,
+      "output": {
+        "address": [
+          "value"
+        ],
+        "include_orders": true,
+        "limit": -1,
+        "offset": -1,
+        "sort": "value",
+        "wallet_address": [
+          "value"
+        ]
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "address": [],
+        "include_orders": null,
+        "limit": null,
+        "offset": null,
+        "sort": null,
+        "wallet_address": []
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "address": [],
+        "include_orders": null,
+        "limit": null,
+        "offset": null,
+        "sort": null,
+        "wallet_address": []
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "address": [],
+        "include_orders": null,
+        "limit": null,
+        "offset": null,
+        "sort": null,
+        "wallet_address": []
+      }
+    }
+  ],
+  "requests::NftCollectionsQuery": [
+    {
+      "accepted": true,
+      "output": {
+        "collection_address": [
+          "value"
+        ],
+        "limit": -1,
+        "offset": -1,
+        "owner_address": [
+          "value"
+        ]
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "collection_address": [],
+        "limit": null,
+        "offset": null,
+        "owner_address": []
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "collection_address": [],
+        "limit": null,
+        "offset": null,
+        "owner_address": []
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "collection_address": [],
+        "limit": null,
+        "offset": null,
+        "owner_address": []
+      }
+    }
+  ],
+  "requests::NftItemsQuery": [
+    {
+      "accepted": true,
+      "output": {
+        "address": [
+          "value"
+        ],
+        "collection_address": [
+          "value"
+        ],
+        "include_on_sale": true,
+        "index": [
+          "value"
+        ],
+        "limit": -1,
+        "offset": -1,
+        "owner_address": [
+          "value"
+        ],
+        "sort_by_last_transaction_lt": true
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "address": [],
+        "collection_address": [],
+        "include_on_sale": null,
+        "index": [],
+        "limit": null,
+        "offset": null,
+        "owner_address": [],
+        "sort_by_last_transaction_lt": null
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "address": [],
+        "collection_address": [],
+        "include_on_sale": null,
+        "index": [],
+        "limit": null,
+        "offset": null,
+        "owner_address": [],
+        "sort_by_last_transaction_lt": null
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "address": [],
+        "collection_address": [],
+        "include_on_sale": null,
+        "index": [],
+        "limit": null,
+        "offset": null,
+        "owner_address": [],
+        "sort_by_last_transaction_lt": null
+      }
+    }
+  ],
+  "requests::NftSalesQuery": [
+    {
+      "accepted": true,
+      "output": {
+        "address": [
+          "value"
+        ]
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "address": []
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "address": []
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "address": []
+      }
+    }
+  ],
+  "requests::NftTransfersQuery": [
+    {
+      "accepted": true,
+      "output": {
+        "collection_address": "value",
+        "direction": "value",
+        "end_lt": 42,
+        "end_utime": -1,
+        "item_address": [
+          "value"
+        ],
+        "limit": -1,
+        "offset": -1,
+        "owner_address": [
+          "value"
+        ],
+        "sort": "value",
+        "start_lt": 42,
+        "start_utime": -1
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "collection_address": null,
+        "direction": null,
+        "end_lt": null,
+        "end_utime": null,
+        "item_address": [],
+        "limit": null,
+        "offset": null,
+        "owner_address": [],
+        "sort": null,
+        "start_lt": null,
+        "start_utime": null
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "collection_address": null,
+        "direction": null,
+        "end_lt": null,
+        "end_utime": null,
+        "item_address": [],
+        "limit": null,
+        "offset": null,
+        "owner_address": [],
+        "sort": null,
+        "start_lt": null,
+        "start_utime": null
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "collection_address": null,
+        "direction": null,
+        "end_lt": null,
+        "end_utime": null,
+        "item_address": [],
+        "limit": null,
+        "offset": null,
+        "owner_address": [],
+        "sort": null,
+        "start_lt": null,
+        "start_utime": null
+      }
+    }
+  ],
+  "requests::PendingActionsQuery": [
+    {
+      "accepted": true,
+      "output": {
+        "account": "value",
+        "ext_msg_hash": [
+          "value"
+        ],
+        "include_transactions": true,
+        "supported_action_types": [
+          "value"
+        ]
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "account": null,
+        "ext_msg_hash": [],
+        "include_transactions": null,
+        "supported_action_types": []
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "account": null,
+        "ext_msg_hash": [],
+        "include_transactions": null,
+        "supported_action_types": []
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "account": null,
+        "ext_msg_hash": [],
+        "include_transactions": null,
+        "supported_action_types": []
+      }
+    }
+  ],
+  "requests::PendingTracesQuery": [
+    {
+      "accepted": true,
+      "output": {
+        "account": "value",
+        "ext_msg_hash": [
+          "value"
+        ]
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "account": null,
+        "ext_msg_hash": []
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "account": null,
+        "ext_msg_hash": []
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "account": null,
+        "ext_msg_hash": []
+      }
+    }
+  ],
+  "requests::PendingTransactionsQuery": [
+    {
+      "accepted": true,
+      "output": {
+        "account": [
+          "value"
+        ],
+        "trace_id": [
+          "value"
+        ]
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "account": [],
+        "trace_id": []
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "account": [],
+        "trace_id": []
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "account": [],
+        "trace_id": []
+      }
+    }
+  ],
+  "requests::RunGetMethodRequest": [
+    {
+      "accepted": true,
+      "output": {
+        "address": "value",
+        "method": "value",
+        "stack": [
+          {
+            "type": "value",
+            "value": {
+              "extra": [
+                "value",
+                42,
+                null
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "address": "value",
+        "method": "value",
+        "stack": []
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "address": "value",
+        "method": "value",
+        "stack": []
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "address": "value",
+        "method": "value",
+        "stack": []
+      }
+    },
+    {
+      "accepted": false
+    }
+  ],
+  "requests::SendMessageRequest": [
+    {
+      "accepted": true,
+      "output": {
+        "boc": "value"
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "boc": "value"
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "boc": "value"
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "boc": "value"
+      }
+    },
+    {
+      "accepted": false
+    }
+  ],
+  "requests::StackEntry": [
+    {
+      "accepted": true,
+      "output": {
+        "type": "value",
+        "value": {
+          "extra": [
+            "value",
+            42,
+            null
+          ]
+        }
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "type": "value",
+        "value": {
+          "extra": [
+            "value",
+            42,
+            null
+          ]
+        }
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "type": "value",
+        "value": {
+          "extra": [
+            "value",
+            42,
+            null
+          ]
+        }
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "type": "value",
+        "value": {
+          "extra": [
+            "value",
+            42,
+            null
+          ]
+        }
+      }
+    },
+    {
+      "accepted": false
+    }
+  ],
+  "requests::TopAccountsByBalanceQuery": [
+    {
+      "accepted": true,
+      "output": {
+        "limit": -1,
+        "offset": -1
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "limit": null,
+        "offset": null
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "limit": null,
+        "offset": null
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "limit": null,
+        "offset": null
+      }
+    }
+  ],
+  "requests::TracesQuery": [
+    {
+      "accepted": true,
+      "output": {
+        "account": "value",
+        "end_lt": 42,
+        "end_utime": -1,
+        "include_actions": true,
+        "limit": -1,
+        "mc_seqno": -1,
+        "msg_hash": [
+          "value"
+        ],
+        "offset": -1,
+        "sort": "value",
+        "start_lt": 42,
+        "start_utime": -1,
+        "supported_action_types": [
+          "value"
+        ],
+        "trace_id": [
+          "value"
+        ],
+        "tx_hash": [
+          "value"
+        ]
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "account": null,
+        "end_lt": null,
+        "end_utime": null,
+        "include_actions": null,
+        "limit": null,
+        "mc_seqno": null,
+        "msg_hash": [],
+        "offset": null,
+        "sort": null,
+        "start_lt": null,
+        "start_utime": null,
+        "supported_action_types": [],
+        "trace_id": [],
+        "tx_hash": []
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "account": null,
+        "end_lt": null,
+        "end_utime": null,
+        "include_actions": null,
+        "limit": null,
+        "mc_seqno": null,
+        "msg_hash": [],
+        "offset": null,
+        "sort": null,
+        "start_lt": null,
+        "start_utime": null,
+        "supported_action_types": [],
+        "trace_id": [],
+        "tx_hash": []
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "account": null,
+        "end_lt": null,
+        "end_utime": null,
+        "include_actions": null,
+        "limit": null,
+        "mc_seqno": null,
+        "msg_hash": [],
+        "offset": null,
+        "sort": null,
+        "start_lt": null,
+        "start_utime": null,
+        "supported_action_types": [],
+        "trace_id": [],
+        "tx_hash": []
+      }
+    }
+  ],
+  "requests::TransactionsByMasterchainBlockQuery": [
+    {
+      "accepted": true,
+      "output": {
+        "limit": -1,
+        "offset": -1,
+        "seqno": -1,
+        "sort": "value"
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "limit": null,
+        "offset": null,
+        "seqno": -1,
+        "sort": null
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "limit": null,
+        "offset": null,
+        "seqno": -1,
+        "sort": null
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "limit": null,
+        "offset": null,
+        "seqno": -1,
+        "sort": null
+      }
+    },
+    {
+      "accepted": false
+    }
+  ],
+  "requests::TransactionsByMessageQuery": [
+    {
+      "accepted": true,
+      "output": {
+        "body_hash": "value",
+        "direction": "value",
+        "limit": -1,
+        "msg_hash": [
+          "value"
+        ],
+        "offset": -1,
+        "opcode": "value"
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "body_hash": null,
+        "direction": null,
+        "limit": null,
+        "msg_hash": [],
+        "offset": null,
+        "opcode": null
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "body_hash": null,
+        "direction": null,
+        "limit": null,
+        "msg_hash": [],
+        "offset": null,
+        "opcode": null
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "body_hash": null,
+        "direction": null,
+        "limit": null,
+        "msg_hash": [],
+        "offset": null,
+        "opcode": null
+      }
+    }
+  ],
+  "requests::TransactionsQuery": [
+    {
+      "accepted": true,
+      "output": {
+        "account": [
+          "value"
+        ],
+        "end_lt": 42,
+        "end_utime": -1,
+        "exclude_account": [
+          "value"
+        ],
+        "hash": [
+          "value"
+        ],
+        "limit": -1,
+        "lt": 42,
+        "mc_seqno": -1,
+        "offset": -1,
+        "seqno": -1,
+        "shard": "value",
+        "sort": "value",
+        "start_lt": 42,
+        "start_utime": -1,
+        "workchain": -1
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "account": [],
+        "end_lt": null,
+        "end_utime": null,
+        "exclude_account": [],
+        "hash": [],
+        "limit": null,
+        "lt": null,
+        "mc_seqno": null,
+        "offset": null,
+        "seqno": null,
+        "shard": null,
+        "sort": null,
+        "start_lt": null,
+        "start_utime": null,
+        "workchain": null
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "account": [],
+        "end_lt": null,
+        "end_utime": null,
+        "exclude_account": [],
+        "hash": [],
+        "limit": null,
+        "lt": null,
+        "mc_seqno": null,
+        "offset": null,
+        "seqno": null,
+        "shard": null,
+        "sort": null,
+        "start_lt": null,
+        "start_utime": null,
+        "workchain": null
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "account": [],
+        "end_lt": null,
+        "end_utime": null,
+        "exclude_account": [],
+        "hash": [],
+        "limit": null,
+        "lt": null,
+        "mc_seqno": null,
+        "offset": null,
+        "seqno": null,
+        "shard": null,
+        "sort": null,
+        "start_lt": null,
+        "start_utime": null,
+        "workchain": null
+      }
+    }
+  ],
+  "requests::VestingQuery": [
+    {
+      "accepted": true,
+      "output": {
+        "check_whitelist": true,
+        "contract_address": [
+          "value"
+        ],
+        "limit": -1,
+        "offset": -1,
+        "wallet_address": [
+          "value"
+        ]
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "check_whitelist": null,
+        "contract_address": [],
+        "limit": null,
+        "offset": null,
+        "wallet_address": []
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "check_whitelist": null,
+        "contract_address": [],
+        "limit": null,
+        "offset": null,
+        "wallet_address": []
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "check_whitelist": null,
+        "contract_address": [],
+        "limit": null,
+        "offset": null,
+        "wallet_address": []
+      }
+    }
+  ],
+  "requests::WalletInformationQuery": [
+    {
+      "accepted": true,
+      "output": {
+        "address": "value",
+        "use_v2": true
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "address": "value",
+        "use_v2": null
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "address": "value",
+        "use_v2": null
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "address": "value",
+        "use_v2": null
+      }
+    },
+    {
+      "accepted": false
+    }
+  ],
+  "requests::WalletStatesQuery": [
+    {
+      "accepted": true,
+      "output": {
+        "address": [
+          "value"
+        ]
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "address": []
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "address": []
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "address": []
+      }
+    }
+  ],
+  "responses::AccountBalance": [
+    {
+      "accepted": true,
+      "output": {
+        "account": "value",
+        "balance": "value"
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "account": "value",
+        "balance": "value"
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "account": "value",
+        "balance": "value"
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "account": "value",
+        "balance": "value"
+      }
+    },
+    {
+      "accepted": false
+    }
+  ],
+  "responses::AccountState": [
+    {
+      "accepted": true,
+      "output": {
+        "account_status": "value",
+        "balance": "value",
+        "code_boc": "value",
+        "code_hash": "value",
+        "data_boc": "value",
+        "data_hash": "value",
+        "extra_currencies": {
+          "key": "value"
+        },
+        "frozen_hash": "value",
+        "hash": "value"
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "account_status": null,
+        "balance": null,
+        "code_hash": null,
+        "data_hash": null,
+        "extra_currencies": null,
+        "frozen_hash": null,
+        "hash": "value"
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "account_status": null,
+        "balance": null,
+        "code_hash": null,
+        "data_hash": null,
+        "extra_currencies": null,
+        "frozen_hash": null,
+        "hash": "value"
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "account_status": null,
+        "balance": null,
+        "code_hash": null,
+        "data_hash": null,
+        "extra_currencies": null,
+        "frozen_hash": null,
+        "hash": "value"
+      }
+    },
+    {
+      "accepted": false
+    }
+  ],
+  "responses::AccountStateFull": [
+    {
+      "accepted": true,
+      "output": {
+        "account_state_hash": "value",
+        "address": "value",
+        "balance": "value",
+        "code_boc": "value",
+        "code_hash": "value",
+        "contract_methods": [
+          -1
+        ],
+        "data_boc": "value",
+        "data_hash": "value",
+        "extra_currencies": {
+          "key": "value"
+        },
+        "frozen_hash": "value",
+        "interfaces": [
+          "value"
+        ],
+        "last_transaction_hash": "value",
+        "last_transaction_lt": "value",
+        "status": "value"
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "account_state_hash": "value",
+        "address": "value",
+        "balance": null,
+        "contract_methods": [],
+        "extra_currencies": {},
+        "interfaces": null,
+        "last_transaction_hash": null,
+        "last_transaction_lt": null,
+        "status": "value"
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "account_state_hash": "value",
+        "address": "value",
+        "balance": null,
+        "contract_methods": [],
+        "extra_currencies": {},
+        "interfaces": null,
+        "last_transaction_hash": null,
+        "last_transaction_lt": null,
+        "status": "value"
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "account_state_hash": "value",
+        "address": "value",
+        "balance": null,
+        "contract_methods": [],
+        "extra_currencies": {},
+        "interfaces": null,
+        "last_transaction_hash": null,
+        "last_transaction_lt": null,
+        "status": "value"
+      }
+    },
+    {
+      "accepted": false
+    }
+  ],
+  "responses::AccountStatesResponse": [
+    {
+      "accepted": true,
+      "output": {
+        "accounts": [
+          {
+            "account_state_hash": "value",
+            "address": "value",
+            "balance": null,
+            "contract_methods": [],
+            "extra_currencies": {},
+            "interfaces": null,
+            "last_transaction_hash": null,
+            "last_transaction_lt": null,
+            "status": "value"
+          }
+        ],
+        "address_book": {},
+        "metadata": {}
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "accounts": [],
+        "address_book": {},
+        "metadata": {}
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "accounts": [],
+        "address_book": {},
+        "metadata": {}
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "accounts": [],
+        "address_book": {},
+        "metadata": {}
+      }
+    },
+    {
+      "accepted": false
+    }
+  ],
+  "responses::Action": [
+    {
+      "accepted": true,
+      "output": {
+        "accounts": [
+          "value"
+        ],
+        "action_id": "value",
+        "details": {
+          "extra": [
+            "value",
+            42,
+            null
+          ]
+        },
+        "end_lt": "value",
+        "end_utime": 42,
+        "finality": "value",
+        "parent_gasless_action": "value",
+        "start_lt": "value",
+        "start_utime": 42,
+        "success": true,
+        "trace_end_lt": "value",
+        "trace_end_utime": 42,
+        "trace_external_hash": "value",
+        "trace_external_hash_norm": "value",
+        "trace_id": "value",
+        "trace_mc_seqno_end": 42,
+        "transactions": [
+          "value"
+        ],
+        "transactions_full": [
+          {
+            "account": "value",
+            "account_state_after": {
+              "account_status": null,
+              "balance": null,
+              "code_hash": null,
+              "data_hash": null,
+              "extra_currencies": null,
+              "frozen_hash": null,
+              "hash": "value"
+            },
+            "account_state_before": {
+              "account_status": null,
+              "balance": null,
+              "code_hash": null,
+              "data_hash": null,
+              "extra_currencies": null,
+              "frozen_hash": null,
+              "hash": "value"
+            },
+            "block_ref": {
+              "seqno": 42,
+              "shard": "value",
+              "workchain": -1
+            },
+            "child_transactions": [],
+            "description": {
+              "aborted": null,
+              "credit_first": null,
+              "destroyed": null,
+              "installed": null,
+              "is_tock": null,
+              "type": "value"
+            },
+            "emulated": true,
+            "end_status": "value",
+            "finality": "value",
+            "hash": "value",
+            "in_msg": null,
+            "lt": "value",
+            "mc_block_seqno": 42,
+            "now": 0,
+            "orig_status": "value",
+            "out_msgs": [],
+            "prev_trans_hash": "value",
+            "prev_trans_lt": "value",
+            "total_fees": "value",
+            "total_fees_extra_currencies": {},
+            "trace_external_hash": null,
+            "trace_id": null
+          }
+        ],
+        "type": "value"
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "accounts": [],
+        "action_id": "value",
+        "details": {
+          "extra": [
+            "value",
+            42,
+            null
+          ]
+        },
+        "end_lt": "value",
+        "end_utime": 42,
+        "finality": "value",
+        "parent_gasless_action": null,
+        "start_lt": "value",
+        "start_utime": 42,
+        "success": null,
+        "trace_end_lt": "value",
+        "trace_end_utime": 42,
+        "trace_external_hash": null,
+        "trace_external_hash_norm": null,
+        "trace_id": null,
+        "trace_mc_seqno_end": 42,
+        "transactions": [],
+        "transactions_full": [],
+        "type": "value"
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "accounts": [],
+        "action_id": "value",
+        "details": {
+          "extra": [
+            "value",
+            42,
+            null
+          ]
+        },
+        "end_lt": "value",
+        "end_utime": 42,
+        "finality": "value",
+        "parent_gasless_action": null,
+        "start_lt": "value",
+        "start_utime": 42,
+        "success": null,
+        "trace_end_lt": "value",
+        "trace_end_utime": 42,
+        "trace_external_hash": null,
+        "trace_external_hash_norm": null,
+        "trace_id": null,
+        "trace_mc_seqno_end": 42,
+        "transactions": [],
+        "transactions_full": [],
+        "type": "value"
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "accounts": [],
+        "action_id": "value",
+        "details": {
+          "extra": [
+            "value",
+            42,
+            null
+          ]
+        },
+        "end_lt": "value",
+        "end_utime": 42,
+        "finality": "value",
+        "parent_gasless_action": null,
+        "start_lt": "value",
+        "start_utime": 42,
+        "success": null,
+        "trace_end_lt": "value",
+        "trace_end_utime": 42,
+        "trace_external_hash": null,
+        "trace_external_hash_norm": null,
+        "trace_id": null,
+        "trace_mc_seqno_end": 42,
+        "transactions": [],
+        "transactions_full": [],
+        "type": "value"
+      }
+    },
+    {
+      "accepted": false
+    }
+  ],
+  "responses::ActionPhase": [
+    {
+      "accepted": true,
+      "output": {
+        "action_list_hash": "value",
+        "msgs_created": 42,
+        "no_funds": true,
+        "result_arg": -1,
+        "result_code": -1,
+        "skipped_actions": 42,
+        "spec_actions": 42,
+        "status_change": "value",
+        "success": true,
+        "tot_actions": 42,
+        "tot_msg_size": {
+          "bits": "value",
+          "cells": "value"
+        },
+        "total_action_fees": "value",
+        "total_fwd_fees": "value",
+        "valid": true
+      }
+    },
+    {
+      "accepted": true,
+      "output": {}
+    },
+    {
+      "accepted": true,
+      "output": {}
+    },
+    {
+      "accepted": true,
+      "output": {}
+    },
+    {
+      "accepted": true,
+      "output": {
+        "tot_actions": 7
+      }
+    }
+  ],
+  "responses::ActionsResponse": [
+    {
+      "accepted": true,
+      "output": {
+        "actions": [
+          {
+            "accounts": [],
+            "action_id": "value",
+            "details": {
+              "extra": [
+                "value",
+                42,
+                null
+              ]
+            },
+            "end_lt": "value",
+            "end_utime": 42,
+            "finality": "value",
+            "parent_gasless_action": null,
+            "start_lt": "value",
+            "start_utime": 42,
+            "success": null,
+            "trace_end_lt": "value",
+            "trace_end_utime": 42,
+            "trace_external_hash": null,
+            "trace_external_hash_norm": null,
+            "trace_id": null,
+            "trace_mc_seqno_end": 42,
+            "transactions": [],
+            "transactions_full": [],
+            "type": "value"
+          }
+        ],
+        "address_book": {},
+        "metadata": {}
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "actions": [],
+        "address_book": {},
+        "metadata": {}
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "actions": [],
+        "address_book": {},
+        "metadata": {}
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "actions": [],
+        "address_book": {},
+        "metadata": {}
+      }
+    },
+    {
+      "accepted": false
+    }
+  ],
+  "responses::AddressBook": [
+    {
+      "accepted": true,
+      "output": {
+        "account": {
+          "domain": null,
+          "interfaces": null,
+          "user_friendly": null
+        }
+      }
+    },
+    {
+      "accepted": true,
+      "output": {}
+    }
+  ],
+  "responses::AddressBookRow": [
+    {
+      "accepted": true,
+      "output": {
+        "domain": "value",
+        "interfaces": [
+          "value"
+        ],
+        "user_friendly": "value"
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "domain": null,
+        "interfaces": null,
+        "user_friendly": null
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "domain": null,
+        "interfaces": null,
+        "user_friendly": null
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "domain": null,
+        "interfaces": null,
+        "user_friendly": null
+      }
+    }
+  ],
+  "responses::AddressMetadata": [
+    {
+      "accepted": true,
+      "output": {
+        "is_indexed": true,
+        "token_info": [
+          {
+            "extra": {}
+          }
+        ]
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "is_indexed": true,
+        "token_info": []
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "is_indexed": true,
+        "token_info": []
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "is_indexed": true,
+        "token_info": []
+      }
+    },
+    {
+      "accepted": false
+    }
+  ],
+  "responses::Block": [
+    {
+      "accepted": true,
+      "output": {
+        "after_merge": true,
+        "after_split": true,
+        "before_split": true,
+        "created_by": "value",
+        "end_lt": "value",
+        "file_hash": "value",
+        "flags": -1,
+        "gen_catchain_seqno": -1,
+        "gen_utime": "18446744073709551616",
+        "global_id": -1,
+        "key_block": true,
+        "master_ref_seqno": -1,
+        "masterchain_block_ref": {
+          "seqno": 42,
+          "shard": "value",
+          "workchain": -1
+        },
+        "min_ref_mc_seqno": -1,
+        "prev_blocks": [
+          {
+            "seqno": 42,
+            "shard": "value",
+            "workchain": -1
+          }
+        ],
+        "prev_key_block_seqno": -1,
+        "rand_seed": "value",
+        "root_hash": "value",
+        "seqno": 42,
+        "shard": "value",
+        "start_lt": "value",
+        "tx_count": -1,
+        "validator_list_hash_short": -1,
+        "version": -1,
+        "vert_seqno": -1,
+        "vert_seqno_incr": true,
+        "want_merge": true,
+        "want_split": true,
+        "workchain": -1
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "after_merge": true,
+        "after_split": true,
+        "before_split": true,
+        "created_by": "value",
+        "end_lt": "value",
+        "file_hash": "value",
+        "flags": -1,
+        "gen_catchain_seqno": -1,
+        "gen_utime": "18446744073709551616",
+        "global_id": -1,
+        "key_block": true,
+        "master_ref_seqno": -1,
+        "masterchain_block_ref": {
+          "seqno": 42,
+          "shard": "value",
+          "workchain": -1
+        },
+        "min_ref_mc_seqno": -1,
+        "prev_blocks": [],
+        "prev_key_block_seqno": -1,
+        "rand_seed": "value",
+        "root_hash": "value",
+        "seqno": 42,
+        "shard": "value",
+        "start_lt": "value",
+        "tx_count": -1,
+        "validator_list_hash_short": -1,
+        "version": -1,
+        "vert_seqno": -1,
+        "vert_seqno_incr": true,
+        "want_merge": true,
+        "want_split": true,
+        "workchain": -1
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "after_merge": true,
+        "after_split": true,
+        "before_split": true,
+        "created_by": "value",
+        "end_lt": "value",
+        "file_hash": "value",
+        "flags": -1,
+        "gen_catchain_seqno": -1,
+        "gen_utime": "18446744073709551616",
+        "global_id": -1,
+        "key_block": true,
+        "master_ref_seqno": -1,
+        "masterchain_block_ref": {
+          "seqno": 42,
+          "shard": "value",
+          "workchain": -1
+        },
+        "min_ref_mc_seqno": -1,
+        "prev_blocks": [],
+        "prev_key_block_seqno": -1,
+        "rand_seed": "value",
+        "root_hash": "value",
+        "seqno": 42,
+        "shard": "value",
+        "start_lt": "value",
+        "tx_count": -1,
+        "validator_list_hash_short": -1,
+        "version": -1,
+        "vert_seqno": -1,
+        "vert_seqno_incr": true,
+        "want_merge": true,
+        "want_split": true,
+        "workchain": -1
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "after_merge": true,
+        "after_split": true,
+        "before_split": true,
+        "created_by": "value",
+        "end_lt": "value",
+        "file_hash": "value",
+        "flags": -1,
+        "gen_catchain_seqno": -1,
+        "gen_utime": "18446744073709551616",
+        "global_id": -1,
+        "key_block": true,
+        "master_ref_seqno": -1,
+        "masterchain_block_ref": {
+          "seqno": 42,
+          "shard": "value",
+          "workchain": -1
+        },
+        "min_ref_mc_seqno": -1,
+        "prev_blocks": [],
+        "prev_key_block_seqno": -1,
+        "rand_seed": "value",
+        "root_hash": "value",
+        "seqno": 42,
+        "shard": "value",
+        "start_lt": "value",
+        "tx_count": -1,
+        "validator_list_hash_short": -1,
+        "version": -1,
+        "vert_seqno": -1,
+        "vert_seqno_incr": true,
+        "want_merge": true,
+        "want_split": true,
+        "workchain": -1
+      }
+    },
+    {
+      "accepted": false
+    }
+  ],
+  "responses::BlockId": [
+    {
+      "accepted": true,
+      "output": {
+        "seqno": 42,
+        "shard": "value",
+        "workchain": -1
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "seqno": 42,
+        "shard": "value",
+        "workchain": -1
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "seqno": 42,
+        "shard": "value",
+        "workchain": -1
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "seqno": 42,
+        "shard": "value",
+        "workchain": -1
+      }
+    },
+    {
+      "accepted": false
+    }
+  ],
+  "responses::BlocksResponse": [
+    {
+      "accepted": true,
+      "output": {
+        "blocks": [
+          {
+            "after_merge": true,
+            "after_split": true,
+            "before_split": true,
+            "created_by": "value",
+            "end_lt": "value",
+            "file_hash": "value",
+            "flags": -1,
+            "gen_catchain_seqno": -1,
+            "gen_utime": "18446744073709551616",
+            "global_id": -1,
+            "key_block": true,
+            "master_ref_seqno": -1,
+            "masterchain_block_ref": {
+              "seqno": 42,
+              "shard": "value",
+              "workchain": -1
+            },
+            "min_ref_mc_seqno": -1,
+            "prev_blocks": [],
+            "prev_key_block_seqno": -1,
+            "rand_seed": "value",
+            "root_hash": "value",
+            "seqno": 42,
+            "shard": "value",
+            "start_lt": "value",
+            "tx_count": -1,
+            "validator_list_hash_short": -1,
+            "version": -1,
+            "vert_seqno": -1,
+            "vert_seqno_incr": true,
+            "want_merge": true,
+            "want_split": true,
+            "workchain": -1
+          }
+        ]
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "blocks": []
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "blocks": []
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "blocks": []
+      }
+    },
+    {
+      "accepted": false
+    }
+  ],
+  "responses::ComputePhase": [
+    {
+      "accepted": true,
+      "output": {
+        "account_activated": true,
+        "exit_arg": -1,
+        "exit_code": -1,
+        "gas_credit": "value",
+        "gas_fees": "value",
+        "gas_limit": "value",
+        "gas_used": "value",
+        "mode": -1,
+        "msg_state_used": true,
+        "reason": "value",
+        "skipped": true,
+        "success": true,
+        "vm_final_state_hash": "value",
+        "vm_init_state_hash": "value",
+        "vm_steps": 42
+      }
+    },
+    {
+      "accepted": true,
+      "output": {}
+    },
+    {
+      "accepted": true,
+      "output": {}
+    },
+    {
+      "accepted": true,
+      "output": {}
+    }
+  ],
+  "responses::CreditPhase": [
+    {
+      "accepted": true,
+      "output": {
+        "credit": "value",
+        "credit_extra_currencies": {
+          "key": "value"
+        },
+        "due_fees_collected": "value"
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "credit_extra_currencies": {}
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "credit_extra_currencies": {}
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "credit_extra_currencies": {}
+      }
+    }
+  ],
+  "responses::DnsRecord": [
+    {
+      "accepted": true,
+      "output": {
+        "dns_next_resolver": "value",
+        "dns_site_adnl": "value",
+        "dns_storage_bag_id": "value",
+        "dns_wallet": "value",
+        "domain": "value",
+        "nft_item_address": "value",
+        "nft_item_owner": "value"
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "dns_next_resolver": null,
+        "dns_site_adnl": null,
+        "dns_storage_bag_id": null,
+        "dns_wallet": null,
+        "domain": "value",
+        "nft_item_address": "value",
+        "nft_item_owner": null
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "dns_next_resolver": null,
+        "dns_site_adnl": null,
+        "dns_storage_bag_id": null,
+        "dns_wallet": null,
+        "domain": "value",
+        "nft_item_address": "value",
+        "nft_item_owner": null
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "dns_next_resolver": null,
+        "dns_site_adnl": null,
+        "dns_storage_bag_id": null,
+        "dns_wallet": null,
+        "domain": "value",
+        "nft_item_address": "value",
+        "nft_item_owner": null
+      }
+    },
+    {
+      "accepted": false
+    }
+  ],
+  "responses::DnsRecordsResponse": [
+    {
+      "accepted": true,
+      "output": {
+        "address_book": {},
+        "records": [
+          {
+            "dns_next_resolver": null,
+            "dns_site_adnl": null,
+            "dns_storage_bag_id": null,
+            "dns_wallet": null,
+            "domain": "value",
+            "nft_item_address": "value",
+            "nft_item_owner": null
+          }
+        ]
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "address_book": {},
+        "records": []
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "address_book": {},
+        "records": []
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "address_book": {},
+        "records": []
+      }
+    },
+    {
+      "accepted": false
+    }
+  ],
+  "responses::EstimateFeeResult": [
+    {
+      "accepted": true,
+      "output": {
+        "destination_fees": [
+          {
+            "fwd_fee": 42,
+            "gas_fee": 42,
+            "in_fwd_fee": 42,
+            "storage_fee": 42
+          }
+        ],
+        "source_fees": {
+          "fwd_fee": 42,
+          "gas_fee": 42,
+          "in_fwd_fee": 42,
+          "storage_fee": 42
+        }
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "destination_fees": [],
+        "source_fees": {
+          "fwd_fee": 42,
+          "gas_fee": 42,
+          "in_fwd_fee": 42,
+          "storage_fee": 42
+        }
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "destination_fees": [],
+        "source_fees": {
+          "fwd_fee": 42,
+          "gas_fee": 42,
+          "in_fwd_fee": 42,
+          "storage_fee": 42
+        }
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "destination_fees": [],
+        "source_fees": {
+          "fwd_fee": 42,
+          "gas_fee": 42,
+          "in_fwd_fee": 42,
+          "storage_fee": 42
+        }
+      }
+    },
+    {
+      "accepted": false
+    }
+  ],
+  "responses::EstimatedFee": [
+    {
+      "accepted": true,
+      "output": {
+        "fwd_fee": 42,
+        "gas_fee": 42,
+        "in_fwd_fee": 42,
+        "storage_fee": 42
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "fwd_fee": 42,
+        "gas_fee": 42,
+        "in_fwd_fee": 42,
+        "storage_fee": 42
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "fwd_fee": 42,
+        "gas_fee": 42,
+        "in_fwd_fee": 42,
+        "storage_fee": 42
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "fwd_fee": 42,
+        "gas_fee": 42,
+        "in_fwd_fee": 42,
+        "storage_fee": 42
+      }
+    },
+    {
+      "accepted": false
+    }
+  ],
+  "responses::JettonBurn": [
+    {
+      "accepted": true,
+      "output": {
+        "amount": "value",
+        "custom_payload": "value",
+        "decoded_custom_payload": {
+          "extra": [
+            "value",
+            42,
+            null
+          ]
+        },
+        "jetton_master": "value",
+        "jetton_wallet": "value",
+        "owner": "value",
+        "query_id": "value",
+        "response_destination": "value",
+        "trace_id": "value",
+        "transaction_aborted": true,
+        "transaction_hash": "value",
+        "transaction_lt": "value",
+        "transaction_now": -1
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "amount": "value",
+        "custom_payload": null,
+        "decoded_custom_payload": null,
+        "jetton_master": "value",
+        "jetton_wallet": "value",
+        "owner": "value",
+        "query_id": "value",
+        "response_destination": null,
+        "trace_id": null,
+        "transaction_aborted": true,
+        "transaction_hash": "value",
+        "transaction_lt": "value",
+        "transaction_now": -1
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "amount": "value",
+        "custom_payload": null,
+        "decoded_custom_payload": null,
+        "jetton_master": "value",
+        "jetton_wallet": "value",
+        "owner": "value",
+        "query_id": "value",
+        "response_destination": null,
+        "trace_id": null,
+        "transaction_aborted": true,
+        "transaction_hash": "value",
+        "transaction_lt": "value",
+        "transaction_now": -1
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "amount": "value",
+        "custom_payload": null,
+        "decoded_custom_payload": null,
+        "jetton_master": "value",
+        "jetton_wallet": "value",
+        "owner": "value",
+        "query_id": "value",
+        "response_destination": null,
+        "trace_id": null,
+        "transaction_aborted": true,
+        "transaction_hash": "value",
+        "transaction_lt": "value",
+        "transaction_now": -1
+      }
+    },
+    {
+      "accepted": false
+    }
+  ],
+  "responses::JettonBurnsResponse": [
+    {
+      "accepted": true,
+      "output": {
+        "address_book": {},
+        "jetton_burns": [
+          {
+            "amount": "value",
+            "custom_payload": null,
+            "decoded_custom_payload": null,
+            "jetton_master": "value",
+            "jetton_wallet": "value",
+            "owner": "value",
+            "query_id": "value",
+            "response_destination": null,
+            "trace_id": null,
+            "transaction_aborted": true,
+            "transaction_hash": "value",
+            "transaction_lt": "value",
+            "transaction_now": -1
+          }
+        ],
+        "metadata": {}
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "address_book": {},
+        "jetton_burns": [],
+        "metadata": {}
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "address_book": {},
+        "jetton_burns": [],
+        "metadata": {}
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "address_book": {},
+        "jetton_burns": [],
+        "metadata": {}
+      }
+    },
+    {
+      "accepted": false
+    }
+  ],
+  "responses::JettonMaster": [
+    {
+      "accepted": true,
+      "output": {
+        "address": "value",
+        "admin_address": "value",
+        "code_hash": "value",
+        "data_hash": "value",
+        "jetton_content": {
+          "key": {
+            "extra": [
+              "value",
+              42,
+              null
+            ]
+          }
+        },
+        "jetton_wallet_code_hash": "value",
+        "last_transaction_lt": "value",
+        "mintable": true,
+        "total_supply": "value"
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "address": "value",
+        "admin_address": null,
+        "code_hash": "value",
+        "data_hash": "value",
+        "jetton_content": {},
+        "jetton_wallet_code_hash": "value",
+        "last_transaction_lt": "value",
+        "mintable": true,
+        "total_supply": "value"
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "address": "value",
+        "admin_address": null,
+        "code_hash": "value",
+        "data_hash": "value",
+        "jetton_content": {},
+        "jetton_wallet_code_hash": "value",
+        "last_transaction_lt": "value",
+        "mintable": true,
+        "total_supply": "value"
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "address": "value",
+        "admin_address": null,
+        "code_hash": "value",
+        "data_hash": "value",
+        "jetton_content": {},
+        "jetton_wallet_code_hash": "value",
+        "last_transaction_lt": "value",
+        "mintable": true,
+        "total_supply": "value"
+      }
+    },
+    {
+      "accepted": false
+    }
+  ],
+  "responses::JettonMastersResponse": [
+    {
+      "accepted": true,
+      "output": {
+        "address_book": {},
+        "jetton_masters": [
+          {
+            "address": "value",
+            "admin_address": null,
+            "code_hash": "value",
+            "data_hash": "value",
+            "jetton_content": {},
+            "jetton_wallet_code_hash": "value",
+            "last_transaction_lt": "value",
+            "mintable": true,
+            "total_supply": "value"
+          }
+        ],
+        "metadata": {}
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "address_book": {},
+        "jetton_masters": [],
+        "metadata": {}
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "address_book": {},
+        "jetton_masters": [],
+        "metadata": {}
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "address_book": {},
+        "jetton_masters": [],
+        "metadata": {}
+      }
+    },
+    {
+      "accepted": false
+    }
+  ],
+  "responses::JettonTransfer": [
+    {
+      "accepted": true,
+      "output": {
+        "amount": "value",
+        "custom_payload": "value",
+        "decoded_custom_payload": {
+          "extra": [
+            "value",
+            42,
+            null
+          ]
+        },
+        "decoded_forward_payload": {
+          "extra": [
+            "value",
+            42,
+            null
+          ]
+        },
+        "destination": "value",
+        "forward_payload": "value",
+        "forward_ton_amount": "value",
+        "jetton_master": "value",
+        "query_id": "value",
+        "response_destination": "value",
+        "source": "value",
+        "source_wallet": "value",
+        "trace_id": "value",
+        "transaction_aborted": true,
+        "transaction_hash": "value",
+        "transaction_lt": "value",
+        "transaction_now": -1
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "amount": "value",
+        "custom_payload": null,
+        "decoded_custom_payload": null,
+        "decoded_forward_payload": null,
+        "destination": "value",
+        "forward_payload": null,
+        "forward_ton_amount": null,
+        "jetton_master": "value",
+        "query_id": "value",
+        "response_destination": null,
+        "source": "value",
+        "source_wallet": "value",
+        "trace_id": null,
+        "transaction_aborted": true,
+        "transaction_hash": "value",
+        "transaction_lt": "value",
+        "transaction_now": -1
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "amount": "value",
+        "custom_payload": null,
+        "decoded_custom_payload": null,
+        "decoded_forward_payload": null,
+        "destination": "value",
+        "forward_payload": null,
+        "forward_ton_amount": null,
+        "jetton_master": "value",
+        "query_id": "value",
+        "response_destination": null,
+        "source": "value",
+        "source_wallet": "value",
+        "trace_id": null,
+        "transaction_aborted": true,
+        "transaction_hash": "value",
+        "transaction_lt": "value",
+        "transaction_now": -1
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "amount": "value",
+        "custom_payload": null,
+        "decoded_custom_payload": null,
+        "decoded_forward_payload": null,
+        "destination": "value",
+        "forward_payload": null,
+        "forward_ton_amount": null,
+        "jetton_master": "value",
+        "query_id": "value",
+        "response_destination": null,
+        "source": "value",
+        "source_wallet": "value",
+        "trace_id": null,
+        "transaction_aborted": true,
+        "transaction_hash": "value",
+        "transaction_lt": "value",
+        "transaction_now": -1
+      }
+    },
+    {
+      "accepted": false
+    }
+  ],
+  "responses::JettonTransfersResponse": [
+    {
+      "accepted": true,
+      "output": {
+        "address_book": {},
+        "jetton_transfers": [
+          {
+            "amount": "value",
+            "custom_payload": null,
+            "decoded_custom_payload": null,
+            "decoded_forward_payload": null,
+            "destination": "value",
+            "forward_payload": null,
+            "forward_ton_amount": null,
+            "jetton_master": "value",
+            "query_id": "value",
+            "response_destination": null,
+            "source": "value",
+            "source_wallet": "value",
+            "trace_id": null,
+            "transaction_aborted": true,
+            "transaction_hash": "value",
+            "transaction_lt": "value",
+            "transaction_now": -1
+          }
+        ],
+        "metadata": {}
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "address_book": {},
+        "jetton_transfers": [],
+        "metadata": {}
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "address_book": {},
+        "jetton_transfers": [],
+        "metadata": {}
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "address_book": {},
+        "jetton_transfers": [],
+        "metadata": {}
+      }
+    },
+    {
+      "accepted": false
+    }
+  ],
+  "responses::JettonWallet": [
+    {
+      "accepted": true,
+      "output": {
+        "address": "value",
+        "balance": "value",
+        "code_hash": "value",
+        "data_hash": "value",
+        "jetton": "value",
+        "last_transaction_lt": "value",
+        "mintless_info": {
+          "extra": [
+            "value",
+            42,
+            null
+          ]
+        },
+        "owner": "value"
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "address": "value",
+        "balance": "value",
+        "code_hash": null,
+        "data_hash": null,
+        "jetton": "value",
+        "last_transaction_lt": "value",
+        "mintless_info": null,
+        "owner": "value"
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "address": "value",
+        "balance": "value",
+        "code_hash": null,
+        "data_hash": null,
+        "jetton": "value",
+        "last_transaction_lt": "value",
+        "mintless_info": null,
+        "owner": "value"
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "address": "value",
+        "balance": "value",
+        "code_hash": null,
+        "data_hash": null,
+        "jetton": "value",
+        "last_transaction_lt": "value",
+        "mintless_info": null,
+        "owner": "value"
+      }
+    },
+    {
+      "accepted": false
+    }
+  ],
+  "responses::JettonWalletsResponse": [
+    {
+      "accepted": true,
+      "output": {
+        "address_book": {},
+        "jetton_wallets": [
+          {
+            "address": "value",
+            "balance": "value",
+            "code_hash": null,
+            "data_hash": null,
+            "jetton": "value",
+            "last_transaction_lt": "value",
+            "mintless_info": null,
+            "owner": "value"
+          }
+        ],
+        "metadata": {}
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "address_book": {},
+        "jetton_wallets": [],
+        "metadata": {}
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "address_book": {},
+        "jetton_wallets": [],
+        "metadata": {}
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "address_book": {},
+        "jetton_wallets": [],
+        "metadata": {}
+      }
+    },
+    {
+      "accepted": false
+    }
+  ],
+  "responses::MasterchainInfo": [
+    {
+      "accepted": true,
+      "output": {
+        "first": {
+          "after_merge": true,
+          "after_split": true,
+          "before_split": true,
+          "created_by": "value",
+          "end_lt": "value",
+          "file_hash": "value",
+          "flags": -1,
+          "gen_catchain_seqno": -1,
+          "gen_utime": "18446744073709551616",
+          "global_id": -1,
+          "key_block": true,
+          "master_ref_seqno": -1,
+          "masterchain_block_ref": {
+            "seqno": 42,
+            "shard": "value",
+            "workchain": -1
+          },
+          "min_ref_mc_seqno": -1,
+          "prev_blocks": [],
+          "prev_key_block_seqno": -1,
+          "rand_seed": "value",
+          "root_hash": "value",
+          "seqno": 42,
+          "shard": "value",
+          "start_lt": "value",
+          "tx_count": -1,
+          "validator_list_hash_short": -1,
+          "version": -1,
+          "vert_seqno": -1,
+          "vert_seqno_incr": true,
+          "want_merge": true,
+          "want_split": true,
+          "workchain": -1
+        },
+        "last": {
+          "after_merge": true,
+          "after_split": true,
+          "before_split": true,
+          "created_by": "value",
+          "end_lt": "value",
+          "file_hash": "value",
+          "flags": -1,
+          "gen_catchain_seqno": -1,
+          "gen_utime": "18446744073709551616",
+          "global_id": -1,
+          "key_block": true,
+          "master_ref_seqno": -1,
+          "masterchain_block_ref": {
+            "seqno": 42,
+            "shard": "value",
+            "workchain": -1
+          },
+          "min_ref_mc_seqno": -1,
+          "prev_blocks": [],
+          "prev_key_block_seqno": -1,
+          "rand_seed": "value",
+          "root_hash": "value",
+          "seqno": 42,
+          "shard": "value",
+          "start_lt": "value",
+          "tx_count": -1,
+          "validator_list_hash_short": -1,
+          "version": -1,
+          "vert_seqno": -1,
+          "vert_seqno_incr": true,
+          "want_merge": true,
+          "want_split": true,
+          "workchain": -1
+        }
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "first": {
+          "after_merge": true,
+          "after_split": true,
+          "before_split": true,
+          "created_by": "value",
+          "end_lt": "value",
+          "file_hash": "value",
+          "flags": -1,
+          "gen_catchain_seqno": -1,
+          "gen_utime": "18446744073709551616",
+          "global_id": -1,
+          "key_block": true,
+          "master_ref_seqno": -1,
+          "masterchain_block_ref": {
+            "seqno": 42,
+            "shard": "value",
+            "workchain": -1
+          },
+          "min_ref_mc_seqno": -1,
+          "prev_blocks": [],
+          "prev_key_block_seqno": -1,
+          "rand_seed": "value",
+          "root_hash": "value",
+          "seqno": 42,
+          "shard": "value",
+          "start_lt": "value",
+          "tx_count": -1,
+          "validator_list_hash_short": -1,
+          "version": -1,
+          "vert_seqno": -1,
+          "vert_seqno_incr": true,
+          "want_merge": true,
+          "want_split": true,
+          "workchain": -1
+        },
+        "last": {
+          "after_merge": true,
+          "after_split": true,
+          "before_split": true,
+          "created_by": "value",
+          "end_lt": "value",
+          "file_hash": "value",
+          "flags": -1,
+          "gen_catchain_seqno": -1,
+          "gen_utime": "18446744073709551616",
+          "global_id": -1,
+          "key_block": true,
+          "master_ref_seqno": -1,
+          "masterchain_block_ref": {
+            "seqno": 42,
+            "shard": "value",
+            "workchain": -1
+          },
+          "min_ref_mc_seqno": -1,
+          "prev_blocks": [],
+          "prev_key_block_seqno": -1,
+          "rand_seed": "value",
+          "root_hash": "value",
+          "seqno": 42,
+          "shard": "value",
+          "start_lt": "value",
+          "tx_count": -1,
+          "validator_list_hash_short": -1,
+          "version": -1,
+          "vert_seqno": -1,
+          "vert_seqno_incr": true,
+          "want_merge": true,
+          "want_split": true,
+          "workchain": -1
+        }
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "first": {
+          "after_merge": true,
+          "after_split": true,
+          "before_split": true,
+          "created_by": "value",
+          "end_lt": "value",
+          "file_hash": "value",
+          "flags": -1,
+          "gen_catchain_seqno": -1,
+          "gen_utime": "18446744073709551616",
+          "global_id": -1,
+          "key_block": true,
+          "master_ref_seqno": -1,
+          "masterchain_block_ref": {
+            "seqno": 42,
+            "shard": "value",
+            "workchain": -1
+          },
+          "min_ref_mc_seqno": -1,
+          "prev_blocks": [],
+          "prev_key_block_seqno": -1,
+          "rand_seed": "value",
+          "root_hash": "value",
+          "seqno": 42,
+          "shard": "value",
+          "start_lt": "value",
+          "tx_count": -1,
+          "validator_list_hash_short": -1,
+          "version": -1,
+          "vert_seqno": -1,
+          "vert_seqno_incr": true,
+          "want_merge": true,
+          "want_split": true,
+          "workchain": -1
+        },
+        "last": {
+          "after_merge": true,
+          "after_split": true,
+          "before_split": true,
+          "created_by": "value",
+          "end_lt": "value",
+          "file_hash": "value",
+          "flags": -1,
+          "gen_catchain_seqno": -1,
+          "gen_utime": "18446744073709551616",
+          "global_id": -1,
+          "key_block": true,
+          "master_ref_seqno": -1,
+          "masterchain_block_ref": {
+            "seqno": 42,
+            "shard": "value",
+            "workchain": -1
+          },
+          "min_ref_mc_seqno": -1,
+          "prev_blocks": [],
+          "prev_key_block_seqno": -1,
+          "rand_seed": "value",
+          "root_hash": "value",
+          "seqno": 42,
+          "shard": "value",
+          "start_lt": "value",
+          "tx_count": -1,
+          "validator_list_hash_short": -1,
+          "version": -1,
+          "vert_seqno": -1,
+          "vert_seqno_incr": true,
+          "want_merge": true,
+          "want_split": true,
+          "workchain": -1
+        }
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "first": {
+          "after_merge": true,
+          "after_split": true,
+          "before_split": true,
+          "created_by": "value",
+          "end_lt": "value",
+          "file_hash": "value",
+          "flags": -1,
+          "gen_catchain_seqno": -1,
+          "gen_utime": "18446744073709551616",
+          "global_id": -1,
+          "key_block": true,
+          "master_ref_seqno": -1,
+          "masterchain_block_ref": {
+            "seqno": 42,
+            "shard": "value",
+            "workchain": -1
+          },
+          "min_ref_mc_seqno": -1,
+          "prev_blocks": [],
+          "prev_key_block_seqno": -1,
+          "rand_seed": "value",
+          "root_hash": "value",
+          "seqno": 42,
+          "shard": "value",
+          "start_lt": "value",
+          "tx_count": -1,
+          "validator_list_hash_short": -1,
+          "version": -1,
+          "vert_seqno": -1,
+          "vert_seqno_incr": true,
+          "want_merge": true,
+          "want_split": true,
+          "workchain": -1
+        },
+        "last": {
+          "after_merge": true,
+          "after_split": true,
+          "before_split": true,
+          "created_by": "value",
+          "end_lt": "value",
+          "file_hash": "value",
+          "flags": -1,
+          "gen_catchain_seqno": -1,
+          "gen_utime": "18446744073709551616",
+          "global_id": -1,
+          "key_block": true,
+          "master_ref_seqno": -1,
+          "masterchain_block_ref": {
+            "seqno": 42,
+            "shard": "value",
+            "workchain": -1
+          },
+          "min_ref_mc_seqno": -1,
+          "prev_blocks": [],
+          "prev_key_block_seqno": -1,
+          "rand_seed": "value",
+          "root_hash": "value",
+          "seqno": 42,
+          "shard": "value",
+          "start_lt": "value",
+          "tx_count": -1,
+          "validator_list_hash_short": -1,
+          "version": -1,
+          "vert_seqno": -1,
+          "vert_seqno_incr": true,
+          "want_merge": true,
+          "want_split": true,
+          "workchain": -1
+        }
+      }
+    },
+    {
+      "accepted": false
+    }
+  ],
+  "responses::Message": [
+    {
+      "accepted": true,
+      "output": {
+        "bounce": true,
+        "bounced": true,
+        "created_at": "value",
+        "created_lt": "value",
+        "decoded_opcode": "value",
+        "destination": "value",
+        "extra_flags": "value",
+        "fwd_fee": "value",
+        "hash": "value",
+        "hash_norm": "value",
+        "ihr_disabled": true,
+        "ihr_fee": "value",
+        "import_fee": "value",
+        "in_msg_tx_hash": "value",
+        "init_state": {
+          "body": "value",
+          "decoded": {
+            "extra": [
+              "value",
+              42,
+              null
+            ]
+          },
+          "hash": "value"
+        },
+        "message_content": {
+          "body": "value",
+          "decoded": {
+            "extra": [
+              "value",
+              42,
+              null
+            ]
+          },
+          "hash": "value"
+        },
+        "opcode": "18446744073709551616",
+        "out_msg_tx_hash": "value",
+        "source": "value",
+        "value": "value",
+        "value_extra_currencies": {
+          "key": "value"
+        }
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "bounce": null,
+        "bounced": null,
+        "created_at": null,
+        "created_lt": null,
+        "decoded_opcode": null,
+        "destination": null,
+        "extra_flags": null,
+        "fwd_fee": null,
+        "hash": "value",
+        "hash_norm": null,
+        "ihr_disabled": null,
+        "ihr_fee": null,
+        "import_fee": null,
+        "in_msg_tx_hash": null,
+        "init_state": null,
+        "message_content": null,
+        "opcode": null,
+        "out_msg_tx_hash": null,
+        "source": null,
+        "value": null,
+        "value_extra_currencies": null
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "bounce": null,
+        "bounced": null,
+        "created_at": null,
+        "created_lt": null,
+        "decoded_opcode": null,
+        "destination": null,
+        "extra_flags": null,
+        "fwd_fee": null,
+        "hash": "value",
+        "hash_norm": null,
+        "ihr_disabled": null,
+        "ihr_fee": null,
+        "import_fee": null,
+        "in_msg_tx_hash": null,
+        "init_state": null,
+        "message_content": null,
+        "opcode": null,
+        "out_msg_tx_hash": null,
+        "source": null,
+        "value": null,
+        "value_extra_currencies": null
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "bounce": null,
+        "bounced": null,
+        "created_at": null,
+        "created_lt": null,
+        "decoded_opcode": null,
+        "destination": null,
+        "extra_flags": null,
+        "fwd_fee": null,
+        "hash": "value",
+        "hash_norm": null,
+        "ihr_disabled": null,
+        "ihr_fee": null,
+        "import_fee": null,
+        "in_msg_tx_hash": null,
+        "init_state": null,
+        "message_content": null,
+        "opcode": null,
+        "out_msg_tx_hash": null,
+        "source": null,
+        "value": null,
+        "value_extra_currencies": null
+      }
+    },
+    {
+      "accepted": false
+    }
+  ],
+  "responses::MessageContent": [
+    {
+      "accepted": true,
+      "output": {
+        "body": "value",
+        "decoded": {
+          "extra": [
+            "value",
+            42,
+            null
+          ]
+        },
+        "hash": "value"
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "body": null,
+        "decoded": null,
+        "hash": null
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "body": null,
+        "decoded": null,
+        "hash": null
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "body": null,
+        "decoded": null,
+        "hash": null
+      }
+    }
+  ],
+  "responses::MessagesResponse": [
+    {
+      "accepted": true,
+      "output": {
+        "address_book": {},
+        "messages": [
+          {
+            "bounce": null,
+            "bounced": null,
+            "created_at": null,
+            "created_lt": null,
+            "decoded_opcode": null,
+            "destination": null,
+            "extra_flags": null,
+            "fwd_fee": null,
+            "hash": "value",
+            "hash_norm": null,
+            "ihr_disabled": null,
+            "ihr_fee": null,
+            "import_fee": null,
+            "in_msg_tx_hash": null,
+            "init_state": null,
+            "message_content": null,
+            "opcode": null,
+            "out_msg_tx_hash": null,
+            "source": null,
+            "value": null,
+            "value_extra_currencies": null
+          }
+        ],
+        "metadata": {}
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "address_book": {},
+        "messages": [],
+        "metadata": {}
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "address_book": {},
+        "messages": [],
+        "metadata": {}
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "address_book": {},
+        "messages": [],
+        "metadata": {}
+      }
+    },
+    {
+      "accepted": false
+    }
+  ],
+  "responses::Metadata": [
+    {
+      "accepted": true,
+      "output": {
+        "account": {
+          "is_indexed": true,
+          "token_info": []
+        }
+      }
+    },
+    {
+      "accepted": true,
+      "output": {}
+    }
+  ],
+  "responses::MsgSize": [
+    {
+      "accepted": true,
+      "output": {
+        "bits": "value",
+        "cells": "value"
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "bits": null,
+        "cells": null
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "bits": null,
+        "cells": null
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "bits": null,
+        "cells": null
+      }
+    }
+  ],
+  "responses::Multisig": [
+    {
+      "accepted": true,
+      "output": {
+        "address": "value",
+        "code_hash": "value",
+        "data_hash": "value",
+        "last_transaction_lt": "value",
+        "next_order_seqno": "value",
+        "orders": [
+          {
+            "actions": [],
+            "address": "value",
+            "approvals_mask": null,
+            "approvals_num": null,
+            "code_hash": null,
+            "data_hash": null,
+            "expiration_date": null,
+            "last_transaction_lt": "value",
+            "multisig_address": "value",
+            "order_boc": null,
+            "order_seqno": null,
+            "sent_for_execution": null,
+            "signers": [],
+            "threshold": null
+          }
+        ],
+        "proposers": [
+          "value"
+        ],
+        "signers": [
+          "value"
+        ],
+        "threshold": -1
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "address": "value",
+        "code_hash": null,
+        "data_hash": null,
+        "last_transaction_lt": "value",
+        "next_order_seqno": null,
+        "orders": [],
+        "proposers": [],
+        "signers": [],
+        "threshold": null
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "address": "value",
+        "code_hash": null,
+        "data_hash": null,
+        "last_transaction_lt": "value",
+        "next_order_seqno": null,
+        "orders": [],
+        "proposers": [],
+        "signers": [],
+        "threshold": null
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "address": "value",
+        "code_hash": null,
+        "data_hash": null,
+        "last_transaction_lt": "value",
+        "next_order_seqno": null,
+        "orders": [],
+        "proposers": [],
+        "signers": [],
+        "threshold": null
+      }
+    },
+    {
+      "accepted": false
+    }
+  ],
+  "responses::MultisigOrder": [
+    {
+      "accepted": true,
+      "output": {
+        "actions": [
+          {
+            "body_raw": {
+              "extra": [
+                "value",
+                42,
+                null
+              ]
+            },
+            "destination": null,
+            "error": null,
+            "parsed": true,
+            "parsed_body": null,
+            "parsed_body_type": "value",
+            "send_mode": 42,
+            "value": null
+          }
+        ],
+        "address": "value",
+        "approvals_mask": "value",
+        "approvals_num": -1,
+        "code_hash": "value",
+        "data_hash": "value",
+        "expiration_date": 42,
+        "last_transaction_lt": "value",
+        "multisig_address": "value",
+        "order_boc": "value",
+        "order_seqno": "value",
+        "sent_for_execution": true,
+        "signers": [
+          "value"
+        ],
+        "threshold": -1
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "actions": [],
+        "address": "value",
+        "approvals_mask": null,
+        "approvals_num": null,
+        "code_hash": null,
+        "data_hash": null,
+        "expiration_date": null,
+        "last_transaction_lt": "value",
+        "multisig_address": "value",
+        "order_boc": null,
+        "order_seqno": null,
+        "sent_for_execution": null,
+        "signers": [],
+        "threshold": null
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "actions": [],
+        "address": "value",
+        "approvals_mask": null,
+        "approvals_num": null,
+        "code_hash": null,
+        "data_hash": null,
+        "expiration_date": null,
+        "last_transaction_lt": "value",
+        "multisig_address": "value",
+        "order_boc": null,
+        "order_seqno": null,
+        "sent_for_execution": null,
+        "signers": [],
+        "threshold": null
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "actions": [],
+        "address": "value",
+        "approvals_mask": null,
+        "approvals_num": null,
+        "code_hash": null,
+        "data_hash": null,
+        "expiration_date": null,
+        "last_transaction_lt": "value",
+        "multisig_address": "value",
+        "order_boc": null,
+        "order_seqno": null,
+        "sent_for_execution": null,
+        "signers": [],
+        "threshold": null
+      }
+    },
+    {
+      "accepted": false
+    }
+  ],
+  "responses::MultisigOrderAction": [
+    {
+      "accepted": true,
+      "output": {
+        "body_raw": {
+          "extra": [
+            "value",
+            42,
+            null
+          ]
+        },
+        "destination": "value",
+        "error": "value",
+        "parsed": true,
+        "parsed_body": {
+          "extra": [
+            "value",
+            42,
+            null
+          ]
+        },
+        "parsed_body_type": "value",
+        "send_mode": 42,
+        "value": "value"
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "body_raw": {
+          "extra": [
+            "value",
+            42,
+            null
+          ]
+        },
+        "destination": null,
+        "error": null,
+        "parsed": true,
+        "parsed_body": null,
+        "parsed_body_type": "value",
+        "send_mode": 42,
+        "value": null
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "body_raw": {
+          "extra": [
+            "value",
+            42,
+            null
+          ]
+        },
+        "destination": null,
+        "error": null,
+        "parsed": true,
+        "parsed_body": null,
+        "parsed_body_type": "value",
+        "send_mode": 42,
+        "value": null
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "body_raw": {
+          "extra": [
+            "value",
+            42,
+            null
+          ]
+        },
+        "destination": null,
+        "error": null,
+        "parsed": true,
+        "parsed_body": null,
+        "parsed_body_type": "value",
+        "send_mode": 42,
+        "value": null
+      }
+    },
+    {
+      "accepted": false
+    }
+  ],
+  "responses::MultisigOrdersResponse": [
+    {
+      "accepted": true,
+      "output": {
+        "address_book": {},
+        "orders": [
+          {
+            "actions": [],
+            "address": "value",
+            "approvals_mask": null,
+            "approvals_num": null,
+            "code_hash": null,
+            "data_hash": null,
+            "expiration_date": null,
+            "last_transaction_lt": "value",
+            "multisig_address": "value",
+            "order_boc": null,
+            "order_seqno": null,
+            "sent_for_execution": null,
+            "signers": [],
+            "threshold": null
+          }
+        ]
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "address_book": {},
+        "orders": []
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "address_book": {},
+        "orders": []
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "address_book": {},
+        "orders": []
+      }
+    },
+    {
+      "accepted": false
+    }
+  ],
+  "responses::MultisigsResponse": [
+    {
+      "accepted": true,
+      "output": {
+        "address_book": {},
+        "multisigs": [
+          {
+            "address": "value",
+            "code_hash": null,
+            "data_hash": null,
+            "last_transaction_lt": "value",
+            "next_order_seqno": null,
+            "orders": [],
+            "proposers": [],
+            "signers": [],
+            "threshold": null
+          }
+        ]
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "address_book": {},
+        "multisigs": []
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "address_book": {},
+        "multisigs": []
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "address_book": {},
+        "multisigs": []
+      }
+    },
+    {
+      "accepted": false
+    }
+  ],
+  "responses::NftCollection": [
+    {
+      "accepted": true,
+      "output": {
+        "address": "value",
+        "code_hash": "value",
+        "collection_content": {
+          "key": {
+            "extra": [
+              "value",
+              42,
+              null
+            ]
+          }
+        },
+        "data_hash": "value",
+        "last_transaction_lt": "value",
+        "next_item_index": "value",
+        "owner_address": "value"
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "address": "value",
+        "code_hash": "value",
+        "collection_content": {},
+        "data_hash": "value",
+        "last_transaction_lt": "value",
+        "next_item_index": "value",
+        "owner_address": null
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "address": "value",
+        "code_hash": "value",
+        "collection_content": {},
+        "data_hash": "value",
+        "last_transaction_lt": "value",
+        "next_item_index": "value",
+        "owner_address": null
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "address": "value",
+        "code_hash": "value",
+        "collection_content": {},
+        "data_hash": "value",
+        "last_transaction_lt": "value",
+        "next_item_index": "value",
+        "owner_address": null
+      }
+    },
+    {
+      "accepted": false
+    }
+  ],
+  "responses::NftCollectionRef": [
+    {
+      "accepted": true,
+      "output": {
+        "address": "value"
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "address": "value"
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "address": "value"
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "address": "value"
+      }
+    },
+    {
+      "accepted": false
+    }
+  ],
+  "responses::NftCollectionsResponse": [
+    {
+      "accepted": true,
+      "output": {
+        "address_book": {},
+        "metadata": {},
+        "nft_collections": [
+          {
+            "address": "value",
+            "code_hash": "value",
+            "collection_content": {},
+            "data_hash": "value",
+            "last_transaction_lt": "value",
+            "next_item_index": "value",
+            "owner_address": null
+          }
+        ]
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "address_book": {},
+        "metadata": {},
+        "nft_collections": []
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "address_book": {},
+        "metadata": {},
+        "nft_collections": []
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "address_book": {},
+        "metadata": {},
+        "nft_collections": []
+      }
+    },
+    {
+      "accepted": false
+    }
+  ],
+  "responses::NftItem": [
+    {
+      "accepted": true,
+      "output": {
+        "address": "value",
+        "auction_contract_address": "value",
+        "code_hash": "value",
+        "collection": {
+          "address": "value"
+        },
+        "collection_address": "value",
+        "content": {
+          "key": {
+            "extra": [
+              "value",
+              42,
+              null
+            ]
+          }
+        },
+        "data_hash": "value",
+        "index": "value",
+        "init": true,
+        "last_transaction_lt": "value",
+        "on_sale": true,
+        "owner_address": "value",
+        "real_owner": "value",
+        "sale_contract_address": "value"
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "address": "value",
+        "auction_contract_address": null,
+        "code_hash": "value",
+        "collection": null,
+        "collection_address": null,
+        "content": {},
+        "data_hash": "value",
+        "index": "value",
+        "init": true,
+        "last_transaction_lt": "value",
+        "on_sale": true,
+        "owner_address": null,
+        "real_owner": null,
+        "sale_contract_address": null
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "address": "value",
+        "auction_contract_address": null,
+        "code_hash": "value",
+        "collection": null,
+        "collection_address": null,
+        "content": {},
+        "data_hash": "value",
+        "index": "value",
+        "init": true,
+        "last_transaction_lt": "value",
+        "on_sale": true,
+        "owner_address": null,
+        "real_owner": null,
+        "sale_contract_address": null
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "address": "value",
+        "auction_contract_address": null,
+        "code_hash": "value",
+        "collection": null,
+        "collection_address": null,
+        "content": {},
+        "data_hash": "value",
+        "index": "value",
+        "init": true,
+        "last_transaction_lt": "value",
+        "on_sale": true,
+        "owner_address": null,
+        "real_owner": null,
+        "sale_contract_address": null
+      }
+    },
+    {
+      "accepted": false
+    }
+  ],
+  "responses::NftItemsResponse": [
+    {
+      "accepted": true,
+      "output": {
+        "address_book": {},
+        "metadata": {},
+        "nft_items": [
+          {
+            "address": "value",
+            "auction_contract_address": null,
+            "code_hash": "value",
+            "collection": null,
+            "collection_address": null,
+            "content": {},
+            "data_hash": "value",
+            "index": "value",
+            "init": true,
+            "last_transaction_lt": "value",
+            "on_sale": true,
+            "owner_address": null,
+            "real_owner": null,
+            "sale_contract_address": null
+          }
+        ]
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "address_book": {},
+        "metadata": {},
+        "nft_items": []
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "address_book": {},
+        "metadata": {},
+        "nft_items": []
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "address_book": {},
+        "metadata": {},
+        "nft_items": []
+      }
+    },
+    {
+      "accepted": false
+    }
+  ],
+  "responses::NftSale": [
+    {
+      "accepted": true,
+      "output": {
+        "address": "value",
+        "code_hash": "value",
+        "created_at": -1,
+        "data_hash": "value",
+        "details": {
+          "extra": [
+            "value",
+            42,
+            null
+          ]
+        },
+        "last_transaction_lt": "value",
+        "marketplace_address": "value",
+        "nft_address": "value",
+        "nft_item": {
+          "address": "value",
+          "auction_contract_address": "value",
+          "code_hash": "value",
+          "collection": {
+            "address": "value"
+          },
+          "collection_address": "value",
+          "content": {
+            "key": {
+              "extra": [
+                "value",
+                42,
+                null
+              ]
+            }
+          },
+          "data_hash": "value",
+          "index": "value",
+          "init": true,
+          "last_transaction_lt": "value",
+          "on_sale": true,
+          "owner_address": "value",
+          "real_owner": "value",
+          "sale_contract_address": "value"
+        },
+        "nft_owner_address": "value",
+        "type": "value"
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "address": "value",
+        "details": {
+          "extra": [
+            "value",
+            42,
+            null
+          ]
+        },
+        "type": "value"
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "address": "value",
+        "details": {
+          "extra": [
+            "value",
+            42,
+            null
+          ]
+        },
+        "type": "value"
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "address": "value",
+        "details": {
+          "extra": [
+            "value",
+            42,
+            null
+          ]
+        },
+        "type": "value"
+      }
+    },
+    {
+      "accepted": false
+    }
+  ],
+  "responses::NftSalesResponse": [
+    {
+      "accepted": true,
+      "output": {
+        "address_book": {},
+        "metadata": {},
+        "nft_sales": [
+          {
+            "address": "value",
+            "details": {
+              "extra": [
+                "value",
+                42,
+                null
+              ]
+            },
+            "type": "value"
+          }
+        ]
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "address_book": {},
+        "metadata": {},
+        "nft_sales": []
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "address_book": {},
+        "metadata": {},
+        "nft_sales": []
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "address_book": {},
+        "metadata": {},
+        "nft_sales": []
+      }
+    },
+    {
+      "accepted": false
+    }
+  ],
+  "responses::NftTransfer": [
+    {
+      "accepted": true,
+      "output": {
+        "custom_payload": "value",
+        "decoded_custom_payload": {
+          "extra": [
+            "value",
+            42,
+            null
+          ]
+        },
+        "decoded_forward_payload": {
+          "extra": [
+            "value",
+            42,
+            null
+          ]
+        },
+        "forward_amount": "value",
+        "forward_payload": "value",
+        "new_owner": "value",
+        "nft_address": "value",
+        "nft_collection": "value",
+        "old_owner": "value",
+        "query_id": "value",
+        "response_destination": "value",
+        "trace_id": "value",
+        "transaction_aborted": true,
+        "transaction_hash": "value",
+        "transaction_lt": "value",
+        "transaction_now": -1
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "custom_payload": null,
+        "decoded_custom_payload": null,
+        "decoded_forward_payload": null,
+        "forward_amount": null,
+        "forward_payload": null,
+        "new_owner": "value",
+        "nft_address": "value",
+        "nft_collection": "value",
+        "old_owner": "value",
+        "query_id": "value",
+        "response_destination": null,
+        "trace_id": null,
+        "transaction_aborted": true,
+        "transaction_hash": "value",
+        "transaction_lt": "value",
+        "transaction_now": -1
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "custom_payload": null,
+        "decoded_custom_payload": null,
+        "decoded_forward_payload": null,
+        "forward_amount": null,
+        "forward_payload": null,
+        "new_owner": "value",
+        "nft_address": "value",
+        "nft_collection": "value",
+        "old_owner": "value",
+        "query_id": "value",
+        "response_destination": null,
+        "trace_id": null,
+        "transaction_aborted": true,
+        "transaction_hash": "value",
+        "transaction_lt": "value",
+        "transaction_now": -1
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "custom_payload": null,
+        "decoded_custom_payload": null,
+        "decoded_forward_payload": null,
+        "forward_amount": null,
+        "forward_payload": null,
+        "new_owner": "value",
+        "nft_address": "value",
+        "nft_collection": "value",
+        "old_owner": "value",
+        "query_id": "value",
+        "response_destination": null,
+        "trace_id": null,
+        "transaction_aborted": true,
+        "transaction_hash": "value",
+        "transaction_lt": "value",
+        "transaction_now": -1
+      }
+    },
+    {
+      "accepted": false
+    }
+  ],
+  "responses::NftTransfersResponse": [
+    {
+      "accepted": true,
+      "output": {
+        "address_book": {},
+        "metadata": {},
+        "nft_transfers": [
+          {
+            "custom_payload": null,
+            "decoded_custom_payload": null,
+            "decoded_forward_payload": null,
+            "forward_amount": null,
+            "forward_payload": null,
+            "new_owner": "value",
+            "nft_address": "value",
+            "nft_collection": "value",
+            "old_owner": "value",
+            "query_id": "value",
+            "response_destination": null,
+            "trace_id": null,
+            "transaction_aborted": true,
+            "transaction_hash": "value",
+            "transaction_lt": "value",
+            "transaction_now": -1
+          }
+        ]
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "address_book": {},
+        "metadata": {},
+        "nft_transfers": []
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "address_book": {},
+        "metadata": {},
+        "nft_transfers": []
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "address_book": {},
+        "metadata": {},
+        "nft_transfers": []
+      }
+    },
+    {
+      "accepted": false
+    }
+  ],
+  "responses::RequestError": [
+    {
+      "accepted": true,
+      "output": {
+        "code": -1,
+        "error": "value"
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "error": "value"
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "error": "value"
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "error": "value"
+      }
+    },
+    {
+      "accepted": false
+    }
+  ],
+  "responses::RunGetMethodResult": [
+    {
+      "accepted": true,
+      "output": {
+        "exit_code": -1,
+        "gas_used": "18446744073709551616",
+        "stack": [
+          {
+            "type": "value",
+            "value": [
+              {
+                "type": "num",
+                "value": "42"
+              }
+            ]
+          }
+        ],
+        "vm_log": "value"
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "exit_code": -1,
+        "gas_used": "18446744073709551616",
+        "stack": [],
+        "vm_log": null
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "exit_code": -1,
+        "gas_used": "18446744073709551616",
+        "stack": [],
+        "vm_log": null
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "exit_code": -1,
+        "gas_used": "18446744073709551616",
+        "stack": [],
+        "vm_log": null
+      }
+    },
+    {
+      "accepted": false
+    }
+  ],
+  "responses::SendMessageResult": [
+    {
+      "accepted": true,
+      "output": {
+        "message_hash": "value",
+        "message_hash_norm": "value"
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "message_hash": "value",
+        "message_hash_norm": "value"
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "message_hash": "value",
+        "message_hash_norm": "value"
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "message_hash": "value",
+        "message_hash_norm": "value"
+      }
+    },
+    {
+      "accepted": false
+    }
+  ],
+  "responses::StackEntity": [
+    {
+      "accepted": true,
+      "output": {
+        "type": "value",
+        "value": [
+          {
+            "type": "num",
+            "value": "42"
+          }
+        ]
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "type": "value",
+        "value": [
+          {
+            "type": "num",
+            "value": "42"
+          }
+        ]
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "type": "value",
+        "value": [
+          {
+            "type": "num",
+            "value": "42"
+          }
+        ]
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "type": "value",
+        "value": [
+          {
+            "type": "num",
+            "value": "42"
+          }
+        ]
+      }
+    },
+    {
+      "accepted": false
+    },
+    {
+      "accepted": true,
+      "output": {
+        "type": "tuple",
+        "value": [
+          {
+            "type": "list",
+            "value": [
+              {
+                "type": "num",
+                "value": "42"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "responses::StackValue": [
+    {
+      "accepted": true,
+      "output": []
+    },
+    {
+      "accepted": true,
+      "output": [
+        {
+          "type": "num",
+          "value": "42"
+        }
+      ]
+    },
+    {
+      "accepted": true,
+      "output": "42"
+    },
+    {
+      "accepted": true,
+      "output": null
+    },
+    {
+      "accepted": true,
+      "output": {
+        "other": 1
+      }
+    }
+  ],
+  "responses::StoragePhase": [
+    {
+      "accepted": true,
+      "output": {
+        "status_change": "value",
+        "storage_fees_collected": "value",
+        "storage_fees_due": "value"
+      }
+    },
+    {
+      "accepted": true,
+      "output": {}
+    },
+    {
+      "accepted": true,
+      "output": {}
+    },
+    {
+      "accepted": true,
+      "output": {}
+    }
+  ],
+  "responses::TokenInfo": [
+    {
+      "accepted": true,
+      "output": {
+        "description": "value",
+        "extra": {
+          "key": {
+            "extra": [
+              "value",
+              42,
+              null
+            ]
+          }
+        },
+        "image": "value",
+        "is_nsfw": true,
+        "is_scam": true,
+        "name": "value",
+        "nft_index": "value",
+        "symbol": "value",
+        "type": "value",
+        "valid": true
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "extra": {}
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "extra": {}
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "extra": {}
+      }
+    }
+  ],
+  "responses::Trace": [
+    {
+      "accepted": true,
+      "output": {
+        "actions": [
+          {
+            "accounts": [],
+            "action_id": "value",
+            "details": {
+              "extra": [
+                "value",
+                42,
+                null
+              ]
+            },
+            "end_lt": "value",
+            "end_utime": 42,
+            "finality": "value",
+            "parent_gasless_action": null,
+            "start_lt": "value",
+            "start_utime": 42,
+            "success": null,
+            "trace_end_lt": "value",
+            "trace_end_utime": 42,
+            "trace_external_hash": null,
+            "trace_external_hash_norm": null,
+            "trace_id": null,
+            "trace_mc_seqno_end": 42,
+            "transactions": [],
+            "transactions_full": [],
+            "type": "value"
+          }
+        ],
+        "end_lt": "value",
+        "end_utime": 42,
+        "external_hash": "value",
+        "is_incomplete": true,
+        "mc_seqno_end": "value",
+        "mc_seqno_start": "value",
+        "start_lt": "value",
+        "start_utime": 42,
+        "trace": {
+          "children": [],
+          "in_msg": {
+            "bounce": null,
+            "bounced": null,
+            "created_at": null,
+            "created_lt": null,
+            "decoded_opcode": null,
+            "destination": null,
+            "extra_flags": null,
+            "fwd_fee": null,
+            "hash": "value",
+            "hash_norm": null,
+            "ihr_disabled": null,
+            "ihr_fee": null,
+            "import_fee": null,
+            "in_msg_tx_hash": null,
+            "init_state": null,
+            "message_content": null,
+            "opcode": null,
+            "out_msg_tx_hash": null,
+            "source": null,
+            "value": null,
+            "value_extra_currencies": null
+          },
+          "in_msg_hash": "value",
+          "transaction": {
+            "account": "value",
+            "account_state_after": {
+              "account_status": null,
+              "balance": null,
+              "code_hash": null,
+              "data_hash": null,
+              "extra_currencies": null,
+              "frozen_hash": null,
+              "hash": "value"
+            },
+            "account_state_before": {
+              "account_status": null,
+              "balance": null,
+              "code_hash": null,
+              "data_hash": null,
+              "extra_currencies": null,
+              "frozen_hash": null,
+              "hash": "value"
+            },
+            "block_ref": {
+              "seqno": 42,
+              "shard": "value",
+              "workchain": -1
+            },
+            "child_transactions": [],
+            "description": {
+              "aborted": null,
+              "credit_first": null,
+              "destroyed": null,
+              "installed": null,
+              "is_tock": null,
+              "type": "value"
+            },
+            "emulated": true,
+            "end_status": "value",
+            "finality": "value",
+            "hash": "value",
+            "in_msg": null,
+            "lt": "value",
+            "mc_block_seqno": 42,
+            "now": 42,
+            "orig_status": "value",
+            "out_msgs": [],
+            "prev_trans_hash": "value",
+            "prev_trans_lt": "value",
+            "total_fees": "value",
+            "total_fees_extra_currencies": {},
+            "trace_external_hash": null,
+            "trace_id": null
+          },
+          "tx_hash": "value"
+        },
+        "trace_id": "value",
+        "trace_info": {
+          "classification_state": "value",
+          "messages": 42,
+          "pending_messages": 42,
+          "trace_state": "value",
+          "transactions": 42
+        },
+        "transactions": {
+          "key": {
+            "account": "value",
+            "account_state_after": {
+              "account_status": null,
+              "balance": null,
+              "code_hash": null,
+              "data_hash": null,
+              "extra_currencies": null,
+              "frozen_hash": null,
+              "hash": "value"
+            },
+            "account_state_before": {
+              "account_status": null,
+              "balance": null,
+              "code_hash": null,
+              "data_hash": null,
+              "extra_currencies": null,
+              "frozen_hash": null,
+              "hash": "value"
+            },
+            "block_ref": {
+              "seqno": 42,
+              "shard": "value",
+              "workchain": -1
+            },
+            "child_transactions": [],
+            "description": {
+              "aborted": null,
+              "credit_first": null,
+              "destroyed": null,
+              "installed": null,
+              "is_tock": null,
+              "type": "value"
+            },
+            "emulated": true,
+            "end_status": "value",
+            "finality": "value",
+            "hash": "value",
+            "in_msg": null,
+            "lt": "value",
+            "mc_block_seqno": 42,
+            "now": 0,
+            "orig_status": "value",
+            "out_msgs": [],
+            "prev_trans_hash": "value",
+            "prev_trans_lt": "value",
+            "total_fees": "value",
+            "total_fees_extra_currencies": {},
+            "trace_external_hash": null,
+            "trace_id": null
+          }
+        },
+        "transactions_order": [
+          "value"
+        ],
+        "warning": "value"
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "actions": [],
+        "end_lt": null,
+        "end_utime": null,
+        "external_hash": null,
+        "is_incomplete": false,
+        "mc_seqno_end": "value",
+        "mc_seqno_start": "value",
+        "start_lt": "value",
+        "start_utime": 42,
+        "trace": null,
+        "trace_id": "value",
+        "trace_info": {
+          "classification_state": "value",
+          "messages": 42,
+          "pending_messages": 42,
+          "trace_state": "value",
+          "transactions": 42
+        },
+        "transactions": {},
+        "transactions_order": [],
+        "warning": null
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "actions": [],
+        "end_lt": null,
+        "end_utime": null,
+        "external_hash": null,
+        "is_incomplete": true,
+        "mc_seqno_end": "value",
+        "mc_seqno_start": "value",
+        "start_lt": "value",
+        "start_utime": 42,
+        "trace": null,
+        "trace_id": "value",
+        "trace_info": {
+          "classification_state": "value",
+          "messages": 42,
+          "pending_messages": 42,
+          "trace_state": "value",
+          "transactions": 42
+        },
+        "transactions": {},
+        "transactions_order": [],
+        "warning": null
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "actions": [],
+        "end_lt": null,
+        "end_utime": null,
+        "external_hash": null,
+        "is_incomplete": false,
+        "mc_seqno_end": "value",
+        "mc_seqno_start": "value",
+        "start_lt": "value",
+        "start_utime": 42,
+        "trace": null,
+        "trace_id": "value",
+        "trace_info": {
+          "classification_state": "value",
+          "messages": 42,
+          "pending_messages": 42,
+          "trace_state": "value",
+          "transactions": 42
+        },
+        "transactions": {},
+        "transactions_order": [],
+        "warning": null
+      }
+    },
+    {
+      "accepted": false
+    }
+  ],
+  "responses::TraceInfo": [
+    {
+      "accepted": true,
+      "output": {
+        "classification_state": "value",
+        "messages": 42,
+        "pending_messages": 42,
+        "trace_state": "value",
+        "transactions": 42
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "classification_state": "value",
+        "messages": 42,
+        "pending_messages": 42,
+        "trace_state": "value",
+        "transactions": 42
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "classification_state": "value",
+        "messages": 42,
+        "pending_messages": 42,
+        "trace_state": "value",
+        "transactions": 42
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "classification_state": "value",
+        "messages": 42,
+        "pending_messages": 42,
+        "trace_state": "value",
+        "transactions": 42
+      }
+    },
+    {
+      "accepted": false
+    }
+  ],
+  "responses::TraceNode": [
+    {
+      "accepted": true,
+      "output": {
+        "children": [
+          {
+            "children": [],
+            "in_msg": null,
+            "in_msg_hash": null,
+            "transaction": null,
+            "tx_hash": null
+          }
+        ],
+        "in_msg": {
+          "bounce": true,
+          "bounced": true,
+          "created_at": "value",
+          "created_lt": "value",
+          "decoded_opcode": "value",
+          "destination": "value",
+          "extra_flags": "value",
+          "fwd_fee": "value",
+          "hash": "value",
+          "hash_norm": "value",
+          "ihr_disabled": true,
+          "ihr_fee": "value",
+          "import_fee": "value",
+          "in_msg_tx_hash": "value",
+          "init_state": {
+            "body": null,
+            "decoded": null,
+            "hash": null
+          },
+          "message_content": {
+            "body": null,
+            "decoded": null,
+            "hash": null
+          },
+          "opcode": "18446744073709551616",
+          "out_msg_tx_hash": "value",
+          "source": "value",
+          "value": "value",
+          "value_extra_currencies": {
+            "key": "value"
+          }
+        },
+        "in_msg_hash": "value",
+        "transaction": {
+          "account": "value",
+          "account_state_after": {
+            "account_status": null,
+            "balance": null,
+            "code_hash": null,
+            "data_hash": null,
+            "extra_currencies": null,
+            "frozen_hash": null,
+            "hash": "value"
+          },
+          "account_state_before": {
+            "account_status": null,
+            "balance": null,
+            "code_hash": null,
+            "data_hash": null,
+            "extra_currencies": null,
+            "frozen_hash": null,
+            "hash": "value"
+          },
+          "block_ref": {
+            "seqno": 42,
+            "shard": "value",
+            "workchain": -1
+          },
+          "child_transactions": [],
+          "description": {
+            "aborted": null,
+            "credit_first": null,
+            "destroyed": null,
+            "installed": null,
+            "is_tock": null,
+            "type": "value"
+          },
+          "emulated": true,
+          "end_status": "value",
+          "finality": "value",
+          "hash": "value",
+          "in_msg": {
+            "bounce": null,
+            "bounced": null,
+            "created_at": null,
+            "created_lt": null,
+            "decoded_opcode": null,
+            "destination": null,
+            "extra_flags": null,
+            "fwd_fee": null,
+            "hash": "value",
+            "hash_norm": null,
+            "ihr_disabled": null,
+            "ihr_fee": null,
+            "import_fee": null,
+            "in_msg_tx_hash": null,
+            "init_state": null,
+            "message_content": null,
+            "opcode": null,
+            "out_msg_tx_hash": null,
+            "source": null,
+            "value": null,
+            "value_extra_currencies": null
+          },
+          "lt": "value",
+          "mc_block_seqno": 42,
+          "now": 42,
+          "orig_status": "value",
+          "out_msgs": [],
+          "prev_trans_hash": "value",
+          "prev_trans_lt": "value",
+          "total_fees": "value",
+          "total_fees_extra_currencies": {
+            "key": "value"
+          },
+          "trace_external_hash": "value",
+          "trace_id": "value"
+        },
+        "tx_hash": "value"
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "children": [],
+        "in_msg": null,
+        "in_msg_hash": null,
+        "transaction": null,
+        "tx_hash": null
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "children": [],
+        "in_msg": null,
+        "in_msg_hash": null,
+        "transaction": null,
+        "tx_hash": null
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "children": [],
+        "in_msg": null,
+        "in_msg_hash": null,
+        "transaction": null,
+        "tx_hash": null
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "children": [
+          {
+            "children": [
+              {
+                "children": [],
+                "in_msg": null,
+                "in_msg_hash": null,
+                "transaction": null,
+                "tx_hash": null
+              }
+            ],
+            "in_msg": null,
+            "in_msg_hash": null,
+            "transaction": null,
+            "tx_hash": null
+          }
+        ],
+        "in_msg": null,
+        "in_msg_hash": null,
+        "transaction": null,
+        "tx_hash": null
+      }
+    }
+  ],
+  "responses::TracesResponse": [
+    {
+      "accepted": true,
+      "output": {
+        "address_book": {},
+        "metadata": {},
+        "traces": [
+          {
+            "actions": [],
+            "end_lt": null,
+            "end_utime": null,
+            "external_hash": null,
+            "is_incomplete": false,
+            "mc_seqno_end": "value",
+            "mc_seqno_start": "value",
+            "start_lt": "value",
+            "start_utime": 42,
+            "trace": null,
+            "trace_id": "value",
+            "trace_info": {
+              "classification_state": "value",
+              "messages": 42,
+              "pending_messages": 42,
+              "trace_state": "value",
+              "transactions": 42
+            },
+            "transactions": {},
+            "transactions_order": [],
+            "warning": null
+          }
+        ]
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "address_book": {},
+        "metadata": {},
+        "traces": []
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "address_book": {},
+        "metadata": {},
+        "traces": []
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "address_book": {},
+        "metadata": {},
+        "traces": []
+      }
+    }
+  ],
+  "responses::Transaction": [
+    {
+      "accepted": true,
+      "output": {
+        "account": "value",
+        "account_state_after": {
+          "account_status": "value",
+          "balance": "value",
+          "code_boc": "value",
+          "code_hash": "value",
+          "data_boc": "value",
+          "data_hash": "value",
+          "extra_currencies": {
+            "key": "value"
+          },
+          "frozen_hash": "value",
+          "hash": "value"
+        },
+        "account_state_before": {
+          "account_status": "value",
+          "balance": "value",
+          "code_boc": "value",
+          "code_hash": "value",
+          "data_boc": "value",
+          "data_hash": "value",
+          "extra_currencies": {
+            "key": "value"
+          },
+          "frozen_hash": "value",
+          "hash": "value"
+        },
+        "block_ref": {
+          "seqno": 42,
+          "shard": "value",
+          "workchain": -1
+        },
+        "child_transactions": [
+          "value"
+        ],
+        "description": {
+          "aborted": true,
+          "action": {},
+          "bounce": {
+            "extra": [
+              "value",
+              42,
+              null
+            ]
+          },
+          "compute_ph": {},
+          "credit_first": true,
+          "credit_ph": {
+            "credit_extra_currencies": {}
+          },
+          "destroyed": true,
+          "installed": true,
+          "is_tock": true,
+          "split_info": {
+            "extra": [
+              "value",
+              42,
+              null
+            ]
+          },
+          "storage_ph": {},
+          "type": "value"
+        },
+        "emulated": true,
+        "end_status": "value",
+        "finality": "value",
+        "hash": "value",
+        "in_msg": {
+          "bounce": true,
+          "bounced": true,
+          "created_at": "value",
+          "created_lt": "value",
+          "decoded_opcode": "value",
+          "destination": "value",
+          "extra_flags": "value",
+          "fwd_fee": "value",
+          "hash": "value",
+          "hash_norm": "value",
+          "ihr_disabled": true,
+          "ihr_fee": "value",
+          "import_fee": "value",
+          "in_msg_tx_hash": "value",
+          "init_state": {
+            "body": null,
+            "decoded": null,
+            "hash": null
+          },
+          "message_content": {
+            "body": null,
+            "decoded": null,
+            "hash": null
+          },
+          "opcode": "18446744073709551616",
+          "out_msg_tx_hash": "value",
+          "source": "value",
+          "value": "value",
+          "value_extra_currencies": {
+            "key": "value"
+          }
+        },
+        "lt": "value",
+        "mc_block_seqno": 42,
+        "now": 42,
+        "orig_status": "value",
+        "out_msgs": [
+          {
+            "bounce": null,
+            "bounced": null,
+            "created_at": null,
+            "created_lt": null,
+            "decoded_opcode": null,
+            "destination": null,
+            "extra_flags": null,
+            "fwd_fee": null,
+            "hash": "value",
+            "hash_norm": null,
+            "ihr_disabled": null,
+            "ihr_fee": null,
+            "import_fee": null,
+            "in_msg_tx_hash": null,
+            "init_state": null,
+            "message_content": null,
+            "opcode": null,
+            "out_msg_tx_hash": null,
+            "source": null,
+            "value": null,
+            "value_extra_currencies": null
+          }
+        ],
+        "prev_trans_hash": "value",
+        "prev_trans_lt": "value",
+        "total_fees": "value",
+        "total_fees_extra_currencies": {
+          "key": "value"
+        },
+        "trace_external_hash": "value",
+        "trace_id": "value"
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "account": "value",
+        "account_state_after": {
+          "account_status": null,
+          "balance": null,
+          "code_hash": null,
+          "data_hash": null,
+          "extra_currencies": null,
+          "frozen_hash": null,
+          "hash": "value"
+        },
+        "account_state_before": {
+          "account_status": null,
+          "balance": null,
+          "code_hash": null,
+          "data_hash": null,
+          "extra_currencies": null,
+          "frozen_hash": null,
+          "hash": "value"
+        },
+        "block_ref": {
+          "seqno": 42,
+          "shard": "value",
+          "workchain": -1
+        },
+        "child_transactions": [],
+        "description": {
+          "aborted": null,
+          "credit_first": null,
+          "destroyed": null,
+          "installed": null,
+          "is_tock": null,
+          "type": "value"
+        },
+        "emulated": true,
+        "end_status": "value",
+        "finality": "value",
+        "hash": "value",
+        "in_msg": null,
+        "lt": "value",
+        "mc_block_seqno": 42,
+        "now": 0,
+        "orig_status": "value",
+        "out_msgs": [],
+        "prev_trans_hash": "value",
+        "prev_trans_lt": "value",
+        "total_fees": "value",
+        "total_fees_extra_currencies": {},
+        "trace_external_hash": null,
+        "trace_id": null
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "account": "value",
+        "account_state_after": {
+          "account_status": null,
+          "balance": null,
+          "code_hash": null,
+          "data_hash": null,
+          "extra_currencies": null,
+          "frozen_hash": null,
+          "hash": "value"
+        },
+        "account_state_before": {
+          "account_status": null,
+          "balance": null,
+          "code_hash": null,
+          "data_hash": null,
+          "extra_currencies": null,
+          "frozen_hash": null,
+          "hash": "value"
+        },
+        "block_ref": {
+          "seqno": 42,
+          "shard": "value",
+          "workchain": -1
+        },
+        "child_transactions": [],
+        "description": {
+          "aborted": null,
+          "credit_first": null,
+          "destroyed": null,
+          "installed": null,
+          "is_tock": null,
+          "type": "value"
+        },
+        "emulated": true,
+        "end_status": "value",
+        "finality": "value",
+        "hash": "value",
+        "in_msg": null,
+        "lt": "value",
+        "mc_block_seqno": 42,
+        "now": 42,
+        "orig_status": "value",
+        "out_msgs": [],
+        "prev_trans_hash": "value",
+        "prev_trans_lt": "value",
+        "total_fees": "value",
+        "total_fees_extra_currencies": {},
+        "trace_external_hash": null,
+        "trace_id": null
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "account": "value",
+        "account_state_after": {
+          "account_status": null,
+          "balance": null,
+          "code_hash": null,
+          "data_hash": null,
+          "extra_currencies": null,
+          "frozen_hash": null,
+          "hash": "value"
+        },
+        "account_state_before": {
+          "account_status": null,
+          "balance": null,
+          "code_hash": null,
+          "data_hash": null,
+          "extra_currencies": null,
+          "frozen_hash": null,
+          "hash": "value"
+        },
+        "block_ref": {
+          "seqno": 42,
+          "shard": "value",
+          "workchain": -1
+        },
+        "child_transactions": [],
+        "description": {
+          "aborted": null,
+          "credit_first": null,
+          "destroyed": null,
+          "installed": null,
+          "is_tock": null,
+          "type": "value"
+        },
+        "emulated": true,
+        "end_status": "value",
+        "finality": "value",
+        "hash": "value",
+        "in_msg": null,
+        "lt": "value",
+        "mc_block_seqno": 42,
+        "now": 0,
+        "orig_status": "value",
+        "out_msgs": [],
+        "prev_trans_hash": "value",
+        "prev_trans_lt": "value",
+        "total_fees": "value",
+        "total_fees_extra_currencies": {},
+        "trace_external_hash": null,
+        "trace_id": null
+      }
+    },
+    {
+      "accepted": false
+    }
+  ],
+  "responses::TransactionDescr": [
+    {
+      "accepted": true,
+      "output": {
+        "aborted": true,
+        "action": {
+          "action_list_hash": "value",
+          "msgs_created": 42,
+          "no_funds": true,
+          "result_arg": -1,
+          "result_code": -1,
+          "skipped_actions": 42,
+          "spec_actions": 42,
+          "status_change": "value",
+          "success": true,
+          "tot_actions": 42,
+          "tot_msg_size": {
+            "bits": null,
+            "cells": null
+          },
+          "total_action_fees": "value",
+          "total_fwd_fees": "value",
+          "valid": true
+        },
+        "bounce": {
+          "extra": [
+            "value",
+            42,
+            null
+          ]
+        },
+        "compute_ph": {
+          "account_activated": true,
+          "exit_arg": -1,
+          "exit_code": -1,
+          "gas_credit": "value",
+          "gas_fees": "value",
+          "gas_limit": "value",
+          "gas_used": "value",
+          "mode": -1,
+          "msg_state_used": true,
+          "reason": "value",
+          "skipped": true,
+          "success": true,
+          "vm_final_state_hash": "value",
+          "vm_init_state_hash": "value",
+          "vm_steps": 42
+        },
+        "credit_first": true,
+        "credit_ph": {
+          "credit": "value",
+          "credit_extra_currencies": {
+            "key": "value"
+          },
+          "due_fees_collected": "value"
+        },
+        "destroyed": true,
+        "installed": true,
+        "is_tock": true,
+        "split_info": {
+          "extra": [
+            "value",
+            42,
+            null
+          ]
+        },
+        "storage_ph": {
+          "status_change": "value",
+          "storage_fees_collected": "value",
+          "storage_fees_due": "value"
+        },
+        "type": "value"
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "aborted": null,
+        "credit_first": null,
+        "destroyed": null,
+        "installed": null,
+        "is_tock": null,
+        "type": "value"
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "aborted": null,
+        "credit_first": null,
+        "destroyed": null,
+        "installed": null,
+        "is_tock": null,
+        "type": "value"
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "aborted": null,
+        "credit_first": null,
+        "destroyed": null,
+        "installed": null,
+        "is_tock": null,
+        "type": "value"
+      }
+    },
+    {
+      "accepted": false
+    }
+  ],
+  "responses::TransactionsResponse": [
+    {
+      "accepted": true,
+      "output": {
+        "address_book": {},
+        "transactions": [
+          {
+            "account": "value",
+            "account_state_after": {
+              "account_status": null,
+              "balance": null,
+              "code_hash": null,
+              "data_hash": null,
+              "extra_currencies": null,
+              "frozen_hash": null,
+              "hash": "value"
+            },
+            "account_state_before": {
+              "account_status": null,
+              "balance": null,
+              "code_hash": null,
+              "data_hash": null,
+              "extra_currencies": null,
+              "frozen_hash": null,
+              "hash": "value"
+            },
+            "block_ref": {
+              "seqno": 42,
+              "shard": "value",
+              "workchain": -1
+            },
+            "child_transactions": [],
+            "description": {
+              "aborted": null,
+              "credit_first": null,
+              "destroyed": null,
+              "installed": null,
+              "is_tock": null,
+              "type": "value"
+            },
+            "emulated": true,
+            "end_status": "value",
+            "finality": "value",
+            "hash": "value",
+            "in_msg": null,
+            "lt": "value",
+            "mc_block_seqno": 42,
+            "now": 0,
+            "orig_status": "value",
+            "out_msgs": [],
+            "prev_trans_hash": "value",
+            "prev_trans_lt": "value",
+            "total_fees": "value",
+            "total_fees_extra_currencies": {},
+            "trace_external_hash": null,
+            "trace_id": null
+          }
+        ]
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "address_book": {},
+        "transactions": []
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "address_book": {},
+        "transactions": []
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "address_book": {},
+        "transactions": []
+      }
+    },
+    {
+      "accepted": false
+    }
+  ],
+  "responses::V2AddressInformation": [
+    {
+      "accepted": true,
+      "output": {
+        "balance": "value",
+        "code": "value",
+        "data": "value",
+        "frozen_hash": "value",
+        "last_transaction_hash": "value",
+        "last_transaction_lt": "value",
+        "status": "value"
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "balance": "value",
+        "code": null,
+        "data": null,
+        "frozen_hash": null,
+        "last_transaction_hash": null,
+        "last_transaction_lt": null,
+        "status": "value"
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "balance": "value",
+        "code": null,
+        "data": null,
+        "frozen_hash": null,
+        "last_transaction_hash": null,
+        "last_transaction_lt": null,
+        "status": "value"
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "balance": "value",
+        "code": null,
+        "data": null,
+        "frozen_hash": null,
+        "last_transaction_hash": null,
+        "last_transaction_lt": null,
+        "status": "value"
+      }
+    },
+    {
+      "accepted": false
+    }
+  ],
+  "responses::V2WalletInformation": [
+    {
+      "accepted": true,
+      "output": {
+        "balance": "value",
+        "last_transaction_hash": "value",
+        "last_transaction_lt": "value",
+        "seqno": -1,
+        "status": "value",
+        "wallet_id": -1,
+        "wallet_type": "value"
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "balance": "value",
+        "last_transaction_hash": "value",
+        "last_transaction_lt": "value",
+        "status": "value"
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "balance": "value",
+        "last_transaction_hash": "value",
+        "last_transaction_lt": "value",
+        "status": "value"
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "balance": "value",
+        "last_transaction_hash": "value",
+        "last_transaction_lt": "value",
+        "status": "value"
+      }
+    },
+    {
+      "accepted": false
+    },
+    {
+      "accepted": true,
+      "output": {
+        "balance": "value",
+        "last_transaction_hash": "value",
+        "last_transaction_lt": "value",
+        "seqno": -9223372036854775808,
+        "status": "value",
+        "wallet_id": 9223372036854775807
+      }
+    }
+  ],
+  "responses::VestingContractsResponse": [
+    {
+      "accepted": true,
+      "output": {
+        "address_book": {},
+        "vesting_contracts": [
+          {
+            "address": null,
+            "cliff_duration": null,
+            "owner_address": null,
+            "sender_address": null,
+            "start_time": null,
+            "total_amount": null,
+            "total_duration": null,
+            "unlock_period": null,
+            "whitelist": []
+          }
+        ]
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "address_book": {},
+        "vesting_contracts": []
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "address_book": {},
+        "vesting_contracts": []
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "address_book": {},
+        "vesting_contracts": []
+      }
+    },
+    {
+      "accepted": false
+    }
+  ],
+  "responses::VestingInfo": [
+    {
+      "accepted": true,
+      "output": {
+        "address": "value",
+        "cliff_duration": -1,
+        "owner_address": "value",
+        "sender_address": "value",
+        "start_time": -1,
+        "total_amount": "value",
+        "total_duration": -1,
+        "unlock_period": -1,
+        "whitelist": [
+          "value"
+        ]
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "address": null,
+        "cliff_duration": null,
+        "owner_address": null,
+        "sender_address": null,
+        "start_time": null,
+        "total_amount": null,
+        "total_duration": null,
+        "unlock_period": null,
+        "whitelist": []
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "address": null,
+        "cliff_duration": null,
+        "owner_address": null,
+        "sender_address": null,
+        "start_time": null,
+        "total_amount": null,
+        "total_duration": null,
+        "unlock_period": null,
+        "whitelist": []
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "address": null,
+        "cliff_duration": null,
+        "owner_address": null,
+        "sender_address": null,
+        "start_time": null,
+        "total_amount": null,
+        "total_duration": null,
+        "unlock_period": null,
+        "whitelist": []
+      }
+    }
+  ],
+  "responses::WalletState": [
+    {
+      "accepted": true,
+      "output": {
+        "address": "value",
+        "balance": "value",
+        "code_hash": "value",
+        "extra_currencies": {
+          "key": "value"
+        },
+        "is_signature_allowed": true,
+        "is_wallet": true,
+        "last_transaction_hash": "value",
+        "last_transaction_lt": "value",
+        "seqno": -1,
+        "status": "value",
+        "wallet_id": -1,
+        "wallet_type": "value"
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "address": "value",
+        "is_wallet": true,
+        "last_transaction_hash": null,
+        "last_transaction_lt": null
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "address": "value",
+        "is_wallet": true,
+        "last_transaction_hash": null,
+        "last_transaction_lt": null
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "address": "value",
+        "is_wallet": true,
+        "last_transaction_hash": null,
+        "last_transaction_lt": null
+      }
+    },
+    {
+      "accepted": false
+    },
+    {
+      "accepted": true,
+      "output": {
+        "address": "value",
+        "is_wallet": true,
+        "last_transaction_hash": null,
+        "last_transaction_lt": null,
+        "seqno": -9223372036854775808,
+        "wallet_id": 9223372036854775807
+      }
+    }
+  ],
+  "responses::WalletStatesResponse": [
+    {
+      "accepted": true,
+      "output": {
+        "address_book": {},
+        "metadata": {},
+        "wallets": [
+          {
+            "address": "value",
+            "is_wallet": true,
+            "last_transaction_hash": null,
+            "last_transaction_lt": null
+          }
+        ]
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "address_book": {},
+        "metadata": {},
+        "wallets": []
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "address_book": {},
+        "metadata": {},
+        "wallets": []
+      }
+    },
+    {
+      "accepted": true,
+      "output": {
+        "address_book": {},
+        "metadata": {},
+        "wallets": []
+      }
+    },
+    {
+      "accepted": false
+    }
+  ]
+}

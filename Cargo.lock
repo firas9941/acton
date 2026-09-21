@@ -6086,7 +6086,6 @@ dependencies = [
  "tasm-core",
  "tokio",
  "tolk-compiler",
- "ton-api",
  "ton-executor",
  "ton-networks",
  "toncenter",
@@ -6169,6 +6168,7 @@ dependencies = [
 name = "toncenter"
 version = "2.1.15"
 dependencies = [
+ "anyhow",
  "expect-test",
  "jsonschema",
  "reqwest",

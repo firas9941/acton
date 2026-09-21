@@ -12,10 +12,9 @@ use std::ffi::OsStr;
 use std::sync::LazyLock;
 use std::time::{Duration, Instant};
 use tokio::sync::Mutex;
-use ton_api::toncenter::v3;
 use ton_executor::message::{PrevBlockId, PrevBlocksInfo};
 use ton_networks::CustomNetworkUrls;
-use toncenter::v2;
+use toncenter::{v2, v3};
 use toncenter_keys::api_key as toncenter_api_key;
 use tycho_types::boc::Boc;
 use tycho_types::prelude::Cell;
@@ -138,7 +137,7 @@ impl TonCenterClient {
             .with_context(|| format!("Failed to decode TON Center {method} response"))
     }
 
-    /// Unwraps the V2 envelope; result schemas are owned by `ton-api`.
+    /// Decodes a v2 response envelope into its typed result or API error.
     async fn get_v2<T: DeserializeOwned>(
         &self,
         method: &str,
@@ -381,7 +380,7 @@ mod tests {
     use tokio::io::{AsyncReadExt, AsyncWriteExt};
     use tokio::net::TcpListener;
     use tokio::task::JoinHandle;
-    use ton_api::toncenter::v3;
+    use toncenter::v3;
     use tycho_types::cell::{CellBuilder, CellFamily, HashBytes, Lazy};
     use tycho_types::models::{
         AccountStatus, ComputePhase, ComputePhaseSkipReason, HashUpdate, OrdinaryTxInfo,
@@ -499,7 +498,7 @@ mod tests {
         let tx: Transaction = cell.parse().unwrap();
         let account = StdAddr::new(0, tx.account).to_string();
         json!({
-            "@type": "raw.transaction",
+            "@type": "ext.transaction",
             "address": { "@type": "accountAddress", "account_address": account },
             "account": account,
             "utime": tx.now,

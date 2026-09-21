@@ -42,7 +42,7 @@ use tolk_compiler::abi::ContractABI;
 use tolk_syntax::ast::expressions::parse_tolk_int_literal;
 use ton::ton_core::cell::TonCell;
 use ton::ton_core::traits::tlb::TLB;
-use ton_api::{Network, TonApiClient, toncenter::v3};
+use ton_api::{Network, TonApiClient};
 use ton_emulator::emulator::{Emulator, SendMessageResult, SendMessageResultSuccess};
 use ton_emulator::world_state::{AccountsState, WorldState};
 use ton_emulator::{extension, register_ext_methods};
@@ -51,6 +51,7 @@ use ton_executor::get::{GetExecutor, GetMethodResult, GetMethodResultSuccess, Ru
 use ton_executor::message::step::StepExecutor;
 use ton_executor::{BaseExecutor, ExecutorVerbosity};
 use ton_executor::{MissingLibrariesContext, missing_library_callback};
+use toncenter::v3;
 use tvm_ffi::serde::serialize_tuple;
 use tvm_ffi::stack::{ContData, Tuple, TupleItem};
 use tycho_types::boc::Boc;

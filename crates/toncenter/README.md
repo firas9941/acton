@@ -1,6 +1,6 @@
-# TON Center v2 types for Rust
+# TON Center API types for Rust
 
-Serialize requests and decode TON Center API v2 responses with typed Rust models.
+Serialize requests and decode TON Center API v2 and v3 responses with typed Rust models.
 Use the request and response types with your HTTP client, or generate an OpenAPI
 document for API tooling.
 
@@ -48,7 +48,7 @@ Use `https://testnet.toncenter.com/api/v2` for testnet.
 with the server's error code and message. Decode the response body even when its
 HTTP status indicates an error to retain these details.
 
-## Work with wire values
+## Work with v2 wire values
 
 - Balances and TVM integers remain strings, preserving values larger than 64 bits.
 - Native coin balances and fees use nanograms: 1 GRAM = 1,000,000,000 nanograms.
@@ -68,6 +68,43 @@ response does not prove on-chain inclusion. The C++ `/jsonRPC` proxy usually omi
 All 36 methods in the deployed OpenAPI are available, together with `/jsonRPC`,
 `shards`, and `sendBocReturnHashNoError`. The supported C++ server accepts
 `dnsResolve.category` but ignores it; `ttl` controls resolution depth, not cache expiry.
+
+## Query indexed data with v3
+
+Use `v3::requests` to select indexed accounts, transactions, blocks, traces, jettons,
+NFTs, DNS records, multisig orders, and vesting contracts. The module also supports
+fee estimation, get methods, and message submission: 35 operations in total.
+It covers a subset of TON Center v3 schema version `1.2.6`.
+
+```rust
+use toncenter::v3::{endpoints::{Endpoint, GetMasterchainInfo}, requests::MasterchainInfoQuery};
+
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = reqwest::blocking::Client::builder()
+        .timeout(std::time::Duration::from_secs(30))
+        .build()?;
+    let response: <GetMasterchainInfo as Endpoint>::Response = client
+        .get(format!("https://toncenter.com{}", GetMasterchainInfo::PATH))
+        .query(&MasterchainInfoQuery::default())
+        .send()?
+        .error_for_status()?
+        .json()?;
+
+    println!("Latest indexed masterchain block: {}", response.last.seqno);
+    Ok(())
+}
+```
+
+V3 returns the result directly. API errors decode as `v3::responses::RequestError`;
+HTTP gateways can also return unstructured errors. For GET requests, omit null
+parameters and encode arrays as repeated query parameters, such as
+`address=first&address=second`. JSON serialization preserves each model's null and
+empty-collection behavior, so a transport must encode URL queries separately.
+
+`v3::StringOrNumber` preserves string and integer representations. It accepts
+signed and unsigned 64-bit JSON integers and keeps larger numbers as strings.
+Unknown response fields are ignored; the supported v3 models do not preserve every
+field provided by newer servers.
 
 ## Generate OpenAPI
 
@@ -90,10 +127,13 @@ From a checkout of this repository, export or check the bundled document with:
 ```sh
 cargo run -p toncenter --example openapi --features openapi -- crates/toncenter/openapi.json
 cargo run -p toncenter --example openapi --features openapi -- --check crates/toncenter/openapi.json
+cargo run -p toncenter --example openapi --features openapi -- --v3 crates/toncenter/openapi-v3.json
+cargo run -p toncenter --example openapi --features openapi -- --v3 --check crates/toncenter/openapi-v3.json
 ```
 
-The bundled [openapi.json](openapi.json) includes field descriptions, query
+The bundled [v2 document](openapi.json) and [v3 document](openapi-v3.json) include field descriptions, query
 parameters, authentication options, and method-specific success and error schemas.
+Use `toncenter::v3::openapi::document()` to generate the v3 document in Rust.
 
 ## Test the contract
 
@@ -109,19 +149,25 @@ Real network tests are compiled only with the `live-tests` feature:
 
 ```sh
 cargo test -p toncenter --features live-tests --test live -- --test-threads=1 --nocapture
+cargo test -p toncenter --features live-tests --test live_v3 -- --test-threads=1 --nocapture
 ```
 
-The suite tests each method over POST and the JSON-RPC proxy, and GET where supported.
+The v2 suite tests each method over POST and the JSON-RPC proxy, and GET where supported.
 It validates actual replies against both the Rust models and generated OpenAPI and
 checks that serialization loses no fields or values. Requests are paced, time-limited,
 and retried for rate limiting and temporary gateway failures. Network or API failures
 fail the tests; missing credentials do not silently skip checks.
+
+The v3 suite checks typed queries and responses for the supported operations,
+including repeated parameters, nullable collections, nested stacks, and API errors.
+It decodes the supported response fields; additional server fields are accepted.
 
 Configuration:
 
 | Environment variable | Meaning |
 | --- | --- |
 | `TONCENTER_V2_URL` | Base URL including `/api/v2`; defaults to mainnet TON Center |
+| `TONCENTER_V3_URL` | Base URL including `/api/v3`; defaults to mainnet TON Center |
 | `TONCENTER_API_KEY` | Optional key sent in `X-API-Key` |
 | `TONCENTER_TOKEN_ADDRESS` | Jetton or NFT contract for `getTokenData` |
 | `TONCENTER_DNS_ADDRESS` | Root resolver for `dnsResolve` |
@@ -138,6 +184,9 @@ fixtures; the suite does not sign or broadcast real messages.
 Server reference:
 [ton-http-api-cpp at ed6e2ee](https://github.com/toncenter/ton-http-api-cpp/tree/ed6e2eefd9784cb292af8c58243ef2f9f48b1026),
 deployed API `v2.1.15-8bacaa3`.
+
+V3 schema reference: [TON Center v3](https://toncenter.com/api/v3/doc.json),
+version `1.2.6`.
 
 Type and field documentation includes material adapted from TON Center's MIT-licensed
 schema; its notice is in [LICENSE-TON-HTTP-API](LICENSE-TON-HTTP-API). This crate is

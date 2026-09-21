@@ -10,7 +10,7 @@ documentation = "https://docs.rs/toncenter"
 readme = "README.md"
 keywords = ["ton", "toncenter", "blockchain", "openapi"]
 categories = ["api-bindings", "cryptography::cryptocurrencies"]
-include = ["src/**", "examples/**", "tests/**", "openapi.json", "README.md", "LICENSE-*", "Cargo.toml"]
+include = ["src/**", "examples/**", "tests/**", "openapi.json", "openapi-v3.json", "README.md", "LICENSE-*", "Cargo.toml"]
 
 [features]
 default = []
@@ -23,6 +23,7 @@ serde_json = "1.0.145"
 utoipa = { version = "5.5", optional = true }
 
 [dev-dependencies]
+anyhow = "1.0"
 expect-test = "1.5.0"
 jsonschema = { version = "0.45.0", default-features = false }
 reqwest = { version = "0.12", default-features = false, features = ["blocking", "json", "rustls-tls-native-roots"] }
@@ -33,6 +34,10 @@ required-features = ["openapi"]
 
 [[test]]
 name = "live"
+required-features = ["live-tests"]
+
+[[test]]
+name = "live_v3"
 required-features = ["live-tests"]
 
 [package.metadata.docs.rs]

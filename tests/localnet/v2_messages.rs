@@ -7,8 +7,8 @@ use crate::support::toncenter::{
 };
 use base64::Engine as _;
 use serde_json::{Value, json};
-use ton_api::toncenter::v3::responses as v3_responses;
 use toncenter::v2::{requests as v2_requests, responses as v2_responses};
+use toncenter::v3::responses as v3_responses;
 use tycho_types::boc::{Boc, BocRepr};
 use tycho_types::cell::CellBuilder;
 use tycho_types::models::{CurrencyCollection, ExtraCurrencyCollection, MsgInfo, OwnedMessage};

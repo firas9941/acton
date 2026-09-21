@@ -6,7 +6,7 @@ use ton::ton_core::cell::TonCell;
 use ton::ton_core::traits::tlb::TLB;
 use ton::ton_wallet::WalletVersion;
 use ton_api::toncenter::emulate::v1::{TonConnectEmulateRequest, TonConnectMessage};
-use ton_api::toncenter::v3::EstimateFeeRequest;
+use toncenter::v3::EstimateFeeRequest;
 use tycho_types::boc::{Boc, BocRepr};
 use tycho_types::cell::{Cell, CellSliceParts};
 use tycho_types::models::{

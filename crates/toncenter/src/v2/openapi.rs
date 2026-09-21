@@ -10,6 +10,7 @@ use utoipa::{PartialSchema, ToSchema, openapi as api};
 
 use super::endpoints::Endpoint;
 use super::{TonlibErrorResponse, TonlibResponse, requests, responses};
+use crate::openapi_support::property_description;
 
 /// Builds a complete REST and JSON-RPC contract from Rust types and the endpoint
 /// registry. No network access or upstream schema file is needed at runtime.
@@ -178,21 +179,6 @@ impl Document {
                 .operation(HttpMethod::Post, operation)
                 .build(),
         );
-    }
-}
-
-fn property_description(schema: &RefOr<Schema>) -> Option<String> {
-    match schema {
-        RefOr::T(Schema::Object(value)) => value.description.clone(),
-        RefOr::T(Schema::Array(value)) => value.description.clone(),
-        RefOr::T(Schema::AllOf(value)) => value.description.clone(),
-        RefOr::T(Schema::OneOf(value)) => value
-            .description
-            .clone()
-            .or_else(|| value.items.iter().find_map(property_description)),
-        RefOr::T(Schema::AnyOf(value)) => value.description.clone(),
-        RefOr::Ref(value) => (!value.description.is_empty()).then(|| value.description.clone()),
-        RefOr::T(_) => None,
     }
 }
 

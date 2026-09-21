@@ -11,8 +11,8 @@ use anyhow::Context;
 use std::collections::{BTreeSet, HashMap};
 use ton_api::OffchainJsonResolver;
 use ton_api::toncenter::streaming::v2 as streaming;
-use ton_api::toncenter::v3;
 use ton_indexer_contracts::categorize_wallet;
+use toncenter::v3;
 use tycho_types::prelude::HashBytes;
 
 #[derive(Clone, Copy, Debug)]

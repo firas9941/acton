@@ -7,7 +7,7 @@ use std::env;
 use std::sync::{Mutex, OnceLock};
 use std::thread;
 use std::time::{Duration, Instant};
-use ton_api::toncenter::v3;
+use toncenter::v3;
 
 const DEFAULT_V2_URL: &str = "https://toncenter.com/api/v2";
 const DEFAULT_V3_URL: &str = "https://toncenter.com/api/v3";
@@ -43,21 +43,32 @@ impl Live {
             return Ok(None);
         }
 
+        Self::configured().map(Some)
+    }
+
+    pub(crate) fn configured() -> Result<Self> {
         let client = Client::builder()
             .connect_timeout(Duration::from_secs(10))
             .timeout(REQUEST_TIMEOUT)
+            .user_agent(concat!(
+                "toncenter-contract-tests/",
+                env!("CARGO_PKG_VERSION")
+            ))
             .build()
             .context("failed to construct live TON Center HTTP client")?;
 
-        Ok(Some(Self {
+        Ok(Self {
             client,
             api_key: env::var("ACTON_TONCENTER_LIVE_API_KEY")
                 .or_else(|_| env::var("TONCENTER_API_KEY"))
                 .ok(),
             v2_url: env_url("ACTON_TONCENTER_LIVE_V2_URL", DEFAULT_V2_URL),
-            v3_url: env_url("ACTON_TONCENTER_LIVE_V3_URL", DEFAULT_V3_URL),
+            v3_url: env_url(
+                "TONCENTER_V3_URL",
+                &env_url("ACTON_TONCENTER_LIVE_V3_URL", DEFAULT_V3_URL),
+            ),
             emulate_url: env_url("ACTON_TONCENTER_LIVE_EMULATE_URL", DEFAULT_EMULATE_URL),
-        }))
+        })
     }
 
     pub(crate) fn require_api_key(&self) -> Option<&str> {

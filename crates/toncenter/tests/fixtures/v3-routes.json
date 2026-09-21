@@ -1,0 +1,1333 @@
+{
+  "/api/v3/accountStates": {
+    "method": "get",
+    "parameters": [
+      {
+        "explode": true,
+        "name": "address",
+        "required": true,
+        "style": "form"
+      },
+      {
+        "explode": true,
+        "name": "include_boc",
+        "required": false,
+        "style": "form"
+      }
+    ],
+    "request": null,
+    "response": {
+      "$ref": "#/components/schemas/GetAccountStatesResponse"
+    }
+  },
+  "/api/v3/addressBook": {
+    "method": "get",
+    "parameters": [
+      {
+        "explode": true,
+        "name": "address",
+        "required": false,
+        "style": "form"
+      }
+    ],
+    "request": null,
+    "response": {
+      "$ref": "#/components/schemas/GetAddressBookResponse"
+    }
+  },
+  "/api/v3/addressInformation": {
+    "method": "get",
+    "parameters": [
+      {
+        "explode": true,
+        "name": "address",
+        "required": true,
+        "style": "form"
+      },
+      {
+        "explode": true,
+        "name": "use_v2",
+        "required": false,
+        "style": "form"
+      }
+    ],
+    "request": null,
+    "response": {
+      "$ref": "#/components/schemas/GetAddressInformationResponse"
+    }
+  },
+  "/api/v3/adjacentTransactions": {
+    "method": "get",
+    "parameters": [
+      {
+        "explode": true,
+        "name": "direction",
+        "required": false,
+        "style": "form"
+      },
+      {
+        "explode": true,
+        "name": "hash",
+        "required": true,
+        "style": "form"
+      }
+    ],
+    "request": null,
+    "response": {
+      "$ref": "#/components/schemas/GetAdjacentTransactionsResponse"
+    }
+  },
+  "/api/v3/blocks": {
+    "method": "get",
+    "parameters": [
+      {
+        "explode": true,
+        "name": "end_lt",
+        "required": false,
+        "style": "form"
+      },
+      {
+        "explode": true,
+        "name": "end_utime",
+        "required": false,
+        "style": "form"
+      },
+      {
+        "explode": true,
+        "name": "file_hash",
+        "required": false,
+        "style": "form"
+      },
+      {
+        "explode": true,
+        "name": "limit",
+        "required": false,
+        "style": "form"
+      },
+      {
+        "explode": true,
+        "name": "mc_seqno",
+        "required": false,
+        "style": "form"
+      },
+      {
+        "explode": true,
+        "name": "offset",
+        "required": false,
+        "style": "form"
+      },
+      {
+        "explode": true,
+        "name": "root_hash",
+        "required": false,
+        "style": "form"
+      },
+      {
+        "explode": true,
+        "name": "seqno",
+        "required": false,
+        "style": "form"
+      },
+      {
+        "explode": true,
+        "name": "shard",
+        "required": false,
+        "style": "form"
+      },
+      {
+        "explode": true,
+        "name": "sort",
+        "required": false,
+        "style": "form"
+      },
+      {
+        "explode": true,
+        "name": "start_lt",
+        "required": false,
+        "style": "form"
+      },
+      {
+        "explode": true,
+        "name": "start_utime",
+        "required": false,
+        "style": "form"
+      },
+      {
+        "explode": true,
+        "name": "workchain",
+        "required": false,
+        "style": "form"
+      }
+    ],
+    "request": null,
+    "response": {
+      "$ref": "#/components/schemas/GetBlocksResponse"
+    }
+  },
+  "/api/v3/dns/records": {
+    "method": "get",
+    "parameters": [
+      {
+        "explode": true,
+        "name": "domain",
+        "required": false,
+        "style": "form"
+      },
+      {
+        "explode": true,
+        "name": "limit",
+        "required": false,
+        "style": "form"
+      },
+      {
+        "explode": true,
+        "name": "offset",
+        "required": false,
+        "style": "form"
+      },
+      {
+        "explode": true,
+        "name": "wallet",
+        "required": false,
+        "style": "form"
+      }
+    ],
+    "request": null,
+    "response": {
+      "$ref": "#/components/schemas/GetDnsRecordsResponse"
+    }
+  },
+  "/api/v3/estimateFee": {
+    "method": "post",
+    "parameters": [],
+    "request": {
+      "$ref": "#/components/schemas/EstimateFeeRequest"
+    },
+    "response": {
+      "$ref": "#/components/schemas/EstimateFeeResponse"
+    }
+  },
+  "/api/v3/jetton/burns": {
+    "method": "get",
+    "parameters": [
+      {
+        "explode": true,
+        "name": "address",
+        "required": false,
+        "style": "form"
+      },
+      {
+        "explode": true,
+        "name": "end_lt",
+        "required": false,
+        "style": "form"
+      },
+      {
+        "explode": true,
+        "name": "end_utime",
+        "required": false,
+        "style": "form"
+      },
+      {
+        "explode": true,
+        "name": "jetton_master",
+        "required": false,
+        "style": "form"
+      },
+      {
+        "explode": true,
+        "name": "jetton_wallet",
+        "required": false,
+        "style": "form"
+      },
+      {
+        "explode": true,
+        "name": "limit",
+        "required": false,
+        "style": "form"
+      },
+      {
+        "explode": true,
+        "name": "offset",
+        "required": false,
+        "style": "form"
+      },
+      {
+        "explode": true,
+        "name": "sort",
+        "required": false,
+        "style": "form"
+      },
+      {
+        "explode": true,
+        "name": "start_lt",
+        "required": false,
+        "style": "form"
+      },
+      {
+        "explode": true,
+        "name": "start_utime",
+        "required": false,
+        "style": "form"
+      }
+    ],
+    "request": null,
+    "response": {
+      "$ref": "#/components/schemas/GetJettonBurnsResponse"
+    }
+  },
+  "/api/v3/jetton/masters": {
+    "method": "get",
+    "parameters": [
+      {
+        "explode": true,
+        "name": "address",
+        "required": false,
+        "style": "form"
+      },
+      {
+        "explode": true,
+        "name": "admin_address",
+        "required": false,
+        "style": "form"
+      },
+      {
+        "explode": true,
+        "name": "limit",
+        "required": false,
+        "style": "form"
+      },
+      {
+        "explode": true,
+        "name": "offset",
+        "required": false,
+        "style": "form"
+      }
+    ],
+    "request": null,
+    "response": {
+      "$ref": "#/components/schemas/GetJettonMastersResponse"
+    }
+  },
+  "/api/v3/jetton/transfers": {
+    "method": "get",
+    "parameters": [
+      {
+        "explode": true,
+        "name": "direction",
+        "required": false,
+        "style": "form"
+      },
+      {
+        "explode": true,
+        "name": "end_lt",
+        "required": false,
+        "style": "form"
+      },
+      {
+        "explode": true,
+        "name": "end_utime",
+        "required": false,
+        "style": "form"
+      },
+      {
+        "explode": true,
+        "name": "jetton_master",
+        "required": false,
+        "style": "form"
+      },
+      {
+        "explode": true,
+        "name": "jetton_wallet",
+        "required": false,
+        "style": "form"
+      },
+      {
+        "explode": true,
+        "name": "limit",
+        "required": false,
+        "style": "form"
+      },
+      {
+        "explode": true,
+        "name": "offset",
+        "required": false,
+        "style": "form"
+      },
+      {
+        "explode": true,
+        "name": "owner_address",
+        "required": false,
+        "style": "form"
+      },
+      {
+        "explode": true,
+        "name": "sort",
+        "required": false,
+        "style": "form"
+      },
+      {
+        "explode": true,
+        "name": "start_lt",
+        "required": false,
+        "style": "form"
+      },
+      {
+        "explode": true,
+        "name": "start_utime",
+        "required": false,
+        "style": "form"
+      }
+    ],
+    "request": null,
+    "response": {
+      "$ref": "#/components/schemas/GetJettonTransfersResponse"
+    }
+  },
+  "/api/v3/jetton/wallets": {
+    "method": "get",
+    "parameters": [
+      {
+        "explode": true,
+        "name": "address",
+        "required": false,
+        "style": "form"
+      },
+      {
+        "explode": true,
+        "name": "exclude_zero_balance",
+        "required": false,
+        "style": "form"
+      },
+      {
+        "explode": true,
+        "name": "jetton_address",
+        "required": false,
+        "style": "form"
+      },
+      {
+        "explode": true,
+        "name": "limit",
+        "required": false,
+        "style": "form"
+      },
+      {
+        "explode": true,
+        "name": "offset",
+        "required": false,
+        "style": "form"
+      },
+      {
+        "explode": true,
+        "name": "owner_address",
+        "required": false,
+        "style": "form"
+      },
+      {
+        "explode": true,
+        "name": "sort",
+        "required": false,
+        "style": "form"
+      }
+    ],
+    "request": null,
+    "response": {
+      "$ref": "#/components/schemas/GetJettonWalletsResponse"
+    }
+  },
+  "/api/v3/masterchainBlockShardState": {
+    "method": "get",
+    "parameters": [
+      {
+        "explode": true,
+        "name": "seqno",
+        "required": true,
+        "style": "form"
+      }
+    ],
+    "request": null,
+    "response": {
+      "$ref": "#/components/schemas/GetMasterchainBlockShardStateResponse"
+    }
+  },
+  "/api/v3/masterchainBlockShards": {
+    "method": "get",
+    "parameters": [
+      {
+        "explode": true,
+        "name": "limit",
+        "required": false,
+        "style": "form"
+      },
+      {
+        "explode": true,
+        "name": "offset",
+        "required": false,
+        "style": "form"
+      },
+      {
+        "explode": true,
+        "name": "seqno",
+        "required": true,
+        "style": "form"
+      }
+    ],
+    "request": null,
+    "response": {
+      "$ref": "#/components/schemas/GetMasterchainBlockShardsResponse"
+    }
+  },
+  "/api/v3/masterchainInfo": {
+    "method": "get",
+    "parameters": [],
+    "request": null,
+    "response": {
+      "$ref": "#/components/schemas/GetMasterchainInfoResponse"
+    }
+  },
+  "/api/v3/message": {
+    "method": "post",
+    "parameters": [],
+    "request": {
+      "$ref": "#/components/schemas/SendMessageRequest"
+    },
+    "response": {
+      "$ref": "#/components/schemas/SendMessageResponse"
+    }
+  },
+  "/api/v3/messages": {
+    "method": "get",
+    "parameters": [
+      {
+        "explode": true,
+        "name": "body_hash",
+        "required": false,
+        "style": "form"
+      },
+      {
+        "explode": true,
+        "name": "destination",
+        "required": false,
+        "style": "form"
+      },
+      {
+        "explode": true,
+        "name": "direction",
+        "required": false,
+        "style": "form"
+      },
+      {
+        "explode": true,
+        "name": "end_lt",
+        "required": false,
+        "style": "form"
+      },
+      {
+        "explode": true,
+        "name": "end_utime",
+        "required": false,
+        "style": "form"
+      },
+      {
+        "explode": true,
+        "name": "exclude_externals",
+        "required": false,
+        "style": "form"
+      },
+      {
+        "explode": true,
+        "name": "limit",
+        "required": false,
+        "style": "form"
+      },
+      {
+        "explode": true,
+        "name": "msg_hash",
+        "required": false,
+        "style": "form"
+      },
+      {
+        "explode": true,
+        "name": "offset",
+        "required": false,
+        "style": "form"
+      },
+      {
+        "explode": true,
+        "name": "only_externals",
+        "required": false,
+        "style": "form"
+      },
+      {
+        "explode": true,
+        "name": "opcode",
+        "required": false,
+        "style": "form"
+      },
+      {
+        "explode": true,
+        "name": "sort",
+        "required": false,
+        "style": "form"
+      },
+      {
+        "explode": true,
+        "name": "source",
+        "required": false,
+        "style": "form"
+      },
+      {
+        "explode": true,
+        "name": "start_lt",
+        "required": false,
+        "style": "form"
+      },
+      {
+        "explode": true,
+        "name": "start_utime",
+        "required": false,
+        "style": "form"
+      }
+    ],
+    "request": null,
+    "response": {
+      "$ref": "#/components/schemas/GetMessagesResponse"
+    }
+  },
+  "/api/v3/metadata": {
+    "method": "get",
+    "parameters": [
+      {
+        "explode": true,
+        "name": "address",
+        "required": false,
+        "style": "form"
+      }
+    ],
+    "request": null,
+    "response": {
+      "$ref": "#/components/schemas/GetMetadataResponse"
+    }
+  },
+  "/api/v3/multisig/orders": {
+    "method": "get",
+    "parameters": [
+      {
+        "explode": true,
+        "name": "address",
+        "required": false,
+        "style": "form"
+      },
+      {
+        "explode": true,
+        "name": "limit",
+        "required": false,
+        "style": "form"
+      },
+      {
+        "explode": true,
+        "name": "multisig_address",
+        "required": false,
+        "style": "form"
+      },
+      {
+        "explode": true,
+        "name": "offset",
+        "required": false,
+        "style": "form"
+      },
+      {
+        "explode": true,
+        "name": "parse_actions",
+        "required": false,
+        "style": "form"
+      },
+      {
+        "explode": true,
+        "name": "sort",
+        "required": false,
+        "style": "form"
+      }
+    ],
+    "request": null,
+    "response": {
+      "$ref": "#/components/schemas/GetMultisigOrdersResponse"
+    }
+  },
+  "/api/v3/multisig/wallets": {
+    "method": "get",
+    "parameters": [
+      {
+        "explode": true,
+        "name": "address",
+        "required": false,
+        "style": "form"
+      },
+      {
+        "explode": true,
+        "name": "include_orders",
+        "required": false,
+        "style": "form"
+      },
+      {
+        "explode": true,
+        "name": "limit",
+        "required": false,
+        "style": "form"
+      },
+      {
+        "explode": true,
+        "name": "offset",
+        "required": false,
+        "style": "form"
+      },
+      {
+        "explode": true,
+        "name": "sort",
+        "required": false,
+        "style": "form"
+      },
+      {
+        "explode": true,
+        "name": "wallet_address",
+        "required": false,
+        "style": "form"
+      }
+    ],
+    "request": null,
+    "response": {
+      "$ref": "#/components/schemas/GetMultisigWalletsResponse"
+    }
+  },
+  "/api/v3/nft/collections": {
+    "method": "get",
+    "parameters": [
+      {
+        "explode": true,
+        "name": "collection_address",
+        "required": false,
+        "style": "form"
+      },
+      {
+        "explode": true,
+        "name": "limit",
+        "required": false,
+        "style": "form"
+      },
+      {
+        "explode": true,
+        "name": "offset",
+        "required": false,
+        "style": "form"
+      },
+      {
+        "explode": true,
+        "name": "owner_address",
+        "required": false,
+        "style": "form"
+      }
+    ],
+    "request": null,
+    "response": {
+      "$ref": "#/components/schemas/GetNftCollectionsResponse"
+    }
+  },
+  "/api/v3/nft/items": {
+    "method": "get",
+    "parameters": [
+      {
+        "explode": true,
+        "name": "address",
+        "required": false,
+        "style": "form"
+      },
+      {
+        "explode": true,
+        "name": "collection_address",
+        "required": false,
+        "style": "form"
+      },
+      {
+        "explode": true,
+        "name": "include_on_sale",
+        "required": false,
+        "style": "form"
+      },
+      {
+        "explode": true,
+        "name": "index",
+        "required": false,
+        "style": "form"
+      },
+      {
+        "explode": true,
+        "name": "limit",
+        "required": false,
+        "style": "form"
+      },
+      {
+        "explode": true,
+        "name": "offset",
+        "required": false,
+        "style": "form"
+      },
+      {
+        "explode": true,
+        "name": "owner_address",
+        "required": false,
+        "style": "form"
+      },
+      {
+        "explode": true,
+        "name": "sort_by_last_transaction_lt",
+        "required": false,
+        "style": "form"
+      }
+    ],
+    "request": null,
+    "response": {
+      "$ref": "#/components/schemas/GetNftItemsResponse"
+    }
+  },
+  "/api/v3/nft/sales": {
+    "method": "get",
+    "parameters": [
+      {
+        "explode": true,
+        "name": "address",
+        "required": false,
+        "style": "form"
+      }
+    ],
+    "request": null,
+    "response": {
+      "$ref": "#/components/schemas/GetNftSalesResponse"
+    }
+  },
+  "/api/v3/nft/transfers": {
+    "method": "get",
+    "parameters": [
+      {
+        "explode": true,
+        "name": "collection_address",
+        "required": false,
+        "style": "form"
+      },
+      {
+        "explode": true,
+        "name": "direction",
+        "required": false,
+        "style": "form"
+      },
+      {
+        "explode": true,
+        "name": "end_lt",
+        "required": false,
+        "style": "form"
+      },
+      {
+        "explode": true,
+        "name": "end_utime",
+        "required": false,
+        "style": "form"
+      },
+      {
+        "explode": true,
+        "name": "item_address",
+        "required": false,
+        "style": "form"
+      },
+      {
+        "explode": true,
+        "name": "limit",
+        "required": false,
+        "style": "form"
+      },
+      {
+        "explode": true,
+        "name": "offset",
+        "required": false,
+        "style": "form"
+      },
+      {
+        "explode": true,
+        "name": "owner_address",
+        "required": false,
+        "style": "form"
+      },
+      {
+        "explode": true,
+        "name": "sort",
+        "required": false,
+        "style": "form"
+      },
+      {
+        "explode": true,
+        "name": "start_lt",
+        "required": false,
+        "style": "form"
+      },
+      {
+        "explode": true,
+        "name": "start_utime",
+        "required": false,
+        "style": "form"
+      }
+    ],
+    "request": null,
+    "response": {
+      "$ref": "#/components/schemas/GetNftTransfersResponse"
+    }
+  },
+  "/api/v3/pendingActions": {
+    "method": "get",
+    "parameters": [
+      {
+        "explode": true,
+        "name": "account",
+        "required": false,
+        "style": "form"
+      },
+      {
+        "explode": true,
+        "name": "ext_msg_hash",
+        "required": false,
+        "style": "form"
+      },
+      {
+        "explode": true,
+        "name": "include_transactions",
+        "required": false,
+        "style": "form"
+      },
+      {
+        "explode": true,
+        "name": "supported_action_types",
+        "required": false,
+        "style": "form"
+      }
+    ],
+    "request": null,
+    "response": {
+      "$ref": "#/components/schemas/GetPendingActionsResponse"
+    }
+  },
+  "/api/v3/pendingTraces": {
+    "method": "get",
+    "parameters": [
+      {
+        "explode": true,
+        "name": "account",
+        "required": false,
+        "style": "form"
+      },
+      {
+        "explode": true,
+        "name": "ext_msg_hash",
+        "required": false,
+        "style": "form"
+      }
+    ],
+    "request": null,
+    "response": {
+      "$ref": "#/components/schemas/GetPendingTracesResponse"
+    }
+  },
+  "/api/v3/pendingTransactions": {
+    "method": "get",
+    "parameters": [
+      {
+        "explode": true,
+        "name": "account",
+        "required": false,
+        "style": "form"
+      },
+      {
+        "explode": true,
+        "name": "trace_id",
+        "required": false,
+        "style": "form"
+      }
+    ],
+    "request": null,
+    "response": {
+      "$ref": "#/components/schemas/GetPendingTransactionsResponse"
+    }
+  },
+  "/api/v3/runGetMethod": {
+    "method": "post",
+    "parameters": [],
+    "request": {
+      "$ref": "#/components/schemas/RunGetMethodRequest"
+    },
+    "response": {
+      "$ref": "#/components/schemas/RunGetMethodResponse"
+    }
+  },
+  "/api/v3/topAccountsByBalance": {
+    "method": "get",
+    "parameters": [
+      {
+        "explode": true,
+        "name": "limit",
+        "required": false,
+        "style": "form"
+      },
+      {
+        "explode": true,
+        "name": "offset",
+        "required": false,
+        "style": "form"
+      }
+    ],
+    "request": null,
+    "response": {
+      "$ref": "#/components/schemas/GetTopAccountsByBalanceResponse"
+    }
+  },
+  "/api/v3/traces": {
+    "method": "get",
+    "parameters": [
+      {
+        "explode": true,
+        "name": "account",
+        "required": false,
+        "style": "form"
+      },
+      {
+        "explode": true,
+        "name": "end_lt",
+        "required": false,
+        "style": "form"
+      },
+      {
+        "explode": true,
+        "name": "end_utime",
+        "required": false,
+        "style": "form"
+      },
+      {
+        "explode": true,
+        "name": "include_actions",
+        "required": false,
+        "style": "form"
+      },
+      {
+        "explode": true,
+        "name": "limit",
+        "required": false,
+        "style": "form"
+      },
+      {
+        "explode": true,
+        "name": "mc_seqno",
+        "required": false,
+        "style": "form"
+      },
+      {
+        "explode": true,
+        "name": "msg_hash",
+        "required": false,
+        "style": "form"
+      },
+      {
+        "explode": true,
+        "name": "offset",
+        "required": false,
+        "style": "form"
+      },
+      {
+        "explode": true,
+        "name": "sort",
+        "required": false,
+        "style": "form"
+      },
+      {
+        "explode": true,
+        "name": "start_lt",
+        "required": false,
+        "style": "form"
+      },
+      {
+        "explode": true,
+        "name": "start_utime",
+        "required": false,
+        "style": "form"
+      },
+      {
+        "explode": true,
+        "name": "supported_action_types",
+        "required": false,
+        "style": "form"
+      },
+      {
+        "explode": true,
+        "name": "trace_id",
+        "required": false,
+        "style": "form"
+      },
+      {
+        "explode": true,
+        "name": "tx_hash",
+        "required": false,
+        "style": "form"
+      }
+    ],
+    "request": null,
+    "response": {
+      "$ref": "#/components/schemas/GetTracesResponse"
+    }
+  },
+  "/api/v3/transactions": {
+    "method": "get",
+    "parameters": [
+      {
+        "explode": true,
+        "name": "account",
+        "required": false,
+        "style": "form"
+      },
+      {
+        "explode": true,
+        "name": "end_lt",
+        "required": false,
+        "style": "form"
+      },
+      {
+        "explode": true,
+        "name": "end_utime",
+        "required": false,
+        "style": "form"
+      },
+      {
+        "explode": true,
+        "name": "exclude_account",
+        "required": false,
+        "style": "form"
+      },
+      {
+        "explode": true,
+        "name": "hash",
+        "required": false,
+        "style": "form"
+      },
+      {
+        "explode": true,
+        "name": "limit",
+        "required": false,
+        "style": "form"
+      },
+      {
+        "explode": true,
+        "name": "lt",
+        "required": false,
+        "style": "form"
+      },
+      {
+        "explode": true,
+        "name": "mc_seqno",
+        "required": false,
+        "style": "form"
+      },
+      {
+        "explode": true,
+        "name": "offset",
+        "required": false,
+        "style": "form"
+      },
+      {
+        "explode": true,
+        "name": "seqno",
+        "required": false,
+        "style": "form"
+      },
+      {
+        "explode": true,
+        "name": "shard",
+        "required": false,
+        "style": "form"
+      },
+      {
+        "explode": true,
+        "name": "sort",
+        "required": false,
+        "style": "form"
+      },
+      {
+        "explode": true,
+        "name": "start_lt",
+        "required": false,
+        "style": "form"
+      },
+      {
+        "explode": true,
+        "name": "start_utime",
+        "required": false,
+        "style": "form"
+      },
+      {
+        "explode": true,
+        "name": "workchain",
+        "required": false,
+        "style": "form"
+      }
+    ],
+    "request": null,
+    "response": {
+      "$ref": "#/components/schemas/GetTransactionsResponse"
+    }
+  },
+  "/api/v3/transactionsByMasterchainBlock": {
+    "method": "get",
+    "parameters": [
+      {
+        "explode": true,
+        "name": "limit",
+        "required": false,
+        "style": "form"
+      },
+      {
+        "explode": true,
+        "name": "offset",
+        "required": false,
+        "style": "form"
+      },
+      {
+        "explode": true,
+        "name": "seqno",
+        "required": true,
+        "style": "form"
+      },
+      {
+        "explode": true,
+        "name": "sort",
+        "required": false,
+        "style": "form"
+      }
+    ],
+    "request": null,
+    "response": {
+      "$ref": "#/components/schemas/GetTransactionsByMasterchainBlockResponse"
+    }
+  },
+  "/api/v3/transactionsByMessage": {
+    "method": "get",
+    "parameters": [
+      {
+        "explode": true,
+        "name": "body_hash",
+        "required": false,
+        "style": "form"
+      },
+      {
+        "explode": true,
+        "name": "direction",
+        "required": false,
+        "style": "form"
+      },
+      {
+        "explode": true,
+        "name": "limit",
+        "required": false,
+        "style": "form"
+      },
+      {
+        "explode": true,
+        "name": "msg_hash",
+        "required": false,
+        "style": "form"
+      },
+      {
+        "explode": true,
+        "name": "offset",
+        "required": false,
+        "style": "form"
+      },
+      {
+        "explode": true,
+        "name": "opcode",
+        "required": false,
+        "style": "form"
+      }
+    ],
+    "request": null,
+    "response": {
+      "$ref": "#/components/schemas/GetTransactionsByMessageResponse"
+    }
+  },
+  "/api/v3/vesting": {
+    "method": "get",
+    "parameters": [
+      {
+        "explode": true,
+        "name": "check_whitelist",
+        "required": false,
+        "style": "form"
+      },
+      {
+        "explode": true,
+        "name": "contract_address",
+        "required": false,
+        "style": "form"
+      },
+      {
+        "explode": true,
+        "name": "limit",
+        "required": false,
+        "style": "form"
+      },
+      {
+        "explode": true,
+        "name": "offset",
+        "required": false,
+        "style": "form"
+      },
+      {
+        "explode": true,
+        "name": "wallet_address",
+        "required": false,
+        "style": "form"
+      }
+    ],
+    "request": null,
+    "response": {
+      "$ref": "#/components/schemas/GetVestingResponse"
+    }
+  },
+  "/api/v3/walletInformation": {
+    "method": "get",
+    "parameters": [
+      {
+        "explode": true,
+        "name": "address",
+        "required": true,
+        "style": "form"
+      },
+      {
+        "explode": true,
+        "name": "use_v2",
+        "required": false,
+        "style": "form"
+      }
+    ],
+    "request": null,
+    "response": {
+      "$ref": "#/components/schemas/GetWalletInformationResponse"
+    }
+  },
+  "/api/v3/walletStates": {
+    "method": "get",
+    "parameters": [
+      {
+        "explode": true,
+        "name": "address",
+        "required": false,
+        "style": "form"
+      }
+    ],
+    "request": null,
+    "response": {
+      "$ref": "#/components/schemas/GetWalletStatesResponse"
+    }
+  }
+}

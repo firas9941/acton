@@ -341,7 +341,7 @@ fn block_data_request_returns_the_selected_block_boc() -> Result<()> {
 fn lookup_block_request_covers_seqno_lt_and_unixtime() -> Result<()> {
     let Some(live) = live()? else { return Ok(()) };
     let block = &fixture(&live)?.block;
-    let gen_utime = (block.gen_utime.to_bigint()?.to_string()).into();
+    let gen_utime = (block.gen_utime.to_string()).into();
 
     for request in [
         v2::requests::LookupBlockRequest {

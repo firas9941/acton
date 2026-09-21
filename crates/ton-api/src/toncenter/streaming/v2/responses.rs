@@ -1,7 +1,7 @@
 use super::Finality;
-use crate::toncenter::v3;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use toncenter::v3;
 
 #[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Serialize)]
 #[serde(rename_all = "lowercase")]

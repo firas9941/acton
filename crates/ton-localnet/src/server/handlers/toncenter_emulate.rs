@@ -145,8 +145,8 @@ async fn build_emulate_v1_extra_data(
     include_address_book: bool,
     include_metadata: bool,
 ) -> anyhow::Result<(
-    Option<ton_api::toncenter::v3::AddressBook>,
-    Option<ton_api::toncenter::v3::Metadata>,
+    Option<toncenter::v3::AddressBook>,
+    Option<toncenter::v3::Metadata>,
 )> {
     if !include_address_book && !include_metadata {
         return Ok((None, None));

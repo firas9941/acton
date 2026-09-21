@@ -5,8 +5,8 @@ use crate::support::toncenter::{
     run_localnet_action_project,
 };
 use serde_json::{Value, json};
-use ton_api::toncenter::v3;
 use toncenter::v2::{requests, responses};
+use toncenter::v3;
 
 const NO_STATE_ADDRESS: &str = "0:0000000000000000000000000000000000000000000000000000000000000000";
 

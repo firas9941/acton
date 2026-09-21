@@ -28,7 +28,9 @@ use serde_json::json;
 use std::collections::{BTreeSet, HashMap, HashSet};
 use std::future::Future;
 use std::sync::Arc;
-use ton_api::toncenter::v3::requests::{
+use ton_api::OffchainJsonResolver;
+use toncenter::v3 as v3_types;
+use toncenter::v3::requests::{
     AccountStatesQuery, AddressInformationQuery, AddressesQuery, AdjacentTransactionsQuery,
     BlocksQuery, DnsRecordsQuery, EstimateFeeRequest, JettonBurnsQuery, JettonMastersQuery,
     JettonTransfersQuery, JettonWalletsQuery, MasterchainBlockShardStateQuery,
@@ -39,7 +41,6 @@ use ton_api::toncenter::v3::requests::{
     TransactionsByMessageQuery, TransactionsQuery, VestingQuery, WalletInformationQuery,
     WalletStatesQuery,
 };
-use ton_api::{OffchainJsonResolver, toncenter::v3 as v3_types};
 use toncenter_v3 as v3;
 
 const BLOCK_WORKCHAIN: i32 = 0;

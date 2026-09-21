@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
-use ton_api::toncenter::v3;
+use toncenter::v3;
 use tycho_types::cell::Cell;
 use tycho_types::models::{IntAddr, OutAction, StdAddr};
 
