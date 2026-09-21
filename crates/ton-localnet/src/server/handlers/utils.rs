@@ -7,7 +7,7 @@ use serde::de::DeserializeOwned;
 use serde_json::Value;
 use std::future::Future;
 use std::time::{SystemTime, UNIX_EPOCH};
-use ton_api::toncenter::v2::StringOrNumber;
+use toncenter::v2::{Int32Input, Int64Input};
 
 #[derive(Debug, thiserror::Error)]
 #[error("{message}")]
@@ -67,16 +67,38 @@ pub fn parse_params<T: DeserializeOwned>(params: Value, method: &str) -> anyhow:
     })
 }
 
-pub fn parse_method_name(method: &StringOrNumber) -> anyhow::Result<String> {
+/// Formats numeric method IDs in decimal and preserves textual method names.
+#[must_use]
+pub fn parse_method_name(method: &Int32Input) -> String {
     match method {
-        StringOrNumber::String(value) => Ok(value.clone()),
-        StringOrNumber::Number(_) | StringOrNumber::Unsigned(_) => {
-            method.to_i32().map(|value| value.to_string()).map_err(|_| {
-                ToncenterHttpError::unprocessable_entity(
-                    "numeric `method` must be a signed 32-bit integer",
-                )
-            })
-        }
+        Int32Input::String(value) => value.clone(),
+        Int32Input::Number(value) => value.to_string(),
+    }
+}
+
+pub(super) trait IntegerInput {
+    fn to_i64(&self) -> anyhow::Result<i64>;
+
+    fn to_i32(&self) -> anyhow::Result<i32> {
+        Ok(self.to_i64()?.try_into()?)
+    }
+}
+
+impl IntegerInput for Int32Input {
+    fn to_i64(&self) -> anyhow::Result<i64> {
+        Ok(match self {
+            Self::String(value) => i64::from(value.parse::<i32>()?),
+            Self::Number(value) => i64::from(*value),
+        })
+    }
+}
+
+impl IntegerInput for Int64Input {
+    fn to_i64(&self) -> anyhow::Result<i64> {
+        Ok(match self {
+            Self::String(value) => value.parse()?,
+            Self::Number(value) => *value,
+        })
     }
 }
 
@@ -89,21 +111,23 @@ where
     M: Serialize,
 {
     match result.await {
-        Ok(res) => Json(ton_api::toncenter::v2::TonlibResponse {
+        Ok(res) => Json(toncenter::v2::TonlibResponse {
             ok: true,
             result: mapper(&res),
             extra: get_extra(),
+            jsonrpc: None,
+            id: None,
         })
         .into_response(),
         Err(e) => {
             let status = error_status(&e);
             (
                 status,
-                Json(ton_api::toncenter::v2::TonlibErrorResponse {
+                Json(toncenter::v2::TonlibErrorResponse {
                     ok: false,
                     error: e.to_string(),
                     code: i32::from(status.as_u16()),
-                    extra: get_extra(),
+                    extra: Some(get_extra()),
                     jsonrpc: None,
                     id: None,
                 }),
@@ -134,17 +158,23 @@ mod tests {
     #[test]
     fn numeric_method_name_must_fit_openapi_int32() {
         assert_eq!(
-            parse_method_name(&StringOrNumber::Number(i64::from(i32::MIN))).unwrap(),
+            parse_method_name(&Int32Input::Number(i32::MIN)),
             i32::MIN.to_string()
         );
         assert_eq!(
-            parse_method_name(&StringOrNumber::Unsigned(i32::MAX as u64)).unwrap(),
+            parse_method_name(&Int32Input::Number(i32::MAX)),
             i32::MAX.to_string()
         );
-        assert!(parse_method_name(&StringOrNumber::Number(i64::from(i32::MAX) + 1)).is_err());
-        assert!(parse_method_name(&StringOrNumber::Unsigned(i32::MAX as u64 + 1)).is_err());
+        assert!(
+            serde_json::from_value::<Int32Input>(serde_json::json!(i64::from(i32::MAX) + 1))
+                .is_err()
+        );
+        assert!(
+            serde_json::from_value::<Int32Input>(serde_json::json!(i64::from(i32::MIN) - 1))
+                .is_err()
+        );
         assert_eq!(
-            parse_method_name(&StringOrNumber::String("2147483648".to_owned())).unwrap(),
+            parse_method_name(&Int32Input::String("2147483648".to_owned())),
             "2147483648"
         );
     }

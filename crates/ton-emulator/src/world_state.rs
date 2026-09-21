@@ -7,7 +7,6 @@
 use acton_config::config::{ActonConfig, project_root as configured_project_root};
 use anyhow::{Context, anyhow};
 use base64::Engine;
-use num_traits::cast::ToPrimitive;
 use rustc_hash::{FxHashMap, FxHashSet};
 use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
@@ -519,9 +518,8 @@ impl RemoteAccountState {
 
         let balance = info
             .balance
-            .to_bigint()?
-            .to_u128()
-            .ok_or_else(|| anyhow!("Failed to convert balance to u128"))?;
+            .parse::<u128>()
+            .context("Failed to convert balance to u128")?;
 
         let account_state = match info.state.as_str() {
             "active" => AccountState::Active(StateInit {

@@ -7,5 +7,4 @@
 mod common;
 pub mod emulate;
 pub mod streaming;
-pub mod v2;
 pub mod v3;

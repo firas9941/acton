@@ -469,7 +469,7 @@ pub enum DnsRecord {
 }
 
 /// Named DNS metadata records, including additional categories returned by the server.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Default, Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "openapi", derive(utoipa::ToSchema))]
 pub struct DnsRecordSet {
     /// Next resolver contract for subdomain lookups.
@@ -761,6 +761,24 @@ pub enum AccountStateEnum {
     /// Wire value `frozen`.
     #[serde(rename = "frozen")]
     Frozen,
+}
+
+impl AccountStateEnum {
+    /// Returns the state name used in API responses.
+    #[must_use]
+    pub const fn as_str(&self) -> &'static str {
+        match self {
+            Self::Uninitialized => "uninitialized",
+            Self::Active => "active",
+            Self::Frozen => "frozen",
+        }
+    }
+}
+
+impl std::fmt::Display for AccountStateEnum {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        formatter.write_str(self.as_str())
+    }
 }
 
 /// One validator signature over a block; use its node identifier to select the verification
@@ -1583,9 +1601,12 @@ pub struct RunGetMethodStdResult {
 
 /// Get-method execution result using the legacy stack format, with the queried block and
 /// transaction cursor.
+///
+/// `S` defaults to TON Center stack entries; use a custom entry type when decoding
+/// additional stack values supplied by a compatible server.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "openapi", derive(utoipa::ToSchema))]
-pub struct RunGetMethodResult {
+pub struct RunGetMethodResult<S = LegacyStackEntry> {
     /// Fixed `TONLib` discriminator `smc.runResult`; other values are rejected.
     #[serde(rename = "@type")]
     pub type_tag: super::tags::RunGetMethodResult,
@@ -1593,7 +1614,7 @@ pub struct RunGetMethodResult {
     pub gas_used: i64,
     /// Ordered result stack in legacy two-element array format. Nested tuples and lists contain
     /// standard `TONLib` stack entries.
-    pub stack: Vec<LegacyStackEntry>,
+    pub stack: Vec<S>,
     /// TVM exit code. `0` or `1` means success; other values indicate errors. Refer to the TVM
     /// exit code reference for all values.
     pub exit_code: i32,
@@ -1643,6 +1664,33 @@ pub enum WalletInformationWalletType {
     /// Wire value `tg-wallet`.
     #[serde(rename = "tg-wallet")]
     TgWallet,
+}
+
+impl WalletInformationWalletType {
+    /// Returns the wallet version label used in API responses.
+    #[must_use]
+    pub const fn as_str(&self) -> &'static str {
+        match self {
+            Self::WalletV1R1 => "wallet v1 r1",
+            Self::WalletV1R2 => "wallet v1 r2",
+            Self::WalletV1R3 => "wallet v1 r3",
+            Self::WalletV2R1 => "wallet v2 r1",
+            Self::WalletV2R2 => "wallet v2 r2",
+            Self::WalletV3R1 => "wallet v3 r1",
+            Self::WalletV3R2 => "wallet v3 r2",
+            Self::WalletV4R1 => "wallet v4 r1",
+            Self::WalletV4R2 => "wallet v4 r2",
+            Self::WalletV5Beta => "wallet v5 beta",
+            Self::WalletV5R1 => "wallet v5 r1",
+            Self::TgWallet => "tg-wallet",
+        }
+    }
+}
+
+impl std::fmt::Display for WalletInformationWalletType {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        formatter.write_str(self.as_str())
+    }
 }
 
 /// The encoding format of the address as provided in the request (e.g., `raw_form`, `dns`,

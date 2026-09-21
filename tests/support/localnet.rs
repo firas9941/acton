@@ -11,9 +11,7 @@ use std::path::{Path, PathBuf};
 use std::process::{Child, Command, Stdio};
 use std::thread;
 use std::time::{Duration, Instant};
-use ton_api::toncenter::v2::StringOrNumber;
-use ton_api::toncenter::v2::requests::JsonRpcRequest;
-use ton_api::toncenter::v2::responses::JsonRpcResponse;
+use toncenter::v2::TonlibResponse;
 
 const DEFAULT_READY_TIMEOUT: Duration = Duration::from_secs(45);
 const STOP_TIMEOUT: Duration = Duration::from_secs(3);
@@ -418,10 +416,10 @@ impl LocalnetHandle {
     pub(crate) fn post_v2_json_rpc<T, P>(
         &self,
         path: &str,
-        id: StringOrNumber,
+        id: Value,
         method: impl Into<String>,
         params: P,
-    ) -> JsonRpcResponse<T>
+    ) -> TonlibResponse<T>
     where
         T: DeserializeOwned,
         P: Serialize,
@@ -433,7 +431,7 @@ impl LocalnetHandle {
     pub(crate) fn post_v2_json_rpc_with_status<T, P>(
         &self,
         path: &str,
-        id: StringOrNumber,
+        id: Value,
         method: impl Into<String>,
         params: P,
     ) -> (u16, T)
@@ -558,17 +556,16 @@ impl LocalnetHandle {
     }
 }
 
-pub(crate) fn v2_json_rpc_request<P>(
-    id: StringOrNumber,
-    method: impl Into<String>,
-    params: P,
-) -> JsonRpcRequest<P> {
-    JsonRpcRequest {
-        jsonrpc: "2.0".to_owned(),
-        id,
-        method: method.into(),
-        params,
-    }
+pub(crate) fn v2_json_rpc_request<P>(id: Value, method: impl Into<String>, params: P) -> Value
+where
+    P: Serialize,
+{
+    serde_json::json!({
+        "jsonrpc": "2.0",
+        "id": id,
+        "method": method.into(),
+        "params": params,
+    })
 }
 
 pub(crate) fn pretty_json_for_snapshot(value: &Value, project_path: &Path) -> String {

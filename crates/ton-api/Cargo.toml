@@ -11,6 +11,7 @@ repository = { workspace = true }
 license = { workspace = true }
 
 [dependencies]
+toncenter = { workspace = true }
 anyhow = { workspace = true }
 reqwest = { workspace = true }
 tokio = { workspace = true, features = ["sync"] }

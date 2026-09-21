@@ -7,7 +7,7 @@ use crate::support::localnet::{
 use crate::support::project::ProjectBuilder;
 use serde_json::{Value, json};
 use std::time::Duration;
-use ton_api::toncenter::v2::responses::TonlibErrorResponse;
+use toncenter::v2::TonlibErrorResponse;
 
 #[test]
 fn localnet_runtime_snapshots_restore_state_and_persistent_db() {

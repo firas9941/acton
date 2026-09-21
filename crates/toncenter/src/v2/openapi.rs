@@ -163,7 +163,7 @@ impl Document {
             .description(Some("Invoke any registered v2 method with matching params. The C++ proxy ignores jsonrpc/id metadata and returns the ordinary TONLib envelope, normally without echoing the ID."))
             .request_body(Some(RequestBodyBuilder::new()
                 .required(Some(Required::True))
-                .content("application/json", Content::new(Some(Ref::from_schema_name(requests::JsonRpcRequest::name()))))
+                .content("application/json", Content::new(Some(Ref::from_schema_name(<requests::JsonRpcRequest>::name()))))
                 .build()))
             .response("200", ResponseBuilder::new()
                 .description("Method-dependent TONLib result; select the endpoint's response type when decoding")

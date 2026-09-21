@@ -6,9 +6,10 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::PathBuf;
 use std::sync::{Arc, Mutex, OnceLock};
-use ton_api::toncenter::{v2, v3};
+use ton_api::toncenter::v3;
 use ton_api::{MasterchainSnapshot, TonApiClient};
 use ton_networks::Network;
+use toncenter::v2;
 use tycho_types::boc::Boc;
 use tycho_types::cell::Cell;
 use tycho_types::models::{AccountState, ShardAccount, ShardIdent};
@@ -93,11 +94,21 @@ impl RemoteProvider {
 
     pub async fn contains_historical_block_id(
         &self,
-        block: &v2::TonBlockIdExt,
+        block: &v2::responses::TonBlockIdExt,
     ) -> anyhow::Result<bool> {
         let shard = parse_remote_shard(&block.shard)?;
-        self.contains_historical_block(block.workchain, shard as i64, block.seqno)
-            .await
+        self.contains_historical_block(
+            block
+                .workchain
+                .try_into()
+                .context("Remote workchain does not fit i32")?,
+            shard as i64,
+            block
+                .seqno
+                .try_into()
+                .context("Remote block seqno is negative")?,
+        )
+        .await
     }
 
     async fn fork_shards(&self) -> anyhow::Result<Arc<Vec<RemoteShardBoundary>>> {
@@ -171,21 +182,28 @@ impl RemoteShardBoundary {
     }
 }
 
-impl TryFrom<v2::TonBlockIdExt> for RemoteShardBoundary {
+impl TryFrom<v2::responses::TonBlockIdExt> for RemoteShardBoundary {
     type Error = anyhow::Error;
 
-    fn try_from(block: v2::TonBlockIdExt) -> Result<Self, Self::Error> {
+    fn try_from(block: v2::responses::TonBlockIdExt) -> Result<Self, Self::Error> {
         let shard = parse_remote_shard(&block.shard)?;
+        let workchain = block
+            .workchain
+            .try_into()
+            .context("Remote workchain does not fit i32")?;
         anyhow::ensure!(
-            ShardIdent::new(block.workchain, shard).is_some(),
+            ShardIdent::new(workchain, shard).is_some(),
             "Remote fork returned invalid shard {}:{}",
             block.workchain,
             block.shard
         );
         Ok(Self {
-            workchain: block.workchain,
+            workchain,
             shard,
-            seqno: block.seqno,
+            seqno: block
+                .seqno
+                .try_into()
+                .context("Remote block seqno is negative")?,
         })
     }
 }
@@ -264,14 +282,14 @@ pub(crate) async fn fetch_remote_transactions_v3(
 pub(crate) async fn fetch_remote_shards_v2(
     provider: &RemoteProvider,
     seqno: u32,
-) -> anyhow::Result<v2::Shards> {
+) -> anyhow::Result<v2::responses::Shards> {
     with_api_client_async(provider, move |api_client| api_client.get_shards(seqno)).await
 }
 
 pub(crate) async fn fetch_remote_block_header_v2(
     provider: &RemoteProvider,
-    request: v2::BlockHeaderRequest,
-) -> anyhow::Result<v2::BlockHeader> {
+    request: v2::requests::BlockHeaderRequest,
+) -> anyhow::Result<v2::responses::BlockHeader> {
     with_api_client_async(provider, move |api_client| {
         api_client.get_block_header_v2(&request)
     })
@@ -280,8 +298,8 @@ pub(crate) async fn fetch_remote_block_header_v2(
 
 pub(crate) async fn fetch_remote_block_v2(
     provider: &RemoteProvider,
-    request: v2::BlockDataRequest,
-) -> anyhow::Result<v2::BlockData> {
+    request: v2::requests::BlockDataRequest,
+) -> anyhow::Result<v2::responses::BlockData> {
     with_api_client_async(provider, move |api_client| {
         api_client.get_block_v2(&request)
     })
@@ -290,8 +308,8 @@ pub(crate) async fn fetch_remote_block_v2(
 
 pub(crate) async fn fetch_remote_block_transactions_v2(
     provider: &RemoteProvider,
-    request: v2::BlockTransactionsRequest,
-) -> anyhow::Result<v2::BlockTransactions> {
+    request: v2::requests::BlockTransactionsRequest,
+) -> anyhow::Result<v2::responses::BlockTransactions> {
     with_api_client_async(provider, move |api_client| {
         api_client.get_block_transactions_v2(&request)
     })
@@ -300,8 +318,8 @@ pub(crate) async fn fetch_remote_block_transactions_v2(
 
 pub(crate) async fn fetch_remote_block_transactions_ext_v2(
     provider: &RemoteProvider,
-    request: v2::BlockTransactionsRequest,
-) -> anyhow::Result<v2::BlockTransactionsExt> {
+    request: v2::requests::BlockTransactionsRequest,
+) -> anyhow::Result<v2::responses::BlockTransactionsExt> {
     with_api_client_async(provider, move |api_client| {
         api_client.get_block_transactions_ext_v2(&request)
     })
@@ -310,8 +328,8 @@ pub(crate) async fn fetch_remote_block_transactions_ext_v2(
 
 pub(crate) async fn fetch_remote_lookup_block_v2(
     provider: &RemoteProvider,
-    request: v2::LookupBlockRequest,
-) -> anyhow::Result<v2::TonBlockIdExt> {
+    request: v2::requests::LookupBlockRequest,
+) -> anyhow::Result<v2::responses::TonBlockIdExt> {
     with_api_client_async(provider, move |api_client| {
         api_client.lookup_block_v2(&request)
     })

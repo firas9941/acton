@@ -14,9 +14,9 @@ use std::sync::{Arc, Mutex};
 use std::thread;
 use std::time::{Duration, Instant};
 use ton::ton_core::types::TonAddress;
-use ton_api::toncenter::v2::responses;
 use ton_executor::DEFAULT_CONFIG_DICT;
 use ton_localnet::types::Addr;
+use toncenter::v2::responses;
 use tvm_ffi::json_stack::legacy_stack_to_json;
 use tvm_ffi::stack::{Tuple, TupleItem};
 use tycho_types::boc::{Boc, BocRepr};
@@ -107,66 +107,20 @@ pub(crate) fn bounceable_user_friendly_address(address: &str) -> String {
         .as_user_friendly()
 }
 
-pub(crate) fn summarize_v2_account_state(state: &responses::AccountStateKind) -> serde_json::Value {
-    match state {
-        responses::AccountStateKind::Raw {
-            code,
-            data,
-            frozen_hash,
-        } => serde_json::json!({
-            "type": "raw.accountState",
-            "code_present": !code.is_empty(),
-            "data_present": !data.is_empty(),
-            "frozen_hash": frozen_hash,
-        }),
-        responses::AccountStateKind::WalletV3 { wallet_id, seqno } => serde_json::json!({
-            "type": "wallet.v3.accountState",
-            "wallet_id": wallet_id,
-            "seqno": seqno,
-        }),
-        responses::AccountStateKind::WalletV4 { wallet_id, seqno } => serde_json::json!({
-            "type": "wallet.v4.accountState",
-            "wallet_id": wallet_id,
-            "seqno": seqno,
-        }),
-        responses::AccountStateKind::WalletHighloadV1 { wallet_id, seqno } => {
-            serde_json::json!({
-                "type": "wallet.highload.v1.accountState",
-                "wallet_id": wallet_id,
-                "seqno": seqno,
-            })
+pub(crate) fn summarize_v2_account_state(state: &responses::AccountState) -> serde_json::Value {
+    let mut value = serde_json::to_value(state).expect("account state must serialize");
+    let object = value.as_object_mut().expect("account state is an object");
+    let kind = object.remove("@type").expect("account state has a type");
+    object.insert("type".to_owned(), kind);
+    for field in ["code", "data"] {
+        if let Some(content) = object.remove(field) {
+            object.insert(
+                format!("{field}_present"),
+                serde_json::json!(!content.as_str().unwrap().is_empty()),
+            );
         }
-        responses::AccountStateKind::WalletHighloadV2 { wallet_id } => serde_json::json!({
-            "type": "wallet.highload.v2.accountState",
-            "wallet_id": wallet_id,
-        }),
-        responses::AccountStateKind::Dns { wallet_id } => serde_json::json!({
-            "type": "dns.accountState",
-            "wallet_id": wallet_id,
-        }),
-        responses::AccountStateKind::RWallet { .. } => {
-            let mut value = serde_json::to_value(state).expect("rwallet state must serialize");
-            value["type"] = value["@type"].take();
-            value
-                .as_object_mut()
-                .expect("state must be an object")
-                .remove("@type");
-            value
-        }
-        responses::AccountStateKind::PChan { .. } => {
-            let mut value = serde_json::to_value(state).expect("pchan state must serialize");
-            value["type"] = value["@type"].take();
-            value
-                .as_object_mut()
-                .expect("state must be an object")
-                .remove("@type");
-            value
-        }
-        responses::AccountStateKind::Uninited { frozen_hash } => serde_json::json!({
-            "type": "uninited.accountState",
-            "frozen_hash": frozen_hash,
-        }),
     }
+    value
 }
 
 pub(crate) fn v2_extra_currencies(
@@ -174,14 +128,7 @@ pub(crate) fn v2_extra_currencies(
 ) -> std::collections::BTreeMap<i32, String> {
     currencies
         .iter()
-        .map(|currency| {
-            let amount = match &currency.amount {
-                ton_api::toncenter::v2::StringOrNumber::String(value) => value.clone(),
-                ton_api::toncenter::v2::StringOrNumber::Number(value) => value.to_string(),
-                ton_api::toncenter::v2::StringOrNumber::Unsigned(value) => value.to_string(),
-            };
-            (currency.id, amount)
-        })
+        .map(|currency| (currency.id, currency.amount.clone()))
         .collect()
 }
 
@@ -667,12 +614,12 @@ pub(crate) fn find_v2_transaction_block(
     node: &LocalnetHandle,
     minimum_transactions: usize,
 ) -> (u32, responses::BlockTransactions) {
-    let masterchain: responses::TonlibResponse<responses::MasterchainInfo> =
+    let masterchain: toncenter::v2::TonlibResponse<responses::MasterchainInfo> =
         node.get_json_as("/api/v2/getMasterchainInfo");
     for seqno in (1..=masterchain.result.last.seqno).rev() {
         let seqno = u32::try_from(seqno).expect("localnet seqno must fit u32");
-        let response: responses::TonlibResponse<responses::BlockTransactions> =
-            node.get_json_as(&format!(
+        let response: toncenter::v2::TonlibResponse<responses::BlockTransactions> = node
+            .get_json_as(&format!(
                 "/api/v2/getBlockTransactions?workchain=0&shard={}&seqno={seqno}&count=10000",
                 i64::MIN
             ));
@@ -717,10 +664,10 @@ fn find_v2_internal_message_matching(
     node: &LocalnetHandle,
     mut predicate: impl FnMut(&responses::MessageStd) -> bool,
 ) -> Option<(responses::TransactionExt, responses::MessageStd)> {
-    let masterchain: responses::TonlibResponse<responses::MasterchainInfo> =
+    let masterchain: toncenter::v2::TonlibResponse<responses::MasterchainInfo> =
         node.get_json_as("/api/v2/getMasterchainInfo");
     for seqno in (1..=masterchain.result.last.seqno).rev() {
-        let response: responses::TonlibResponse<responses::BlockTransactionsExt> = node
+        let response: toncenter::v2::TonlibResponse<responses::BlockTransactionsExt> = node
             .get_json_as(&format!(
                 "/api/v2/getBlockTransactionsExt?workchain=0&shard={}&seqno={seqno}&count=10000",
                 i64::MIN
@@ -765,7 +712,7 @@ pub(crate) fn toncenter_v2_run_get_method_ok_response(
             "@extra": "0",
             "result": {
                 "@type": "smc.runResult",
-                "gas_used": "0",
+                "gas_used": 0,
                 "stack": legacy_stack_to_json(&Tuple(stack)).expect("stack must serialize to legacy json"),
                 "exit_code": exit_code,
                 "block_id": {

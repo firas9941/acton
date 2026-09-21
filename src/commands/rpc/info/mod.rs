@@ -14,7 +14,8 @@ use serde::Serialize;
 use serde_json::{Value, json};
 use std::collections::HashSet;
 use std::path::Path;
-use ton_api::{Network, OffchainJsonResolver, TonApiClient, toncenter::v2};
+use ton_api::{Network, OffchainJsonResolver, TonApiClient};
+use toncenter::v2;
 use tycho_types::boc::Boc;
 use tycho_types::cell::{Cell, HashBytes};
 use tycho_types::dict::Dict;
@@ -46,7 +47,10 @@ pub(super) fn rpc_info_cmd(
         .get_account_info(block_number, &address.to_string())
         .with_context(|| format!("Failed to fetch account info for {address} from {network}"))?;
 
-    let balance = remote.balance.to_bigint()?;
+    let balance = remote
+        .balance
+        .parse::<BigInt>()
+        .context("Invalid account balance")?;
     let code = TonApiClient::decode_optional_cell(&remote.code)?;
     let data = TonApiClient::decode_optional_cell(&remote.data)?;
 
@@ -170,7 +174,7 @@ pub(super) fn rpc_info_cmd(
         print_kv("Block", block_number.to_string().yellow().to_string());
     }
     print_kv("Raw Address", address.to_string().cyan().to_string());
-    print_kv("Status", format_account_status(&remote.state));
+    print_kv("Status", format_account_status(remote.state.as_str()));
     print_kv("Contract", contract_name);
     print_kv("Balance", format_nanograms(&balance).white().to_string());
     print_kv("Last Tx LT", remote.last_transaction_id.lt.as_str());
@@ -190,7 +194,7 @@ pub(super) fn rpc_info_cmd(
     if let Some(data) = &data {
         print_kv("Data Hash", format_hash(data.repr_hash()));
     }
-    if remote.state == "frozen" && !remote.frozen_hash.is_empty() {
+    if remote.state == v2::responses::AccountStateEnum::Frozen && !remote.frozen_hash.is_empty() {
         print_kv(
             "Frozen Hash",
             remote.frozen_hash.as_str().yellow().to_string(),
@@ -335,7 +339,7 @@ pub(super) struct JsonReportInput<'a> {
     pub(super) network: &'a Network,
     pub(super) address: &'a StdAddr,
     pub(super) block_number: Option<u64>,
-    pub(super) remote: &'a v2::AddressInformation,
+    pub(super) remote: &'a v2::responses::AddressInformation,
     pub(super) balance: &'a BigInt,
     pub(super) code: Option<&'a Cell>,
     pub(super) data: Option<&'a Cell>,
@@ -487,7 +491,9 @@ pub(super) fn json_report(input: JsonReportInput<'_>) -> anyhow::Result<Value> {
     if let Some(data) = input.data {
         output["account"]["dataHash"] = json!(hash_json(data.repr_hash()));
     }
-    if input.remote.state == "frozen" && !input.remote.frozen_hash.is_empty() {
+    if input.remote.state == v2::responses::AccountStateEnum::Frozen
+        && !input.remote.frozen_hash.is_empty()
+    {
         output["account"]["frozenHash"] = json!(input.remote.frozen_hash);
     }
 

@@ -1,10 +1,18 @@
+#[cfg(test)]
+mod tests;
+
 use anyhow::{Context, anyhow};
 use faucet_config::ToncenterConfig;
 use reqwest::header;
-use serde::Deserialize;
-use serde_json::{Value, json};
+use serde::de::DeserializeOwned;
 use std::time::Duration;
 use tokio::time::sleep;
+use toncenter_api::v2::requests::{
+    AddressBalanceRequest, JsonRpcCall, JsonRpcRequest, RunGetMethodRequest, SendBocRequest,
+};
+use toncenter_api::v2::responses::{ResultOk, RunGetMethodResult};
+use toncenter_api::v2::stack::LegacyStackEntry;
+use toncenter_api::v2::{Int64Input, Response, TonlibErrorResponse};
 use tracing::warn;
 
 pub struct ToncenterClient {
@@ -12,11 +20,6 @@ pub struct ToncenterClient {
     base_url: String,
     max_retries: u32,
     retry_base_delay: Duration,
-}
-
-#[derive(Deserialize, Debug)]
-pub struct GetMethodResult {
-    pub stack: Vec<Value>,
 }
 
 impl ToncenterClient {
@@ -48,83 +51,61 @@ impl ToncenterClient {
 
     pub async fn get_wallet_seqno(&self, address: &str) -> anyhow::Result<u32> {
         let result = self.run_get_method(address, "seqno").await?;
-
-        for first in result.stack {
-            if let Some(value_str) = Self::stack_num_value(&first) {
-                return Ok(Self::parse_seqno(value_str));
+        for entry in result.stack {
+            if let LegacyStackEntry::Number((_, value)) = entry {
+                return match value {
+                    Int64Input::Number(value) => {
+                        u32::try_from(value).context("Invalid wallet seqno")
+                    }
+                    Int64Input::String(value) => match value.strip_prefix("0x") {
+                        Some(hex) => u32::from_str_radix(hex, 16),
+                        None => value.parse(),
+                    }
+                    .context("Invalid wallet seqno"),
+                };
             }
         }
-
         Ok(0)
-    }
-
-    fn stack_num_value(value: &Value) -> Option<&str> {
-        value
-            .as_array()
-            .filter(|items| items.len() == 2 && items[0].as_str() == Some("num"))
-            .and_then(|items| items[1].as_str())
-            .or_else(|| {
-                (value.get("type").and_then(Value::as_str) == Some("num"))
-                    .then(|| value.get("value").and_then(Value::as_str))
-                    .flatten()
-            })
-    }
-
-    fn parse_seqno(value: &str) -> u32 {
-        u32::from_str_radix(value.trim_start_matches("0x"), 16).unwrap_or(0)
     }
 
     pub async fn run_get_method(
         &self,
         address: &str,
         method: &str,
-    ) -> anyhow::Result<GetMethodResult> {
-        let json = json!({
-            "id": "1",
-            "jsonrpc": "2.0",
-            "method": "runGetMethod",
-            "params": {
-                "address": address,
-                "method": method,
-                "stack": []
-            }
-        });
-
-        let response = self.post_jsonrpc_with_retry(&json, "runGetMethod").await?;
-        let result = response.get("result").cloned().unwrap_or(response);
-
-        serde_json::from_value(result).context("Failed to parse runGetMethod response payload")
+    ) -> anyhow::Result<RunGetMethodResult> {
+        self.post_jsonrpc_with_retry(
+            JsonRpcCall::RunGetMethod(RunGetMethodRequest {
+                address: address.to_owned(),
+                method: method.into(),
+                stack: Vec::new(),
+                seqno: None,
+            }),
+            "runGetMethod",
+        )
+        .await
     }
 
-    pub async fn send_boc(&self, boc: &str) -> anyhow::Result<Value> {
-        let json = json!({
-            "id": "1",
-            "jsonrpc": "2.0",
-            "method": "sendBoc",
-            "params": {
-                "boc": boc
-            }
-        });
-
-        self.post_jsonrpc_with_retry(&json, "sendBoc").await
+    pub async fn send_boc(&self, boc: &str) -> anyhow::Result<ResultOk> {
+        self.post_jsonrpc_with_retry(
+            JsonRpcCall::SendBoc(SendBocRequest {
+                boc: boc.to_owned(),
+            }),
+            "sendBoc",
+        )
+        .await
     }
 
     pub async fn get_address_balance(&self, address: &str) -> anyhow::Result<u64> {
-        let json = json!({
-            "id": "1",
-            "jsonrpc": "2.0",
-            "method": "getAddressBalance",
-            "params": {
-                "address": address
-            }
-        });
-
-        let response = self
-            .post_jsonrpc_with_retry(&json, "getAddressBalance")
+        let balance: String = self
+            .post_jsonrpc_with_retry(
+                JsonRpcCall::GetAddressBalance(AddressBalanceRequest {
+                    address: address.to_owned(),
+                    seqno: None,
+                }),
+                "getAddressBalance",
+            )
             .await?;
-        let result = response.get("result").unwrap_or(&response);
-
-        parse_balance(result).context("Failed to parse getAddressBalance response payload")
+        balance.parse().context("Invalid account balance")
     }
 
     fn jsonrpc_url(&self) -> String {
@@ -144,33 +125,30 @@ impl ToncenterClient {
         error.is_timeout() || error.is_connect() || error.is_request()
     }
 
-    fn is_retryable_rpc_error(error: &Value) -> bool {
-        if let Some(code) = error.get("code").and_then(|v| v.as_i64())
-            && (code == 429 || code >= 500)
-        {
-            return true;
-        }
-
-        if let Some(message) = error.get("message").and_then(|v| v.as_str()) {
-            let msg = message.to_ascii_lowercase();
-            return msg.contains("rate limit")
-                || msg.contains("too many requests")
-                || msg.contains("timeout")
-                || msg.contains("temporary");
-        }
-
-        false
+    fn is_retryable_rpc_error(error: &TonlibErrorResponse) -> bool {
+        let message = error.error.to_ascii_lowercase();
+        error.code == 429
+            || error.code >= 500
+            || message.contains("rate limit")
+            || message.contains("too many requests")
+            || message.contains("timeout")
+            || message.contains("temporary")
     }
 
-    async fn post_jsonrpc_with_retry(
+    async fn post_jsonrpc_with_retry<T: DeserializeOwned>(
         &self,
-        payload: &Value,
+        call: JsonRpcCall,
         operation: &str,
-    ) -> anyhow::Result<Value> {
+    ) -> anyhow::Result<T> {
         let url = self.jsonrpc_url();
+        let payload = JsonRpcRequest {
+            call,
+            jsonrpc: Some(serde_json::json!("2.0")),
+            id: Some(serde_json::json!("1")),
+        };
 
         for attempt in 0..=self.max_retries {
-            let request = self.client.post(&url).json(payload);
+            let request = self.client.post(&url).json(&payload);
 
             let response = match request.send().await {
                 Ok(response) => response,
@@ -218,10 +196,10 @@ impl ToncenterClient {
                 ));
             }
 
-            let response_json: Value = serde_json::from_str(&body)
+            let response: Response<T> = serde_json::from_str(&body)
                 .context(format!("Failed to parse {} response as JSON", operation))?;
 
-            if let Some(error) = response_json.get("error").filter(|e| !e.is_null()) {
+            if let Response::Error(error) = &response {
                 if attempt < self.max_retries && Self::is_retryable_rpc_error(error) {
                     warn!(
                         operation,
@@ -241,7 +219,7 @@ impl ToncenterClient {
                 ));
             }
 
-            return Ok(response_json);
+            return response.into_result().map_err(Into::into);
         }
 
         Err(anyhow!(
@@ -254,42 +232,4 @@ impl ToncenterClient {
 fn user_agent() -> String {
     let git_hash = option_env!("GIT_HASH").unwrap_or("unknown");
     format!("faucet/{} ({git_hash})", env!("CARGO_PKG_VERSION"))
-}
-
-fn parse_balance(value: &Value) -> Option<u64> {
-    if let Some(balance) = value.as_u64() {
-        return Some(balance);
-    }
-
-    if let Some(balance) = value.as_i64() {
-        return u64::try_from(balance).ok();
-    }
-
-    if let Some(balance) = value.as_str() {
-        return balance.parse().ok();
-    }
-
-    value.get("balance").and_then(parse_balance)
-}
-
-#[cfg(test)]
-mod tests {
-    use serde_json::json;
-
-    use super::parse_balance;
-
-    #[test]
-    fn parses_balance_payloads() {
-        assert_eq!(parse_balance(&json!("25000000000")), Some(25_000_000_000));
-        assert_eq!(
-            parse_balance(&json!(25_000_000_000u64)),
-            Some(25_000_000_000)
-        );
-        assert_eq!(
-            parse_balance(&json!({ "balance": "25000000000" })),
-            Some(25_000_000_000)
-        );
-        assert_eq!(parse_balance(&json!(-1)), None);
-        assert_eq!(parse_balance(&json!("not-number")), None);
-    }
 }

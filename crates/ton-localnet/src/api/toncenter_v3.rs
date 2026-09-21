@@ -24,10 +24,9 @@ use num_bigint::BigInt;
 use serde_json::value::Value;
 use std::collections::HashMap;
 use ton_api::toncenter::emulate::v1 as emulate;
-use ton_api::toncenter::v2::StringOrNumber as V2StringOrNumber;
-use ton_api::toncenter::v2::responses as v2_response;
 use ton_api::toncenter::v3 as response;
 use ton_indexer_contracts::methods::parse_contract_methods;
+use toncenter::v2::responses as v2_response;
 use tvm_ffi::stack::{Tuple, TupleItem};
 use tycho_types::boc::Boc;
 use tycho_types::cell::{Cell, CellBuilder, CellSlice, HashBytes};
@@ -836,7 +835,7 @@ pub(crate) fn map_v2_address_information(
     state: &v2_response::AddressInformation,
 ) -> response::V2AddressInformation {
     response::V2AddressInformation {
-        balance: string_or_number_to_string(&state.balance),
+        balance: state.balance.clone(),
         code: (!state.code.is_empty()).then(|| state.code.clone()),
         data: (!state.data.is_empty()).then(|| state.data.clone()),
         frozen_hash: (!state.frozen_hash.is_empty()).then(|| state.frozen_hash.clone()),
@@ -844,7 +843,7 @@ pub(crate) fn map_v2_address_information(
             .then(|| state.last_transaction_id.hash.clone()),
         last_transaction_lt: (!state.last_transaction_id.lt.is_empty())
             .then(|| state.last_transaction_id.lt.clone()),
-        status: state.state.clone(),
+        status: state.state.to_string(),
     }
 }
 
@@ -916,12 +915,12 @@ pub(crate) fn map_v2_wallet_information(
 ) -> response::V2WalletInformation {
     response::V2WalletInformation {
         balance: state.balance.clone(),
-        wallet_type: state.wallet_type.clone(),
+        wallet_type: state.wallet_type.as_ref().map(ToString::to_string),
         seqno: state.seqno,
-        wallet_id: state.wallet_id.map(i64::from),
+        wallet_id: state.wallet_id,
         last_transaction_lt: state.last_transaction_id.lt.clone(),
         last_transaction_hash: state.last_transaction_id.hash.clone(),
-        status: state.account_state.clone(),
+        status: state.account_state.to_string(),
     }
 }
 
@@ -1868,14 +1867,6 @@ fn map_indexed_information_status(state: &LocalnetAccountState) -> &'static str 
     }
 }
 
-fn string_or_number_to_string(value: &V2StringOrNumber) -> String {
-    match value {
-        V2StringOrNumber::String(value) => value.clone(),
-        V2StringOrNumber::Number(value) => value.to_string(),
-        V2StringOrNumber::Unsigned(value) => value.to_string(),
-    }
-}
-
 const fn map_account_state_status(status: &AccountStatus) -> &'static str {
     match status {
         AccountStatus::Active => "active",
@@ -2162,22 +2153,21 @@ mod tests {
 
     #[test]
     fn legacy_wallet_projection_preserves_signed_identifiers() {
-        let mapped =
-            map_v2_wallet_information(&ton_api::toncenter::v2::responses::WalletInformation {
-                type_field: "ext.accounts.walletInformation".to_owned(),
-                wallet: true,
-                balance: "1".to_owned(),
-                account_state: "active".to_owned(),
-                last_transaction_id: ton_api::toncenter::v2::responses::InternalTransactionId {
-                    type_field: "internal.transactionId".to_owned(),
-                    lt: "0".to_owned(),
-                    hash: Hash256([0; 32]).to_base64(),
-                },
-                wallet_type: Some("highload_v1_r1".to_owned()),
-                seqno: Some(-1),
-                wallet_id: Some(-1),
-                is_signature_allowed: None,
-            });
+        let mapped = map_v2_wallet_information(&toncenter::v2::responses::WalletInformation {
+            type_tag: Default::default(),
+            wallet: true,
+            balance: "1".to_owned(),
+            account_state: toncenter::v2::responses::AccountStateEnum::Active,
+            last_transaction_id: toncenter::v2::responses::InternalTransactionId {
+                type_tag: Default::default(),
+                lt: "0".to_owned(),
+                hash: Hash256([0; 32]).to_base64(),
+            },
+            wallet_type: Some(toncenter::v2::responses::WalletInformationWalletType::WalletV3R1),
+            seqno: Some(-1),
+            wallet_id: Some(-1),
+            is_signature_allowed: None,
+        });
 
         assert_eq!(mapped.seqno, Some(-1));
         assert_eq!(mapped.wallet_id, Some(-1));

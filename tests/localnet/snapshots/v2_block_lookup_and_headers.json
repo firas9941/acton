@@ -83,7 +83,7 @@
     {
       "case": "lt i64 overflow",
       "code": 422,
-      "error": "out of range integral type conversion attempted",
+      "error": "number too large to fit in target type",
       "status": 422
     },
     {
@@ -95,7 +95,7 @@
     {
       "case": "unixtime i32 overflow",
       "code": 422,
-      "error": "out of range integral type conversion attempted",
+      "error": "number too large to fit in target type",
       "status": 422
     },
     {

@@ -4,6 +4,36 @@ use serde_json::{Value, json};
 use toncenter::v2::{TonlibErrorResponse, TonlibResponse, requests, responses, stack};
 
 #[test]
+fn extended_stacks_require_an_explicit_entry_type() {
+    let request = json!({
+        "method": "runGetMethod",
+        "params": { "address": "account", "method": "value", "stack": [["null", null]] }
+    });
+    let fixtures: Value = serde_json::from_str(include_str!("fixtures/wire.json")).unwrap();
+    let mut result = fixtures["RunGetMethodResult"][0].clone();
+    result["stack"] = json!([["null", null]]);
+
+    let extended_request: requests::JsonRpcRequest<Value> =
+        serde_json::from_value(request.clone()).unwrap();
+    let extended_result: responses::RunGetMethodResult<Value> =
+        serde_json::from_value(result.clone()).unwrap();
+    let summary = json!({
+        "default_request_rejects_null": serde_json::from_value::<requests::JsonRpcRequest>(request.clone()).is_err(),
+        "default_result_rejects_null": serde_json::from_value::<responses::RunGetMethodResult>(result.clone()).is_err(),
+        "extended_request_preserves_null": serde_json::to_value(extended_request).unwrap() == request,
+        "extended_result_preserves_null": serde_json::to_value(extended_result).unwrap() == result,
+    });
+    expect_test::expect![[r#"
+        {
+          "default_request_rejects_null": true,
+          "default_result_rejects_null": true,
+          "extended_request_preserves_null": true,
+          "extended_result_preserves_null": true
+        }"#]]
+    .assert_eq(&serde_json::to_string_pretty(&summary).unwrap());
+}
+
+#[test]
 fn every_request_and_response_round_trips_the_reference_snapshot() {
     let fixtures: Value =
         serde_json::from_str(include_str!("fixtures/wire.json")).expect("fixture JSON");

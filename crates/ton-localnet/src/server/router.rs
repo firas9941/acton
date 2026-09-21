@@ -38,7 +38,8 @@ use std::num::NonZeroU32;
 use std::sync::Arc;
 use std::time::Duration;
 use tokio::time::sleep;
-use ton_api::toncenter::{v2::responses::TonlibErrorResponse, v3::responses::RequestError};
+use ton_api::toncenter::v3::responses::RequestError;
+use toncenter::v2::TonlibErrorResponse;
 use tower_governor::governor::GovernorConfigBuilder;
 use tower_governor::key_extractor::GlobalKeyExtractor;
 use tower_governor::{GovernorError, GovernorLayer};
@@ -283,7 +284,7 @@ fn tonlib_error_response(status: StatusCode, error: impl Into<String>) -> Respon
             ok: false,
             error: error.into(),
             code: i32::from(status.as_u16()),
-            extra: get_extra(),
+            extra: Some(get_extra()),
             jsonrpc: None,
             id: None,
         }),

@@ -249,7 +249,7 @@ pub async fn get_wallet_information_v3(
 ) -> impl IntoResponse {
     let use_v2 = payload.use_v2.unwrap_or(false);
     if use_v2 {
-        let request = ton_api::toncenter::v2::requests::AddressInformationRequest {
+        let request = toncenter::v2::requests::AddressInformationRequest {
             address: payload.address,
             seqno: None,
         };
@@ -259,7 +259,9 @@ pub async fn get_wallet_information_v3(
                 return request_error(StatusCode::INTERNAL_SERVER_ERROR, error.to_string());
             }
         };
-        if !state.wallet && state.account_state != "uninitialized" {
+        if !state.wallet
+            && state.account_state != toncenter::v2::responses::AccountStateEnum::Uninitialized
+        {
             return request_error(StatusCode::CONFLICT, "not a wallet");
         }
         return (StatusCode::OK, Json(v3::map_v2_wallet_information(&state))).into_response();

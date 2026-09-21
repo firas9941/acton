@@ -836,13 +836,7 @@ async fn process_send_tokens(
         .wallet
         .create_ext_in_msg(vec![message_cell], seqno, expire_at, false)?;
 
-    let response = client.send_boc(&external.to_boc_base64()?).await?;
-
-    if let Some(ok) = response.get("ok").and_then(|v| v.as_bool())
-        && !ok
-    {
-        anyhow::bail!("Toncenter returned ok: false. Response: {:?}", response);
-    }
+    client.send_boc(&external.to_boc_base64()?).await?;
 
     Ok(())
 }

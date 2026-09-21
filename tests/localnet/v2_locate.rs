@@ -5,7 +5,7 @@ use crate::support::toncenter::{
     same_std_address,
 };
 use serde_json::json;
-use ton_api::toncenter::v2::{StringOrNumber, requests, responses};
+use toncenter::v2::{requests, responses};
 
 #[test]
 fn transaction_lookup_matches_upstream_contract() {
@@ -21,26 +21,26 @@ fn transaction_lookup_matches_upstream_contract() {
     let request = requests::TryLocateTxRequest {
         source: source.clone(),
         destination: destination.clone(),
-        created_lt: StringOrNumber::Unsigned(created_lt),
+        created_lt: created_lt.to_string().into(),
     };
 
-    let alias: responses::TonlibResponse<responses::Transaction> = node.get_json_as(&format!(
+    let alias: toncenter::v2::TonlibResponse<responses::Transaction> = node.get_json_as(&format!(
         "/api/v2/tryLocateTx?source={source}&destination={destination}&created_lt={created_lt}"
     ));
-    let result: responses::JsonRpcResponse<responses::Transaction> = node.post_v2_json_rpc(
+    let result: toncenter::v2::TonlibResponse<responses::Transaction> = node.post_v2_json_rpc(
         "/api/v2",
-        StringOrNumber::String("result".to_owned()),
+        "result".into(),
         "tryLocateResultTx",
         request.clone(),
     );
-    let source_rest: responses::TonlibResponse<responses::Transaction> = node.get_json_as(
+    let source_rest: toncenter::v2::TonlibResponse<responses::Transaction> = node.get_json_as(
         &format!(
             "/api/v2/tryLocateSourceTx?source={source}&destination={destination}&created_lt={created_lt}"
         ),
     );
-    let source_rpc: responses::JsonRpcResponse<responses::Transaction> = node.post_v2_json_rpc(
+    let source_rpc: toncenter::v2::TonlibResponse<responses::Transaction> = node.post_v2_json_rpc(
         "/api/v2",
-        StringOrNumber::String("source".to_owned()),
+        "source".into(),
         "tryLocateSourceTx",
         request.clone(),
     );
@@ -48,8 +48,8 @@ fn transaction_lookup_matches_upstream_contract() {
     let missing_lt = created_lt + 1;
     let mut errors = Vec::new();
     for method in ["tryLocateTx", "tryLocateResultTx", "tryLocateSourceTx"] {
-        let (status, error): (u16, responses::TonlibErrorResponse) =
-            node.get_json_with_status_as(&format!(
+        let (status, error): (u16, toncenter::v2::TonlibErrorResponse) = node
+            .get_json_with_status_as(&format!(
                 "/api/v2/{method}?source={source}&destination={destination}&created_lt={missing_lt}"
             ));
         errors.push(json!({
@@ -65,14 +65,14 @@ fn transaction_lookup_matches_upstream_contract() {
         (
             "negative created_lt",
             requests::TryLocateTxRequest {
-                created_lt: StringOrNumber::Number(-1),
+                created_lt: (-1).into(),
                 ..request.clone()
             },
         ),
         (
             "created_lt int64 overflow",
             requests::TryLocateTxRequest {
-                created_lt: StringOrNumber::Unsigned(i64::MAX as u64 + 1),
+                created_lt: (i64::MAX as u64 + 1).to_string().into(),
                 ..request.clone()
             },
         ),
@@ -91,10 +91,10 @@ fn transaction_lookup_matches_upstream_contract() {
             },
         ),
     ] {
-        let (status, error): (u16, responses::TonlibErrorResponse) = node
+        let (status, error): (u16, toncenter::v2::TonlibErrorResponse) = node
             .post_v2_json_rpc_with_status(
                 "/api/v2",
-                StringOrNumber::String(case.to_owned()),
+                case.to_owned().into(),
                 "tryLocateResultTx",
                 invalid_request,
             );
@@ -107,9 +107,11 @@ fn transaction_lookup_matches_upstream_contract() {
         }));
     }
 
-    let source_contains_message = source_rest.result.out_msgs.iter().any(|candidate| {
-        matches!(candidate, responses::Message::Full(full) if full.hash == message.hash)
-    });
+    let source_contains_message = source_rest
+        .result
+        .out_msgs
+        .iter()
+        .any(|candidate| candidate.hash == message.hash);
     let snapshot = json!({
         "fixture": {
             "has_internal_source": !source.is_empty(),
@@ -119,14 +121,14 @@ fn transaction_lookup_matches_upstream_contract() {
         "destination_lookup": {
             "alias_matches_incoming_transaction": alias.result.transaction_id.hash
                 == destination_transaction.transaction_id.hash,
-            "result_matches_incoming_transaction": result.response.result.transaction_id.hash
+            "result_matches_incoming_transaction": result.result.transaction_id.hash
                 == destination_transaction.transaction_id.hash,
             "alias_matches_result": alias.result.transaction_id.hash
-                == result.response.result.transaction_id.hash,
+                == result.result.transaction_id.hash,
         },
         "source_lookup": {
             "rest_and_rpc_match": source_rest.result.transaction_id.hash
-                == source_rpc.response.result.transaction_id.hash,
+                == source_rpc.result.transaction_id.hash,
             "belongs_to_source": same_std_address(&source_rest.result.account, source),
             "contains_located_message": source_contains_message,
         },

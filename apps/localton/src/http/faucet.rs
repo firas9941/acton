@@ -16,8 +16,12 @@ use axum::{
 };
 use base64::{Engine, engine::general_purpose::STANDARD};
 use serde::{Deserialize, Serialize};
-use serde_json::json;
 use tokio::sync::Mutex;
+use toncenter::v2::{
+    Response as ToncenterResponse,
+    requests::{SendBocRequest, TransactionsRequest},
+    responses::{ExtMessageInfo, Transaction},
+};
 use tonutils::tvm::Address;
 use utoipa::ToSchema;
 
@@ -46,7 +50,7 @@ impl State {
 pub(super) struct FundAccountRequest {
     /// TON address that receives the funds
     address: String,
-    /// Transfer amount in nanotons
+    /// Transfer amount in nanograms
     amount: u128,
 }
 
@@ -75,52 +79,6 @@ pub(super) struct FundAccountErrorResponse {
     error: String,
     /// HTTP status code for the error
     code: u16,
-}
-
-#[derive(Deserialize)]
-struct TonlibResponse<T> {
-    ok: bool,
-    result: Option<T>,
-    error: Option<String>,
-}
-
-#[derive(Deserialize)]
-struct SendBocResult {
-    hash: String,
-}
-
-#[derive(Deserialize)]
-struct RawTransaction {
-    in_msg: Option<RawMessageHash>,
-    #[serde(default)]
-    out_msgs: Vec<RawOutgoingMessage>,
-}
-
-#[derive(Deserialize)]
-struct RawMessageHash {
-    hash: String,
-}
-
-#[derive(Deserialize)]
-struct RawOutgoingMessage {
-    hash: String,
-    destination: Option<RawAccountAddress>,
-}
-
-#[derive(Deserialize)]
-#[serde(untagged)]
-enum RawAccountAddress {
-    Text(String),
-    Tonlib { account_address: String },
-}
-
-impl RawAccountAddress {
-    fn as_str(&self) -> &str {
-        match self {
-            Self::Text(address) => address,
-            Self::Tonlib { account_address } => account_address,
-        }
-    }
 }
 
 const CONFIRMATION_TIMEOUT: Duration = Duration::from_secs(30);
@@ -185,12 +143,13 @@ pub(super) async fn send_boc_return_hash(state: &State, boc: &[u8]) -> Result<St
         "{}/api/v2/sendBocReturnHash",
         state.backend.trim_end_matches('/')
     );
-    let payload = serde_json::to_vec(&json!({ "boc": STANDARD.encode(boc) }))?;
+    let payload = SendBocRequest {
+        boc: STANDARD.encode(boc),
+    };
     let response = state
         .client
         .post(url)
-        .header("content-type", "application/json")
-        .body(payload)
+        .json(&payload)
         .timeout(Duration::from_secs(10))
         .send()
         .await
@@ -200,21 +159,20 @@ pub(super) async fn send_boc_return_hash(state: &State, boc: &[u8]) -> Result<St
         .bytes()
         .await
         .context("failed to read sendBocReturnHash response")?;
-    let response: TonlibResponse<SendBocResult> = serde_json::from_slice(&body)
+    let response: ToncenterResponse<ExtMessageInfo> = serde_json::from_slice(&body)
         .with_context(|| format!("invalid sendBocReturnHash response: {}", body_text(&body)))?;
-    if !status.is_success() || !response.ok {
-        bail!(
-            "sendBocReturnHash failed with status {status}: {}",
-            response
-                .error
-                .unwrap_or_else(|| "TON HTTP API returned no error details".to_owned())
-        );
-    }
-    response
-        .result
-        .map(|result| result.hash)
-        .filter(|hash| !hash.is_empty())
-        .context("sendBocReturnHash response did not include a message hash")
+    let result = response
+        .into_result()
+        .with_context(|| format!("sendBocReturnHash failed with status {status}"))?;
+    anyhow::ensure!(
+        status.is_success(),
+        "sendBocReturnHash failed with status {status}"
+    );
+    anyhow::ensure!(
+        !result.hash.is_empty(),
+        "sendBocReturnHash response did not include a message hash"
+    );
+    Ok(result.hash)
 }
 
 pub(super) async fn wait_for_transfer(
@@ -234,9 +192,7 @@ pub(super) async fn wait_for_transfer(
                         .is_some_and(|incoming| incoming.hash == external_hash)
                 }) {
                     if let Some(outgoing) = transaction.out_msgs.iter().find(|outgoing| {
-                        outgoing.destination.as_ref().is_some_and(|destination| {
-                            same_ton_address(destination.as_str(), &message.destination_address)
-                        })
+                        same_ton_address(&outgoing.destination, &message.destination_address)
                     }) {
                         return Ok(outgoing.hash.clone());
                     }
@@ -263,17 +219,23 @@ pub(super) async fn wait_for_transfer(
     }
 }
 
-async fn transactions(state: &State, source_address: &str) -> Result<Vec<RawTransaction>> {
-    let mut url = reqwest::Url::parse(&format!(
+async fn transactions(state: &State, source_address: &str) -> Result<Vec<Transaction>> {
+    let url = reqwest::Url::parse(&format!(
         "{}/api/v2/getTransactions",
         state.backend.trim_end_matches('/')
     ))?;
-    url.query_pairs_mut()
-        .append_pair("address", source_address)
-        .append_pair("limit", TRANSACTION_LOOKBACK);
+    let request = TransactionsRequest {
+        address: source_address.to_owned(),
+        limit: Some(TRANSACTION_LOOKBACK.into()),
+        lt: None,
+        hash: None,
+        to_lt: None,
+        archival: None,
+    };
     let response = state
         .client
         .get(url)
+        .query(&request)
         .timeout(Duration::from_secs(5))
         .send()
         .await
@@ -283,19 +245,16 @@ async fn transactions(state: &State, source_address: &str) -> Result<Vec<RawTran
         .bytes()
         .await
         .context("failed to read getTransactions response")?;
-    let response: TonlibResponse<Vec<RawTransaction>> = serde_json::from_slice(&body)
+    let response: ToncenterResponse<Vec<Transaction>> = serde_json::from_slice(&body)
         .with_context(|| format!("invalid getTransactions response: {}", body_text(&body)))?;
-    if !status.is_success() || !response.ok {
-        bail!(
-            "getTransactions failed with status {status}: {}",
-            response
-                .error
-                .unwrap_or_else(|| "TON HTTP API returned no error details".to_owned())
-        );
-    }
-    response
-        .result
-        .context("getTransactions response did not include a result")
+    let result = response
+        .into_result()
+        .with_context(|| format!("getTransactions failed with status {status}"))?;
+    anyhow::ensure!(
+        status.is_success(),
+        "getTransactions failed with status {status}"
+    );
+    Ok(result)
 }
 
 fn same_ton_address(left: &str, right: &str) -> bool {

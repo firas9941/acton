@@ -12,9 +12,10 @@ use std::ffi::OsStr;
 use std::sync::LazyLock;
 use std::time::{Duration, Instant};
 use tokio::sync::Mutex;
-use ton_api::toncenter::{v2, v3};
+use ton_api::toncenter::v3;
 use ton_executor::message::{PrevBlockId, PrevBlocksInfo};
 use ton_networks::CustomNetworkUrls;
+use toncenter::v2;
 use toncenter_keys::api_key as toncenter_api_key;
 use tycho_types::boc::Boc;
 use tycho_types::prelude::Cell;
@@ -186,7 +187,7 @@ impl TonCenterClient {
             let key_seqno = if mc_seqno == 0 {
                 0
             } else {
-                let header: v2::BlockHeader = self
+                let header: v2::responses::BlockHeader = self
                     .get_v2(
                         "getBlockHeader",
                         &[
@@ -234,7 +235,8 @@ impl TonCenterClient {
                 // lookupBlock cannot return zerostate; the network's initial ID
                 // is available in getMasterchainInfo instead.
                 let id = if seqno == 0 {
-                    let info: v2::MasterchainInfo = self.get_v2("getMasterchainInfo", &[]).await?;
+                    let info: v2::responses::MasterchainInfo =
+                        self.get_v2("getMasterchainInfo", &[]).await?;
                     info.init
                 } else {
                     self.get_v2(
@@ -276,7 +278,7 @@ impl TonCenterClient {
         hash: &str,
         to_lt: u64,
         limit: u32,
-    ) -> anyhow::Result<Vec<v2::Transaction>> {
+    ) -> anyhow::Result<Vec<v2::responses::Transaction>> {
         self.get_v2(
             "getTransactions",
             &[
@@ -293,7 +295,7 @@ impl TonCenterClient {
 
     /// Fetches the global library cell needed to resolve an exotic code cell.
     pub(crate) async fn get_libraries(&self, hash: &str) -> anyhow::Result<String> {
-        let libraries: v2::LibraryResult = self
+        let libraries: v2::responses::LibraryResult = self
             .get_v2("getLibraries", &[("libraries", hash.to_owned())])
             .await?;
         libraries
@@ -306,7 +308,7 @@ impl TonCenterClient {
 
     /// Fetches the configuration in effect at the replayed masterchain block.
     pub(crate) async fn get_config_all(&self, seqno: u32) -> anyhow::Result<Cell> {
-        let config: v2::ConfigInfo = self
+        let config: v2::responses::ConfigInfo = self
             .get_v2("getConfigAll", &[("seqno", seqno.to_string())])
             .await?;
         Boc::decode_base64(config.config.bytes)
@@ -319,7 +321,7 @@ impl TonCenterClient {
         seqno: u32,
         address: &str,
     ) -> anyhow::Result<Cell> {
-        let cell: v2::TvmCell = self
+        let cell: v2::stack::TvmCell = self
             .get_v2(
                 "getShardAccountCell",
                 &[
@@ -333,14 +335,17 @@ impl TonCenterClient {
 }
 
 /// Validates API block IDs before exposing their hashes to contract code in c7.
-fn prev_block_id(id: v2::TonBlockIdExt, expected_seqno: u32) -> anyhow::Result<PrevBlockId> {
+fn prev_block_id(
+    id: v2::responses::TonBlockIdExt,
+    expected_seqno: u32,
+) -> anyhow::Result<PrevBlockId> {
     anyhow::ensure!(
         id.workchain == -1
             && (matches!(
                 id.shard.as_str(),
                 "-9223372036854775808" | "8000000000000000"
             ) || (expected_seqno == 0 && id.shard == "0"))
-            && id.seqno == u64::from(expected_seqno),
+            && id.seqno == i64::from(expected_seqno),
         "TON Center returned an unexpected masterchain block for seqno {expected_seqno}"
     );
     let decode_hash = |value: &str| -> anyhow::Result<[u8; 32]> {

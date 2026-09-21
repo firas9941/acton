@@ -184,6 +184,68 @@ pub enum TvmStackEntry {
     Unsupported(TvmStackEntryUnsupported),
 }
 
+impl TvmStackEntry {
+    /// Creates a decimal integer stack entry without narrowing its value.
+    #[must_use]
+    pub fn number(value: impl ToString) -> Self {
+        Self::Number(TvmStackEntryNumber {
+            type_tag: Default::default(),
+            number: TvmNumberDecimal {
+                type_tag: Default::default(),
+                number: value.to_string(),
+            },
+        })
+    }
+
+    /// Creates a cell stack entry from a base64-encoded `BoC`.
+    #[must_use]
+    pub fn cell(value: impl Into<String>) -> Self {
+        Self::Cell(TvmStackEntryCell {
+            type_tag: Default::default(),
+            cell: TvmCell {
+                type_tag: Default::default(),
+                bytes: value.into(),
+            },
+        })
+    }
+
+    /// Creates a slice stack entry from a base64-encoded `BoC`.
+    #[must_use]
+    pub fn slice(value: impl Into<String>) -> Self {
+        Self::Slice(TvmStackEntrySlice {
+            type_tag: Default::default(),
+            slice: TvmSlice {
+                type_tag: Default::default(),
+                bytes: value.into(),
+            },
+        })
+    }
+
+    /// Creates an ordered tuple of standard stack entries.
+    #[must_use]
+    pub fn tuple(value: Vec<Self>) -> Self {
+        Self::Tuple(TvmStackEntryTuple {
+            type_tag: Default::default(),
+            tuple: TvmTuple {
+                type_tag: Default::default(),
+                elements: value,
+            },
+        })
+    }
+
+    /// Creates an ordered list of standard stack entries.
+    #[must_use]
+    pub fn list(value: Vec<Self>) -> Self {
+        Self::List(TvmStackEntryList {
+            type_tag: Default::default(),
+            list: TvmList {
+                type_tag: Default::default(),
+                elements: value,
+            },
+        })
+    }
+}
+
 /// A legacy stack entry contains exactly two array elements: its tag and payload.
 ///
 /// Numbers in replies use hexadecimal strings; requests also accept decimal text
@@ -325,6 +387,7 @@ impl utoipa::ToSchema for LegacyStackEntry {
     ) {
         use utoipa::PartialSchema;
 
+        schemas.push((Self::name().into_owned(), Self::schema()));
         TvmStackEntry::schemas(schemas);
         schemas.push((TvmStackEntry::name().into_owned(), TvmStackEntry::schema()));
         LegacyStackEntryCell::schemas(schemas);

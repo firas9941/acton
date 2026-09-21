@@ -5,8 +5,8 @@ use crate::support::toncenter::{
     run_localnet_action_project,
 };
 use serde_json::{Value, json};
-use ton_api::toncenter::v2::{StringOrNumber, requests, responses};
 use ton_api::toncenter::v3;
+use toncenter::v2::{requests, responses};
 
 const NO_STATE_ADDRESS: &str = "0:0000000000000000000000000000000000000000000000000000000000000000";
 
@@ -21,10 +21,10 @@ fn get_token_data_reads_real_historical_jetton_states() {
     let master_seqno = first_transaction_seqno(&node, &master);
     let wallet_seqno = first_transaction_seqno(&node, &wallet);
     let historical_master = get_token_data(&node, &master, Some(master_seqno));
-    let historical_master_rpc: responses::JsonRpcResponse<responses::TokenData> = node
+    let historical_master_rpc: toncenter::v2::TonlibResponse<responses::TokenData> = node
         .post_v2_json_rpc(
             "/api/v2",
-            StringOrNumber::String("historical-master".to_owned()),
+            "historical-master".into(),
             "getTokenData",
             token_request(&master, Some(master_seqno)),
         );
@@ -40,7 +40,7 @@ fn get_token_data_reads_real_historical_jetton_states() {
         "master": {
             "first_transaction_seqno": master_seqno,
             "historical_rest": token_summary(&historical_master.result),
-            "historical_json_rpc": token_summary(&historical_master_rpc.response.result),
+            "historical_json_rpc": token_summary(&historical_master_rpc.result),
             "current": token_summary(&current_master.result),
         },
         "wallet": {
@@ -75,10 +75,10 @@ fn get_token_data_detects_real_empty_collection_and_historical_nft_owner() {
     let collection_seqno = first_transaction_seqno(&node, &collection);
     let item_seqno = first_transaction_seqno(&node, &item);
     let historical_collection = get_token_data(&node, &collection, Some(collection_seqno));
-    let historical_collection_rpc: responses::JsonRpcResponse<responses::TokenData> = node
+    let historical_collection_rpc: toncenter::v2::TonlibResponse<responses::TokenData> = node
         .post_v2_json_rpc(
             "/api/v2",
-            StringOrNumber::String("empty-collection".to_owned()),
+            "empty-collection".into(),
             "getTokenData",
             token_request(&collection, Some(collection_seqno)),
         );
@@ -90,7 +90,7 @@ fn get_token_data_detects_real_empty_collection_and_historical_nft_owner() {
         "collection": {
             "deploy_seqno": collection_seqno,
             "historical_rest": token_summary(&historical_collection.result),
-            "historical_json_rpc": token_summary(&historical_collection_rpc.response.result),
+            "historical_json_rpc": token_summary(&historical_collection_rpc.result),
             "current": token_summary(&current_collection.result),
         },
         "item": {
@@ -111,7 +111,7 @@ fn get_token_data(
     node: &LocalnetHandle,
     address: &str,
     seqno: Option<u32>,
-) -> responses::TonlibResponse<responses::TokenData> {
+) -> toncenter::v2::TonlibResponse<responses::TokenData> {
     let seqno = seqno.map_or_else(String::new, |seqno| format!("&seqno={seqno}"));
     serde_json::from_value(node.get_json(&format!("/api/v2/getTokenData?address={address}{seqno}")))
         .expect("getTokenData response must match the typed V2 contract")
@@ -120,7 +120,7 @@ fn get_token_data(
 fn token_request(address: &str, seqno: Option<u32>) -> requests::AddressInformationRequest {
     requests::AddressInformationRequest {
         address: address.to_owned(),
-        seqno: seqno.map(|seqno| StringOrNumber::Unsigned(u64::from(seqno))),
+        seqno: seqno.map(|seqno| (u64::from(seqno)).to_string().into()),
     }
 }
 

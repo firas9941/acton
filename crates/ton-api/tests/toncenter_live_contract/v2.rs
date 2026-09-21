@@ -1,7 +1,7 @@
 use super::support::{Live, TypedResponse, fixture, invalid_boc};
 use anyhow::{Context, Result};
 use serde_json::json;
-use ton_api::toncenter::v2;
+use toncenter::v2;
 use tycho_types::boc::Boc;
 use tycho_types::cell::Cell;
 
@@ -11,9 +11,12 @@ fn live() -> Result<Option<Live>> {
     Live::from_env()
 }
 
-fn masterchain_info(live: &Live) -> Result<v2::MasterchainInfo> {
-    let response: v2::TonlibResponse<v2::MasterchainInfo> =
-        live.get(&live.v2_url, "/getMasterchainInfo", &v2::EmptyRequest {})?;
+fn masterchain_info(live: &Live) -> Result<v2::responses::MasterchainInfo> {
+    let response: v2::TonlibResponse<v2::responses::MasterchainInfo> = live.get(
+        &live.v2_url,
+        "/getMasterchainInfo",
+        &v2::requests::EmptyRequest {},
+    )?;
     Ok(response.result)
 }
 
@@ -24,11 +27,11 @@ fn address_information_request_and_response_variants() -> Result<()> {
     let fixture = fixture(&live)?;
     let masterchain = masterchain_info(&live)?;
 
-    for seqno in [None, Some(u32::try_from(masterchain.last.seqno)?)] {
-        let _: v2::TonlibResponse<v2::AddressInformation> = live.get(
+    for seqno in [None, Some(i32::try_from(masterchain.last.seqno)?)] {
+        let _: v2::TonlibResponse<v2::responses::AddressInformation> = live.get(
             &live.v2_url,
             "/getAddressInformation",
-            &v2::AddressInformationRequest {
+            &v2::requests::AddressInformationRequest {
                 address: fixture.transaction.account.clone(),
                 seqno: seqno.map(Into::into),
             },
@@ -43,24 +46,24 @@ fn address_request_detect_pack_and_unpack_responses() -> Result<()> {
     let Some(live) = live()? else { return Ok(()) };
     let fixture = fixture(&live)?;
 
-    let detected: v2::TonlibResponse<v2::DetectAddress> = live.get(
+    let detected: v2::TonlibResponse<v2::responses::DetectAddress> = live.get(
         &live.v2_url,
         "/detectAddress",
-        &v2::AddressRequest {
+        &v2::requests::AddressRequest {
             address: fixture.transaction.account.clone(),
         },
     )?;
     let packed: v2::TonlibResponse<String> = live.get(
         &live.v2_url,
         "/packAddress",
-        &v2::AddressRequest {
+        &v2::requests::AddressRequest {
             address: detected.result.raw_form,
         },
     )?;
     let _: v2::TonlibResponse<String> = live.get(
         &live.v2_url,
         "/unpackAddress",
-        &v2::AddressRequest {
+        &v2::requests::AddressRequest {
             address: packed.result,
         },
     )?;
@@ -73,17 +76,17 @@ fn detect_hash_request_accepts_base64_and_hex() -> Result<()> {
     let Some(live) = live()? else { return Ok(()) };
     let fixture = fixture(&live)?;
 
-    let detected: v2::TonlibResponse<v2::DetectHash> = live.get(
+    let detected: v2::TonlibResponse<v2::responses::DetectHash> = live.get(
         &live.v2_url,
         "/detectHash",
-        &v2::DetectHashRequest {
+        &v2::requests::DetectHashRequest {
             hash: fixture.transaction.hash.clone(),
         },
     )?;
-    let _: v2::TonlibResponse<v2::DetectHash> = live.get(
+    let _: v2::TonlibResponse<v2::responses::DetectHash> = live.get(
         &live.v2_url,
         "/detectHash",
-        &v2::DetectHashRequest {
+        &v2::requests::DetectHashRequest {
             hash: detected.result.hex,
         },
     )?;
@@ -103,10 +106,12 @@ fn libraries_request_accepts_one_and_multiple_hashes() -> Result<()> {
             "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=".to_owned(),
         ],
     ] {
-        let _: v2::TonlibResponse<v2::LibraryResult> = live.get(
+        let _: v2::TonlibResponse<v2::responses::LibraryResult> = live.get(
             &live.v2_url,
             "/getLibraries",
-            &v2::LibrariesRequest { libraries },
+            &v2::requests::LibrariesRequest {
+                libraries: Some(libraries),
+            },
         )?;
     }
     Ok(())
@@ -118,40 +123,40 @@ fn transactions_request_covers_limit_cursor_and_archival() -> Result<()> {
     let Some(live) = live()? else { return Ok(()) };
     let fixture = fixture(&live)?;
 
-    let _: v2::TonlibResponse<Vec<v2::Transaction>> = live.get(
+    let _: v2::TonlibResponse<Vec<v2::responses::Transaction>> = live.get(
         &live.v2_url,
         "/getTransactions",
-        &v2::TransactionsRequest {
+        &v2::requests::TransactionsRequest {
             address: fixture.transaction.account.clone(),
             limit: Some(2.into()),
             lt: None,
             hash: None,
             to_lt: None,
-            archival: Some(false),
+            archival: Some(false.into()),
         },
     )?;
-    let _: v2::TonlibResponse<Vec<v2::Transaction>> = live.get(
+    let _: v2::TonlibResponse<Vec<v2::responses::Transaction>> = live.get(
         &live.v2_url,
         "/getTransactions",
-        &v2::TransactionsRequest {
+        &v2::requests::TransactionsRequest {
             address: fixture.transaction.account.clone(),
             limit: Some(2.into()),
-            lt: Some(v2::StringOrNumber::String(fixture.transaction.lt.clone())),
+            lt: Some(fixture.transaction.lt.clone().into()),
             hash: Some(fixture.transaction.hash.clone()),
             to_lt: Some(0.into()),
-            archival: Some(true),
+            archival: Some(true.into()),
         },
     )?;
-    let _: v2::TonlibResponse<v2::RawTransactions> = live.get(
+    let _: v2::TonlibResponse<v2::responses::TransactionsStd> = live.get(
         &live.v2_url,
         "/getTransactionsStd",
-        &v2::TransactionsRequest {
+        &v2::requests::TransactionsRequest {
             address: fixture.transaction.account.clone(),
             limit: Some(2.into()),
             lt: None,
             hash: None,
             to_lt: None,
-            archival: Some(false),
+            archival: Some(false.into()),
         },
     )?;
     Ok(())
@@ -162,10 +167,10 @@ fn transactions_request_covers_limit_cursor_and_archival() -> Result<()> {
 fn block_transactions_ext_uses_raw_transaction_ext_wire_types() -> Result<()> {
     let Some(live) = live()? else { return Ok(()) };
     let masterchain = masterchain_info(&live)?;
-    let shards: v2::TonlibResponse<v2::Shards> = live.get(
+    let shards: v2::TonlibResponse<v2::responses::Shards> = live.get(
         &live.v2_url,
         "/getShards",
-        &v2::SeqnoRequest {
+        &v2::requests::SeqnoRequest {
             seqno: i32::try_from(masterchain.last.seqno)?.into(),
         },
     )?;
@@ -175,12 +180,12 @@ fn block_transactions_ext_uses_raw_transaction_ext_wire_types() -> Result<()> {
         .first()
         .context("latest masterchain block returned no shards")?;
 
-    let response: v2::TonlibResponse<v2::BlockTransactionsExt> = live.get(
+    let response: v2::TonlibResponse<v2::responses::BlockTransactionsExt> = live.get(
         &live.v2_url,
         "/getBlockTransactionsExt",
-        &v2::BlockTransactionsRequest {
-            workchain: block.workchain.into(),
-            shard: v2::StringOrNumber::String(block.shard.clone()),
+        &v2::requests::BlockTransactionsRequest {
+            workchain: i32::try_from(block.workchain)?.into(),
+            shard: block.shard.clone().into(),
             seqno: i32::try_from(block.seqno)?.into(),
             root_hash: Some(block.root_hash.clone()),
             file_hash: Some(block.file_hash.clone()),
@@ -195,11 +200,11 @@ fn block_transactions_ext_uses_raw_transaction_ext_wire_types() -> Result<()> {
         .transactions
         .first()
         .context("fixture block returned no extended transactions")?;
-    anyhow::ensure!(transaction.type_field == "raw.transactionExt");
+    anyhow::ensure!(transaction.type_tag == Default::default());
     if let Some(message) = transaction.in_msg.as_ref() {
-        anyhow::ensure!(message.type_field == "raw.message");
-        anyhow::ensure!(message.source.type_field == "accountAddress");
-        anyhow::ensure!(message.destination.type_field == "accountAddress");
+        anyhow::ensure!(message.type_tag == Default::default());
+        anyhow::ensure!(message.source.type_tag == Default::default());
+        anyhow::ensure!(message.destination.type_tag == Default::default());
     }
     Ok(())
 }
@@ -223,21 +228,20 @@ fn try_locate_tx_request_and_transaction_response() -> Result<()> {
         return Ok(());
     };
 
-    let _: v2::TonlibResponse<v2::Transaction> = live.get(
+    let _: v2::TonlibResponse<v2::responses::Transaction> = live.get(
         &live.v2_url,
         "/tryLocateTx",
-        &v2::TryLocateTxRequest {
+        &v2::requests::TryLocateTxRequest {
             source: message.source.clone().context("source disappeared")?,
             destination: message
                 .destination
                 .clone()
                 .context("destination disappeared")?,
-            created_lt: v2::StringOrNumber::String(
-                message
-                    .created_lt
-                    .clone()
-                    .context("created_lt disappeared")?,
-            ),
+            created_lt: (message
+                .created_lt
+                .clone()
+                .context("created_lt disappeared")?)
+            .into(),
         },
     )?;
     Ok(())
@@ -250,18 +254,18 @@ fn config_param_request_covers_param_alias_and_seqno() -> Result<()> {
     let seqno = i32::try_from(masterchain_info(&live)?.last.seqno)?;
 
     for request in [
-        v2::ConfigParamRequest {
+        v2::requests::ConfigParamRequest {
             param: Some(0.into()),
             config_id: None,
             seqno: None,
         },
-        v2::ConfigParamRequest {
+        v2::requests::ConfigParamRequest {
             param: None,
             config_id: Some(0.into()),
             seqno: Some(seqno.into()),
         },
     ] {
-        let _: v2::TonlibResponse<v2::ConfigInfo> =
+        let _: v2::TonlibResponse<v2::responses::ConfigInfo> =
             live.get(&live.v2_url, "/getConfigParam", &request)?;
     }
     Ok(())
@@ -274,10 +278,10 @@ fn config_all_request_covers_latest_and_explicit_seqno() -> Result<()> {
     let seqno = i32::try_from(masterchain_info(&live)?.last.seqno)?;
 
     for seqno in [None, Some(seqno.into())] {
-        let _: v2::TonlibResponse<v2::ConfigInfo> = live.get(
+        let _: v2::TonlibResponse<v2::responses::ConfigInfo> = live.get(
             &live.v2_url,
             "/getConfigAll",
-            &v2::ConfigAllRequest { seqno },
+            &v2::requests::ConfigAllRequest { seqno },
         )?;
     }
     Ok(())
@@ -290,12 +294,12 @@ fn block_header_request_covers_id_and_hashes() -> Result<()> {
     let block = masterchain_info(&live)?.last;
 
     for include_hashes in [false, true] {
-        let _: v2::TonlibResponse<v2::BlockHeader> = live.get(
+        let _: v2::TonlibResponse<v2::responses::BlockHeader> = live.get(
             &live.v2_url,
             "/getBlockHeader",
-            &v2::BlockHeaderRequest {
-                workchain: block.workchain.into(),
-                shard: v2::StringOrNumber::String(block.shard.clone()),
+            &v2::requests::BlockHeaderRequest {
+                workchain: i32::try_from(block.workchain)?.into(),
+                shard: block.shard.clone().into(),
                 seqno: i32::try_from(block.seqno)?.into(),
                 root_hash: include_hashes.then(|| block.root_hash.clone()),
                 file_hash: include_hashes.then(|| block.file_hash.clone()),
@@ -310,21 +314,21 @@ fn block_header_request_covers_id_and_hashes() -> Result<()> {
 fn block_data_request_returns_the_selected_block_boc() -> Result<()> {
     let Some(live) = live()? else { return Ok(()) };
     let block = masterchain_info(&live)?.last;
-    let request = v2::BlockDataRequest {
-        workchain: block.workchain.into(),
-        shard: v2::StringOrNumber::String(block.shard.clone()),
+    let request = v2::requests::BlockDataRequest {
+        workchain: i32::try_from(block.workchain)?.into(),
+        shard: block.shard.clone().into(),
         seqno: i32::try_from(block.seqno)?.into(),
         root_hash: Some(block.root_hash.clone()),
         file_hash: Some(block.file_hash.clone()),
-        archival: Some(true),
+        archival: Some(true.into()),
     };
 
-    let get_response: v2::TonlibResponse<v2::BlockData> =
+    let get_response: v2::TonlibResponse<v2::responses::BlockData> =
         live.get(&live.v2_url, "/getBlock", &request)?;
-    let post_response: v2::TonlibResponse<v2::BlockData> =
+    let post_response: v2::TonlibResponse<v2::responses::BlockData> =
         live.post(&live.v2_url, "/getBlock", &request)?;
 
-    anyhow::ensure!(get_response.result.type_field == "blocks.blockData");
+    anyhow::ensure!(get_response.result.type_tag == Default::default());
     anyhow::ensure!(get_response.result.id.root_hash == block.root_hash);
     anyhow::ensure!(get_response.result.id.file_hash == block.file_hash);
     anyhow::ensure!(get_response.result.data == post_response.result.data);
@@ -337,32 +341,32 @@ fn block_data_request_returns_the_selected_block_boc() -> Result<()> {
 fn lookup_block_request_covers_seqno_lt_and_unixtime() -> Result<()> {
     let Some(live) = live()? else { return Ok(()) };
     let block = &fixture(&live)?.block;
-    let gen_utime = v2::StringOrNumber::String(block.gen_utime.to_bigint()?.to_string());
+    let gen_utime = (block.gen_utime.to_bigint()?.to_string()).into();
 
     for request in [
-        v2::LookupBlockRequest {
+        v2::requests::LookupBlockRequest {
             workchain: block.workchain.into(),
-            shard: v2::StringOrNumber::String(block.shard.clone()),
+            shard: block.shard.clone().into(),
             seqno: Some(i32::try_from(block.seqno)?.into()),
             lt: None,
             unixtime: None,
         },
-        v2::LookupBlockRequest {
+        v2::requests::LookupBlockRequest {
             workchain: block.workchain.into(),
-            shard: v2::StringOrNumber::String(block.shard.clone()),
+            shard: block.shard.clone().into(),
             seqno: None,
-            lt: Some(v2::StringOrNumber::String(block.start_lt.clone())),
+            lt: Some(block.start_lt.clone().into()),
             unixtime: None,
         },
-        v2::LookupBlockRequest {
+        v2::requests::LookupBlockRequest {
             workchain: block.workchain.into(),
-            shard: v2::StringOrNumber::String(block.shard.clone()),
+            shard: block.shard.clone().into(),
             seqno: None,
             lt: None,
             unixtime: Some(gen_utime),
         },
     ] {
-        let _: v2::TonlibResponse<v2::TonBlockIdExt> =
+        let _: v2::TonlibResponse<v2::responses::TonBlockIdExt> =
             live.get(&live.v2_url, "/lookupBlock", &request)?;
     }
     Ok(())
@@ -372,45 +376,45 @@ fn lookup_block_request_covers_seqno_lt_and_unixtime() -> Result<()> {
 #[ignore = "optional live TON Center contract test"]
 fn run_get_method_request_covers_latest_and_historical_state() -> Result<()> {
     let Some(live) = live()? else { return Ok(()) };
-    let seqno = u32::try_from(masterchain_info(&live)?.last.seqno)?;
+    let seqno = i32::try_from(masterchain_info(&live)?.last.seqno)?;
 
     for seqno in [None, Some(seqno)] {
-        let _: v2::TonlibResponse<v2::RunGetMethodResult> = live.post(
+        let _: v2::TonlibResponse<v2::responses::RunGetMethodResult> = live.post(
             &live.v2_url,
             "/runGetMethod",
-            &v2::RunGetMethodRequest {
+            &v2::requests::RunGetMethodRequest::<v2::stack::LegacyStackEntry> {
                 address: ELECTOR_ADDRESS.to_owned(),
-                method: v2::StringOrNumber::String("participant_list_extended".to_owned()),
+                method: "participant_list_extended".into(),
                 stack: Vec::new(),
-                seqno: seqno.map(Into::into),
+                seqno,
             },
         )?;
 
-        let _: v2::TonlibResponse<v2::RunGetMethodStdResult> = live.post(
+        let _: v2::TonlibResponse<v2::responses::RunGetMethodStdResult> = live.post(
             &live.v2_url,
             "/runGetMethodStd",
-            &v2::RunGetMethodStdRequest {
+            &v2::requests::RunGetMethodStdRequest {
                 address: ELECTOR_ADDRESS.to_owned(),
-                method: v2::StringOrNumber::String("participant_list_extended".to_owned()),
+                method: "participant_list_extended".into(),
                 stack: Vec::new(),
-                seqno: seqno.map(|value| value as i32),
+                seqno: seqno.map(i64::from),
             },
         )?;
     }
 
     let boc = Boc::encode_base64(Cell::default());
-    let _: v2::TonlibResponse<v2::RunGetMethodStdResult> = live.post(
+    let _: v2::TonlibResponse<v2::responses::RunGetMethodStdResult> = live.post(
         &live.v2_url,
         "/runGetMethodStd",
-        &v2::RunGetMethodStdRequest {
+        &v2::requests::RunGetMethodStdRequest {
             address: ELECTOR_ADDRESS.to_owned(),
-            method: v2::StringOrNumber::Number(1),
+            method: 1.into(),
             stack: vec![
-                v2::TvmStackEntry::number(7),
-                v2::TvmStackEntry::cell(boc.clone()),
-                v2::TvmStackEntry::slice(boc),
-                v2::TvmStackEntry::tuple(Vec::new()),
-                v2::TvmStackEntry::list(Vec::new()),
+                v2::stack::TvmStackEntry::number(7),
+                v2::stack::TvmStackEntry::cell(boc.clone()),
+                v2::stack::TvmStackEntry::slice(boc),
+                v2::stack::TvmStackEntry::tuple(Vec::new()),
+                v2::stack::TvmStackEntry::list(Vec::new()),
             ],
             seqno: None,
         },
@@ -434,7 +438,7 @@ fn json_rpc_request_and_generic_response() -> Result<()> {
             "params": "ignored"
         }),
     ] {
-        let response: v2::JsonRpcResponse<v2::MasterchainInfo> =
+        let response: v2::TonlibResponse<v2::responses::MasterchainInfo> =
             live.post(&live.v2_url, "/jsonRPC", &request)?;
         assert!(response.jsonrpc.is_none());
         assert!(response.id.is_none());
@@ -447,7 +451,7 @@ fn json_rpc_request_and_generic_response() -> Result<()> {
     )?;
 
     let seqno = masterchain_info(&live)?.last.seqno;
-    let _: v2::JsonRpcResponse<v2::Shards> = live.post(
+    let _: v2::TonlibResponse<v2::responses::Shards> = live.post(
         &live.v2_url,
         "/jsonRPC",
         &json!({"method": "getShards", "params": {"seqno": seqno}}),
@@ -460,32 +464,36 @@ fn json_rpc_request_and_generic_response() -> Result<()> {
 fn send_boc_request_deserializes_real_error_without_broadcasting() -> Result<()> {
     let Some(live) = live()? else { return Ok(()) };
 
-    let response: TypedResponse<v2::TonlibResponse<v2::ResultOk>, v2::TonlibErrorResponse> = live
-        .post_either(
+    let response: TypedResponse<
+        v2::TonlibResponse<v2::responses::ResultOk>,
+        v2::TonlibErrorResponse,
+    > = live.post_either(
         &live.v2_url,
         "/sendBoc",
-        &v2::SendBocRequest {
+        &v2::requests::SendBocRequest {
             boc: invalid_boc().to_owned(),
         },
     )?;
     match response {
         TypedResponse::Success(response) => {
             anyhow::bail!(
-                "invalid BOC unexpectedly accepted: {}",
-                response.result.type_field
+                "invalid BOC unexpectedly accepted: {:?}",
+                response.result.type_tag
             )
         }
         TypedResponse::Error(_) => {}
     }
 
-    let response: TypedResponse<v2::TonlibResponse<v2::ExtMessageInfo>, v2::TonlibErrorResponse> =
-        live.post_either(
-            &live.v2_url,
-            "/sendBocReturnHash",
-            &v2::SendBocRequest {
-                boc: invalid_boc().to_owned(),
-            },
-        )?;
+    let response: TypedResponse<
+        v2::TonlibResponse<v2::responses::ExtMessageInfo>,
+        v2::TonlibErrorResponse,
+    > = live.post_either(
+        &live.v2_url,
+        "/sendBocReturnHash",
+        &v2::requests::SendBocRequest {
+            boc: invalid_boc().to_owned(),
+        },
+    )?;
     if let TypedResponse::Success(response) = response {
         anyhow::bail!(
             "invalid BOC unexpectedly accepted: {}",
@@ -501,17 +509,19 @@ fn json_rpc_typed_params_cover_address_information() -> Result<()> {
     let Some(live) = live()? else { return Ok(()) };
     let fixture = fixture(&live)?;
 
-    let _: v2::JsonRpcResponse<v2::AddressInformation> = live.post(
+    let _: v2::TonlibResponse<v2::responses::AddressInformation> = live.post(
         &live.v2_url,
         "/jsonRPC",
-        &v2::JsonRpcRequest::new(
-            "live-address-information",
-            "getAddressInformation",
-            v2::AddressInformationRequest {
-                address: fixture.transaction.account.clone(),
-                seqno: None,
-            },
-        ),
+        &v2::requests::JsonRpcRequest::<v2::stack::LegacyStackEntry> {
+            jsonrpc: Some(json!("2.0")),
+            id: Some(json!("live-address-information")),
+            call: v2::requests::JsonRpcCall::GetAddressInformation(
+                v2::requests::AddressInformationRequest {
+                    address: fixture.transaction.account.clone(),
+                    seqno: None,
+                },
+            ),
+        },
     )?;
 
     Ok(())

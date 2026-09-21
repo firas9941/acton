@@ -9,8 +9,8 @@ use crate::support::toncenter::{
 use base64::Engine as _;
 use serde_json::json;
 use std::fs;
-use ton_api::toncenter::v2::{requests as v2_requests, responses as v2_responses};
 use ton_api::toncenter::v3::responses as v3_responses;
+use toncenter::v2::{requests as v2_requests, responses as v2_responses};
 use tycho_types::cell::{Cell, CellFamily};
 use tycho_types::models::{CurrencyCollection, ExtraCurrencyCollection};
 use tycho_types::num::VarUint248;
@@ -54,11 +54,11 @@ fn wallet_and_extended_account_information_match_upstream_shapes() {
     let mut wallet_matrix = Vec::with_capacity(wallets.len());
     for (version, address) in wallets {
         let wallet_json = node.get_json(&format!("/api/v2/getWalletInformation?address={address}"));
-        let wallet: v2_responses::TonlibResponse<v2_responses::WalletInformation> =
+        let wallet: toncenter::v2::TonlibResponse<v2_responses::WalletInformation> =
             serde_json::from_value(wallet_json.clone())
                 .expect("wallet information must match the typed V2 response");
-        let extended: v2_responses::TonlibResponse<v2_responses::ExtendedAddressInformation> = node
-            .get_json_as(&format!(
+        let extended: toncenter::v2::TonlibResponse<v2_responses::ExtendedAddressInformation> =
+            node.get_json_as(&format!(
                 "/api/v2/getExtendedAddressInformation?address={address}"
             ));
         let fields = wallet_json["result"]
@@ -93,13 +93,13 @@ fn wallet_and_extended_account_information_match_upstream_shapes() {
     let nonexist = format!("0:{}", hex::encode([0x99; 32]));
     let nonexist_wallet_json =
         node.get_json(&format!("/api/v2/getWalletInformation?address={nonexist}"));
-    let nonexist_wallet: v2_responses::TonlibResponse<v2_responses::WalletInformation> =
+    let nonexist_wallet: toncenter::v2::TonlibResponse<v2_responses::WalletInformation> =
         serde_json::from_value(nonexist_wallet_json.clone())
             .expect("nonexistent wallet response must match the V2 DTO");
     let nonexist_fields = nonexist_wallet_json["result"]
         .as_object()
         .expect("wallet result must be an object");
-    let nonexist_extended: v2_responses::TonlibResponse<v2_responses::ExtendedAddressInformation> =
+    let nonexist_extended: toncenter::v2::TonlibResponse<v2_responses::ExtendedAddressInformation> =
         node.get_json_as(&format!(
             "/api/v2/getExtendedAddressInformation?address={nonexist}"
         ));
@@ -112,7 +112,7 @@ fn wallet_and_extended_account_information_match_upstream_shapes() {
             "state": {"type": "uninit", "balance": "1000000000"},
         }),
     );
-    let uninit_extended: v2_responses::TonlibResponse<v2_responses::ExtendedAddressInformation> =
+    let uninit_extended: toncenter::v2::TonlibResponse<v2_responses::ExtendedAddressInformation> =
         node.get_json_as(&format!(
             "/api/v2/getExtendedAddressInformation?address={uninit}"
         ));
@@ -129,7 +129,7 @@ fn wallet_and_extended_account_information_match_upstream_shapes() {
             },
         }),
     );
-    let frozen_extended: v2_responses::TonlibResponse<v2_responses::ExtendedAddressInformation> =
+    let frozen_extended: toncenter::v2::TonlibResponse<v2_responses::ExtendedAddressInformation> =
         node.get_json_as(&format!(
             "/api/v2/getExtendedAddressInformation?address={frozen}"
         ));
@@ -172,52 +172,55 @@ fn account_extra_currencies_survive_v2_and_v3_state_queries() {
     ])
     .expect("extra currencies must encode");
 
-    let sent: v2_responses::TonlibResponse<v2_responses::InternalMessageInfo> = node.post_json_as(
-        "/acton_sendInternalMessage",
-        &v2_requests::SendBocRequest {
-            boc: base64::engine::general_purpose::STANDARD.encode(
-                build_internal_message_boc_with_currency_and_body(
-                    test_std_addr(0x41),
-                    destination.clone(),
-                    value,
-                    Cell::empty_cell(),
-                ),
-            ),
-        },
-    );
-    let _ = find_v2_internal_message_by_hash(&node, &sent.result.hash);
-
-    let address: v2_responses::TonlibResponse<v2_responses::AddressInformation> = node.get_json_as(
-        &format!("/api/v2/getAddressInformation?address={destination_raw}"),
-    );
-    let first_seqno = address.result.block_id.seqno;
-    node.post_json(
-        "/acton_setNextBlockTimestamp",
-        &json!({"timestamp": address.result.sync_utime + 3600}),
-    );
-    let second: v2_responses::TonlibResponse<v2_responses::InternalMessageInfo> = node
-        .post_json_as(
+    let sent: toncenter::v2::TonlibResponse<ton_localnet::api::toncenter_v2::InternalMessageInfo> =
+        node.post_json_as(
             "/acton_sendInternalMessage",
             &v2_requests::SendBocRequest {
                 boc: base64::engine::general_purpose::STANDARD.encode(
                     build_internal_message_boc_with_currency_and_body(
-                        test_std_addr(0x43),
-                        destination,
-                        CurrencyCollection::new(1),
+                        test_std_addr(0x41),
+                        destination.clone(),
+                        value,
                         Cell::empty_cell(),
                     ),
                 ),
             },
         );
+    let _ = find_v2_internal_message_by_hash(&node, &sent.result.hash);
+
+    let address: toncenter::v2::TonlibResponse<v2_responses::AddressInformation> = node
+        .get_json_as(&format!(
+            "/api/v2/getAddressInformation?address={destination_raw}"
+        ));
+    let first_seqno = address.result.block_id.seqno;
+    node.post_json(
+        "/acton_setNextBlockTimestamp",
+        &json!({"timestamp": address.result.sync_utime + 3600}),
+    );
+    let second: toncenter::v2::TonlibResponse<
+        ton_localnet::api::toncenter_v2::InternalMessageInfo,
+    > = node.post_json_as(
+        "/acton_sendInternalMessage",
+        &v2_requests::SendBocRequest {
+            boc: base64::engine::general_purpose::STANDARD.encode(
+                build_internal_message_boc_with_currency_and_body(
+                    test_std_addr(0x43),
+                    destination,
+                    CurrencyCollection::new(1),
+                    Cell::empty_cell(),
+                ),
+            ),
+        },
+    );
     let _ = find_v2_internal_message_by_hash(&node, &second.result.hash);
-    let latest: v2_responses::TonlibResponse<v2_responses::AddressInformation> = node.get_json_as(
+    let latest: toncenter::v2::TonlibResponse<v2_responses::AddressInformation> = node.get_json_as(
         &format!("/api/v2/getAddressInformation?address={destination_raw}"),
     );
-    let historical: v2_responses::TonlibResponse<v2_responses::AddressInformation> = node
+    let historical: toncenter::v2::TonlibResponse<v2_responses::AddressInformation> = node
         .get_json_as(&format!(
             "/api/v2/getAddressInformation?address={destination_raw}&seqno={first_seqno}"
         ));
-    let extended: v2_responses::TonlibResponse<v2_responses::ExtendedAddressInformation> = node
+    let extended: toncenter::v2::TonlibResponse<v2_responses::ExtendedAddressInformation> = node
         .get_json_as(&format!(
             "/api/v2/getExtendedAddressInformation?address={destination_raw}"
         ));

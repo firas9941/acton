@@ -1379,7 +1379,7 @@ fn test_rpc_call_parses_toncenter_mixed_list_stack() {
                 "@extra": "0",
                 "result": {
                     "@type": "smc.runResult",
-                    "gas_used": "0",
+                    "gas_used": 0,
                     "stack": mixed_list_stack,
                     "exit_code": 0,
                     "block_id": {

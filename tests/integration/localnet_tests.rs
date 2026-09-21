@@ -32,10 +32,9 @@ use ton::ton_core::types::TonAddress;
 use ton::ton_wallet::{Mnemonic, TonWallet, WalletVersion};
 use ton_api::Network;
 use ton_api::toncenter::emulate::v1::EmulateTraceResponse;
-use ton_api::toncenter::v2::StringOrNumber;
-use ton_api::toncenter::v2::{requests as v2_requests, responses as v2_responses};
 use ton_api::toncenter::v3 as toncenter_v3;
 use ton_localnet::types::{Addr, Hash256};
+use toncenter::v2::{requests as v2_requests, responses as v2_responses};
 use tycho_types::boc::Boc;
 use tycho_types::cell::{Cell, CellBuilder, CellFamily, Store};
 use tycho_types::models::config::BlockchainConfigParams;
@@ -680,10 +679,10 @@ fn localnet_v2_json_rpc_entrypoints_share_canonical_envelope() {
     let node = project.localnet().start();
 
     let responses = ["/api/v2", "/api/v2/jsonRPC", "/api/v2/v2/jsonRPC"].map(|path| {
-        let response: v2_responses::JsonRpcResponse<v2_responses::MasterchainInfo> = node
+        let response: toncenter::v2::TonlibResponse<v2_responses::MasterchainInfo> = node
             .post_v2_json_rpc(
                 path,
-                StringOrNumber::String("masterchain".to_owned()),
+                "masterchain".into(),
                 "getMasterchainInfo",
                 v2_requests::EmptyRequest {},
             );
@@ -1199,22 +1198,22 @@ fn localnet_no_mining_bootstraps_startup_accounts_in_fork_mode() {
     let forked_historical_transactions = forked_node.get_json(&historical_transactions_path);
     let source_historical_shards = source_node.get_json(&historical_shards_path);
     let forked_historical_shards = forked_node.get_json(&historical_shards_path);
-    let source_historical_shards_rpc: v2_responses::JsonRpcResponse<v2_responses::Shards> =
+    let source_historical_shards_rpc: toncenter::v2::TonlibResponse<v2_responses::Shards> =
         source_node.post_v2_json_rpc(
             "/api/v2/jsonRPC",
-            StringOrNumber::String("source-shards".to_owned()),
+            "source-shards".into(),
             "getShards",
             v2_requests::SeqnoRequest {
-                seqno: StringOrNumber::String(historical_seqno.to_string()),
+                seqno: historical_seqno.to_string().into(),
             },
         );
-    let forked_historical_shards_rpc: v2_responses::JsonRpcResponse<v2_responses::Shards> =
+    let forked_historical_shards_rpc: toncenter::v2::TonlibResponse<v2_responses::Shards> =
         forked_node.post_v2_json_rpc(
             "/api/v2/jsonRPC",
-            StringOrNumber::String("forked-shards".to_owned()),
+            "forked-shards".into(),
             "getShards",
             v2_requests::SeqnoRequest {
-                seqno: StringOrNumber::String(historical_seqno.to_string()),
+                seqno: historical_seqno.to_string().into(),
             },
         );
     let forked_unpinned_account = forked_node.get_json(&format!(
@@ -1288,9 +1287,9 @@ fn localnet_no_mining_bootstraps_startup_accounts_in_fork_mode() {
             "shards_match_source":
                 forked_historical_shards["result"] == source_historical_shards["result"],
             "json_rpc_shards_match_source":
-                serde_json::to_value(&forked_historical_shards_rpc.response.result)
+                serde_json::to_value(&forked_historical_shards_rpc.result)
                     .expect("forked shards must serialize")
-                    == serde_json::to_value(&source_historical_shards_rpc.response.result)
+                    == serde_json::to_value(&source_historical_shards_rpc.result)
                         .expect("source shards must serialize"),
             "unpinned_account_includes_remote_transaction":
                 forked_unpinned_account["transactions"]

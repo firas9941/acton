@@ -3383,7 +3383,7 @@ fn toncenter_v2_seqno_ok_response() -> ToncenterV2MockResponse {
             "@extra": "0",
             "result": {
                 "@type": "smc.runResult",
-                "gas_used": "0",
+                "gas_used": 0,
                 "stack": [["num", "0x0"]],
                 "exit_code": 0,
                 "block_id": {

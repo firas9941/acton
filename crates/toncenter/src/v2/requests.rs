@@ -408,11 +408,11 @@ pub struct RunGetMethodStdRequest {
 }
 
 /// Request to execute a smart contract get method. Specify address, method name/ID, and input
-/// stack.
+/// stack. `S` defaults to TON Center stack entries; custom servers can use an extended entry type.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "openapi", derive(utoipa::ToSchema))]
 #[serde(deny_unknown_fields)]
-pub struct RunGetMethodRequest {
+pub struct RunGetMethodRequest<S = LegacyStackEntry> {
     /// Account to query, in raw workchain:hex or user-friendly base64 form.
     pub address: String,
     /// The get method name (e.g., `seqno`, `get_wallet_data`) or its numeric ID.
@@ -421,7 +421,7 @@ pub struct RunGetMethodRequest {
     /// strings and signed 64-bit integers. Use `cell` or `slice` with a `{ "bytes": "..." }`
     /// object, or `tvm.Cell` or `tvm.Slice` with a base64 `BoC` string. Nested tuple and list
     /// elements use standard `TONLib` stack entries.
-    pub stack: Vec<LegacyStackEntry>,
+    pub stack: Vec<S>,
     /// Masterchain block sequence number. Run the get method against the contract state at this
     /// specific block height. If omitted, uses the current state.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -430,12 +430,14 @@ pub struct RunGetMethodRequest {
 
 /// A typed call through `/jsonRPC`. The C++ proxy ignores JSON-RPC metadata and
 /// returns an ordinary `TONLib` envelope; do not require the ID to be echoed.
+///
+/// `S` defaults to TON Center stack entries and can represent custom server extensions.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "openapi", derive(utoipa::ToSchema))]
-pub struct JsonRpcRequest {
+pub struct JsonRpcRequest<S = LegacyStackEntry> {
     /// Method and its matching object-shaped parameters.
     #[serde(flatten)]
-    pub call: JsonRpcCall,
+    pub call: JsonRpcCall<S>,
     /// Optional protocol metadata. C++ ignores its contents; `"2.0"` is conventional.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub jsonrpc: Option<serde_json::Value>,
@@ -448,10 +450,11 @@ pub struct JsonRpcRequest {
 ///
 /// This models canonical calls. The server also tolerates omitted or non-object
 /// params for parameterless methods; transports should send an empty object.
+/// `S` selects the legacy get-method stack entry type and defaults to the v2 contract.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "openapi", derive(utoipa::ToSchema))]
 #[serde(tag = "method", content = "params")]
-pub enum JsonRpcCall {
+pub enum JsonRpcCall<S = LegacyStackEntry> {
     /// Validates an address and returns it in all standard formats. Use this to convert between address formats or to validate user input. Returns raw format (0:abc), base64 bounceable (EQ), base64 non-bounceable (UQ), and URL-safe variants.
     #[serde(rename = "detectAddress")]
     DetectAddress(DetectAddressRequest),
@@ -547,7 +550,7 @@ pub enum JsonRpcCall {
     GetLibraries(LibrariesRequest),
     /// Executes a read-only method on a smart contract. Get methods query contract state without sending a transaction. Common methods include `seqno` (wallet sequence number), `get_wallet_data` (wallet info), and `get_jetton_data` (token info). Method arguments are provided in the `stack` array.
     #[serde(rename = "runGetMethod")]
-    RunGetMethod(RunGetMethodRequest),
+    RunGetMethod(RunGetMethodRequest<S>),
     /// Executes a read-only method on a smart contract using typed stack entries. Input and output stack entries use explicit types (`TvmStackEntryNumber`, `TvmStackEntryCell`, etc.) for structured input/output handling. Common methods: `seqno` (wallet sequence number), `get_wallet_data` (wallet info), `get_jetton_data` (token info).
     #[serde(rename = "runGetMethodStd")]
     RunGetMethodStd(RunGetMethodStdRequest),

@@ -12,8 +12,8 @@ use serde::de::DeserializeOwned;
 use serde_json::Value;
 use ton::ton_core::cell::TonHash;
 use ton::ton_core::types::TonAddress;
-use ton_api::toncenter::v2::{TonlibErrorResponse, TonlibResponse};
 use ton_api::toncenter::v3::responses::{AccountStateFull, AccountStatesResponse};
+use toncenter::v2::{TonlibErrorResponse, TonlibResponse};
 
 use crate::contract_registry::{
     ArtifactIdRequest, CodeHashRequest, ContractArtifact, ContractListEntry, ContractRegistryError,
@@ -635,6 +635,8 @@ fn success<T: Serialize>(result: T) -> Response {
         ok: true,
         result,
         extra: extra(),
+        jsonrpc: None,
+        id: None,
     })
     .into_response()
 }
@@ -694,7 +696,7 @@ impl IntoResponse for ContractFacadeError {
                 ok: false,
                 error: self.to_string(),
                 code: i32::from(status.as_u16()),
-                extra: extra(),
+                extra: Some(extra()),
                 jsonrpc: None,
                 id: None,
             }),

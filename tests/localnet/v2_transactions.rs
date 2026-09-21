@@ -5,7 +5,7 @@ use crate::support::toncenter::{
 };
 use base64::Engine as _;
 use serde_json::json;
-use ton_api::toncenter::v2::{StringOrNumber, requests, responses};
+use toncenter::v2::{requests, responses};
 
 const ZERO_HASH_HEX: &str = "0000000000000000000000000000000000000000000000000000000000000000";
 
@@ -14,9 +14,9 @@ fn transaction_history_matches_upstream_cursor_and_boundary_semantics() {
     let project = jetton_v1_action_project("localnet-v2-transaction-history");
     let (node, output) = run_localnet_action_project(&project, "scripts/jetton.tolk");
     let account = extract_canonical_addr_marker(&output, "OWNER=");
-    let all: responses::TonlibResponse<Vec<responses::Transaction>> = node.get_json_as(&format!(
-        "/api/v2/getTransactions?address={account}&limit=100"
-    ));
+    let all: toncenter::v2::TonlibResponse<Vec<responses::Transaction>> = node.get_json_as(
+        &format!("/api/v2/getTransactions?address={account}&limit=100"),
+    );
     assert!(
         all.result.len() >= 4,
         "fixture must produce at least four account transactions"
@@ -43,10 +43,10 @@ fn transaction_history_matches_upstream_cursor_and_boundary_semantics() {
         .into_iter()
         .enumerate()
         .map(|(index, (encoding, hash))| {
-            let response: responses::JsonRpcResponse<Vec<responses::Transaction>> = node
+            let response: toncenter::v2::TonlibResponse<Vec<responses::Transaction>> = node
                 .post_v2_json_rpc(
                     "/api/v2",
-                    StringOrNumber::Unsigned(index as u64),
+                    (index as u64).to_string().into(),
                     "getTransactions",
                     transaction_request(
                         &account,
@@ -58,9 +58,8 @@ fn transaction_history_matches_upstream_cursor_and_boundary_semantics() {
                 );
             json!({
                 "encoding": encoding,
-                "count": response.response.result.len(),
+                "count": response.result.len(),
                 "starts_at_cursor": response
-                    .response
                     .result
                     .first()
                     .is_some_and(|tx| tx.transaction_id.hash == cursor.hash),
@@ -68,7 +67,7 @@ fn transaction_history_matches_upstream_cursor_and_boundary_semantics() {
         })
         .collect::<Vec<_>>();
 
-    let exact_rest: responses::TonlibResponse<Vec<responses::Transaction>> =
+    let exact_rest: toncenter::v2::TonlibResponse<Vec<responses::Transaction>> =
         node.get_json_as(&format!(
             "/api/v2/getTransactions?address={account}&limit=2&lt={cursor_lt}&hash={}",
             hex::encode(&cursor_bytes)
@@ -78,21 +77,22 @@ fn transaction_history_matches_upstream_cursor_and_boundary_semantics() {
         .lt
         .parse::<u64>()
         .expect("boundary LT must parse");
-    let bounded: responses::TonlibResponse<Vec<responses::Transaction>> = node.get_json_as(
+    let bounded: toncenter::v2::TonlibResponse<Vec<responses::Transaction>> = node.get_json_as(
         &format!("/api/v2/getTransactions?address={account}&limit=100&to_lt={boundary_lt}"),
     );
-    let negative_bound: responses::TonlibResponse<Vec<responses::Transaction>> = node.get_json_as(
-        &format!("/api/v2/getTransactions?address={account}&limit=100&to_lt=-1"),
-    );
+    let negative_bound: toncenter::v2::TonlibResponse<Vec<responses::Transaction>> = node
+        .get_json_as(&format!(
+            "/api/v2/getTransactions?address={account}&limit=100&to_lt=-1"
+        ));
 
-    let (invalid_rest_status, invalid_rest): (u16, responses::TonlibErrorResponse) = node
+    let (invalid_rest_status, invalid_rest): (u16, toncenter::v2::TonlibErrorResponse) = node
         .get_json_with_status_as(&format!(
             "/api/v2/getTransactions?address={account}&limit=2&lt={cursor_lt}&hash={ZERO_HASH_HEX}"
         ));
-    let (invalid_rpc_status, invalid_rpc): (u16, responses::TonlibErrorResponse) = node
+    let (invalid_rpc_status, invalid_rpc): (u16, toncenter::v2::TonlibErrorResponse) = node
         .post_v2_json_rpc_with_status(
             "/api/v2",
-            StringOrNumber::String("invalid-cursor".to_owned()),
+            "invalid-cursor".into(),
             "getTransactions",
             transaction_request(
                 &account,
@@ -103,17 +103,17 @@ fn transaction_history_matches_upstream_cursor_and_boundary_semantics() {
             ),
         );
 
-    let (decoded_zero_status, decoded_zero): (u16, responses::TonlibErrorResponse) = node
+    let (decoded_zero_status, decoded_zero): (u16, toncenter::v2::TonlibErrorResponse) = node
         .get_json_with_status_as(&format!(
             "/api/v2/getTransactions?address={account}&limit=2&lt=0&hash={ZERO_HASH_HEX}"
         ));
-    let std_zero: responses::TonlibResponse<responses::RawTransactions> = node.get_json_as(
+    let std_zero: toncenter::v2::TonlibResponse<responses::TransactionsStd> = node.get_json_as(
         &format!("/api/v2/getTransactionsStd?address={account}&limit=2&lt=0&hash={ZERO_HASH_HEX}"),
     );
-    let std_zero_rpc: responses::JsonRpcResponse<responses::RawTransactions> = node
+    let std_zero_rpc: toncenter::v2::TonlibResponse<responses::TransactionsStd> = node
         .post_v2_json_rpc(
             "/api/v2",
-            StringOrNumber::String("zero-cursor".to_owned()),
+            "zero-cursor".into(),
             "getTransactionsStd",
             transaction_request(
                 &account,
@@ -123,7 +123,7 @@ fn transaction_history_matches_upstream_cursor_and_boundary_semantics() {
                 None,
             ),
         );
-    let std_bounded: responses::TonlibResponse<responses::RawTransactions> = node.get_json_as(
+    let std_bounded: toncenter::v2::TonlibResponse<responses::TransactionsStd> = node.get_json_as(
         &format!("/api/v2/getTransactionsStd?address={account}&limit=3&to_lt={boundary_lt}"),
     );
 
@@ -160,8 +160,8 @@ fn transaction_history_matches_upstream_cursor_and_boundary_semantics() {
             "decoded_code": decoded_zero.code,
             "std_rest_count": std_zero.result.transactions.len(),
             "std_rest_previous_is_zero": std_zero.result.previous_transaction_id.lt == "0",
-            "std_rpc_count": std_zero_rpc.response.result.transactions.len(),
-            "std_rpc_previous_is_zero": std_zero_rpc.response.result.previous_transaction_id.lt == "0",
+            "std_rpc_count": std_zero_rpc.result.transactions.len(),
+            "std_rpc_previous_is_zero": std_zero_rpc.result.previous_transaction_id.lt == "0",
         },
         "std_boundary": {
             "count": std_bounded.result.transactions.len(),
@@ -191,10 +191,10 @@ fn transaction_request(
     requests::TransactionsRequest {
         address: address.to_owned(),
         limit: Some(2.into()),
-        lt: lt.map(StringOrNumber::Unsigned),
+        lt: lt.map(|lt| lt.to_string().into()),
         hash,
-        to_lt: to_lt.map(StringOrNumber::Number),
-        archival,
+        to_lt: to_lt.map(Into::into),
+        archival: archival.map(Into::into),
     }
 }
 

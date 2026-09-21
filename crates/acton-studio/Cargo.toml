@@ -11,6 +11,7 @@ repository = { workspace = true }
 license = { workspace = true }
 
 [dependencies]
+toncenter = { workspace = true }
 acton-localnet = { workspace = true }
 axum = { workspace = true }
 base64 = { workspace = true }

@@ -1,9 +1,7 @@
 //! Localnet-to-`TON Center` v2 response adapters.
 //!
-//! Known `OpenAPI` deviations:
-//! - `map_run_get_method` adds local `vm_log` to the legacy `RunGetMethodResult`;
-//! - `map_consensus_block` and internal-message responses are Acton extensions, not v2 `OpenAPI`
-//!   operations.
+//! The simulator includes a VM execution trace in legacy get-method results
+//! and provides a separate receipt for its internal-message submission endpoint.
 
 use crate::api::toncenter_v2_account_state::{
     V2ExtendedAccountState, read_v2_extended_account_state,
@@ -20,21 +18,54 @@ use crate::types::{Addr, BocBytes, ExtraCurrency, Hash256};
 use anyhow::Context;
 use base64::Engine;
 use serde_json::value::Value;
-use ton_api::toncenter::v2 as response;
 use ton_indexer_contracts::{WalletType, categorize_wallet};
-use tvm_ffi::json_stack::{legacy_stack_to_json, std_stack_from_tuple};
+use toncenter::v2::{responses as response, stack};
+use tvm_ffi::json_stack::std_stack_from_tuple;
 use tvm_ffi::stack::{Tuple, TupleItem};
 use tycho_types::boc::Boc;
 use tycho_types::cell::HashBytes as CellHashBytes;
 use tycho_types::models::{Base64StdAddrFlags, DisplayBase64StdAddr, StdAddr};
 
+/// Simulator get-method result with the VM trace produced during execution.
+#[derive(Debug, Clone, serde::Serialize)]
+pub struct SimulatorGetMethodResult {
+    /// Standard TON Center execution result and its block context.
+    #[serde(flatten)]
+    pub result: response::RunGetMethodResult<Value>,
+    /// Simulator execution trace; absent when no trace is available.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub vm_log: Option<String>,
+}
+
+/// Receipt for an internal message accepted by the simulator.
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct InternalMessageInfo {
+    /// Simulator receipt discriminator.
+    #[serde(rename = "@type")]
+    pub type_tag: toncenter::v2::tags::ResultOk,
+    /// Accepted message hash, encoded in base64.
+    pub hash: String,
+}
+
+fn token_content_data(content: &Value) -> response::TokenContentData {
+    match content {
+        Value::String(value) => response::TokenContentData::String(value.clone()),
+        Value::Object(value) => response::TokenContentData::TokenContentDict(Box::new(
+            response::TokenContentDict(value.clone().into_iter().collect()),
+        )),
+        _ => response::TokenContentData::TokenContentDict(Box::new(response::TokenContentDict(
+            Default::default(),
+        ))),
+    }
+}
+
 #[must_use]
 pub fn map_block_id(id: &LocalnetBlockId) -> response::TonBlockIdExt {
     response::TonBlockIdExt {
-        type_field: "ton.blockIdExt".to_owned(),
-        workchain: id.workchain,
+        type_tag: Default::default(),
+        workchain: i64::from(id.workchain),
         shard: id.shard.to_string(),
-        seqno: u64::from(id.seqno),
+        seqno: i64::from(id.seqno),
         root_hash: id.root_hash.to_base64(),
         file_hash: id.file_hash.to_base64(),
     }
@@ -44,7 +75,7 @@ pub fn map_block_id(id: &LocalnetBlockId) -> response::TonBlockIdExt {
 #[must_use]
 pub fn map_block_data(id: &LocalnetBlockId, data: &BocBytes) -> response::BlockData {
     response::BlockData {
-        type_field: "blocks.blockData".to_owned(),
+        type_tag: Default::default(),
         id: map_block_id(id),
         data: data.to_base64(),
     }
@@ -54,9 +85,9 @@ pub fn map_transactions(txs: &[LocalnetTransaction]) -> Vec<response::Transactio
     txs.iter().map(map_transaction).collect()
 }
 
-pub fn map_transactions_std(page: &LocalnetTransactionsPage) -> response::RawTransactions {
-    response::RawTransactions {
-        type_field: "raw.transactions".to_owned(),
+pub fn map_transactions_std(page: &LocalnetTransactionsPage) -> response::TransactionsStd {
+    response::TransactionsStd {
+        type_tag: Default::default(),
         transactions: page.transactions.iter().map(map_transaction_std).collect(),
         previous_transaction_id: map_internal_transaction_id(&page.previous_transaction_id),
     }
@@ -64,10 +95,10 @@ pub fn map_transactions_std(page: &LocalnetTransactionsPage) -> response::RawTra
 
 pub fn map_transaction(tx: &LocalnetTransaction) -> response::Transaction {
     response::Transaction {
-        type_field: "ext.transaction".to_owned(),
+        type_tag: Default::default(),
         address: map_account_address(&tx.address),
         account: tx.address.to_string(),
-        utime: u64::from(tx.utime),
+        utime: i64::from(tx.utime),
         data: tx.data.to_base64(),
         transaction_id: map_internal_transaction_id(&tx.transaction_id),
         fee: tx.total_fees.to_string(),
@@ -78,11 +109,11 @@ pub fn map_transaction(tx: &LocalnetTransaction) -> response::Transaction {
     }
 }
 
-pub fn map_transaction_std(tx: &LocalnetTransaction) -> response::RawTransaction {
-    response::RawTransaction {
-        type_field: "raw.transaction".to_owned(),
+pub fn map_transaction_std(tx: &LocalnetTransaction) -> response::TransactionStd {
+    response::TransactionStd {
+        type_tag: Default::default(),
         address: map_account_address(&tx.address),
-        utime: u64::from(tx.utime),
+        utime: i64::from(tx.utime),
         data: tx.data.to_base64(),
         transaction_id: map_internal_transaction_id(&tx.transaction_id),
         fee: tx.total_fees.to_string(),
@@ -95,10 +126,10 @@ pub fn map_transaction_std(tx: &LocalnetTransaction) -> response::RawTransaction
 
 pub fn map_transaction_ext(tx: &LocalnetTransaction) -> response::TransactionExt {
     response::TransactionExt {
-        type_field: "raw.transactionExt".to_owned(),
+        type_tag: Default::default(),
         address: map_account_address(&tx.address),
         account: tx.address.to_string(),
-        utime: u64::from(tx.utime),
+        utime: i64::from(tx.utime),
         data: tx.data.to_base64(),
         transaction_id: map_internal_transaction_id(&tx.transaction_id),
         fee: tx.total_fees.to_string(),
@@ -115,7 +146,8 @@ pub fn map_message(msg: &crate::localnet::LocalnetMessage) -> Option<response::M
         return None;
     }
     let mapped_data = map_decoded_message_data(msg);
-    Some(response::Message::Full(Box::new(response::MessageFull {
+    Some(response::Message {
+        type_tag: Default::default(),
         hash: msg.hash.to_base64(),
         source: msg
             .source
@@ -136,7 +168,7 @@ pub fn map_message(msg: &crate::localnet::LocalnetMessage) -> Option<response::M
         extra_currencies: map_extra_currencies(&msg.extra_currencies),
         message: mapped_data.message,
         message_decode_error: mapped_data.decode_error,
-    })))
+    })
 }
 
 #[must_use]
@@ -145,7 +177,7 @@ pub fn map_message_std(msg: &crate::localnet::LocalnetMessage) -> Option<respons
         return None;
     }
     Some(response::MessageStd {
-        type_field: "raw.message".to_owned(),
+        type_tag: Default::default(),
         hash: msg.hash.to_base64(),
         source: map_optional_account_address(msg.source.as_ref()),
         destination: map_optional_account_address(msg.destination.as_ref()),
@@ -162,8 +194,8 @@ pub fn map_message_std(msg: &crate::localnet::LocalnetMessage) -> Option<respons
 #[must_use]
 pub fn map_account_state(s: &LocalnetAccountState) -> response::AddressInformation {
     response::AddressInformation {
-        type_field: "raw.fullAccountState".to_owned(),
-        balance: response::StringOrNumber::String(s.balance.to_string()),
+        type_tag: Default::default(),
+        balance: s.balance.to_string(),
         extra_currencies: map_extra_currencies(&s.extra_currencies),
         last_transaction_id: map_internal_transaction_id(&s.last_transaction_id),
         block_id: map_block_id(&s.block_id),
@@ -174,18 +206,20 @@ pub fn map_account_state(s: &LocalnetAccountState) -> response::AddressInformati
             .as_ref()
             .map(Hash256::to_base64)
             .unwrap_or_default(),
-        sync_utime: s.sync_utime,
-        state: map_account_status(&s.state).to_owned(),
-        suspended: false,
+        sync_utime: s.sync_utime as i64,
+        state: map_account_status(&s.state),
+        suspended: Some(false),
     }
 }
 
 #[must_use]
-pub const fn map_account_status(status: &AccountStatus) -> &'static str {
+pub const fn map_account_status(status: &AccountStatus) -> response::AccountStateEnum {
     match status {
-        AccountStatus::Active => "active",
-        AccountStatus::Uninit | AccountStatus::Nonexist => "uninitialized",
-        AccountStatus::Frozen => "frozen",
+        AccountStatus::Active => response::AccountStateEnum::Active,
+        AccountStatus::Uninit | AccountStatus::Nonexist => {
+            response::AccountStateEnum::Uninitialized
+        }
+        AccountStatus::Frozen => response::AccountStateEnum::Frozen,
     }
 }
 
@@ -195,9 +229,9 @@ pub fn map_extended_account_state(
 ) -> anyhow::Result<response::ExtendedAddressInformation> {
     let (account_state, revision) = map_extended_account_state_kind(s)?;
     Ok(response::ExtendedAddressInformation {
-        type_field: "fullAccountState".to_owned(),
+        type_tag: Default::default(),
         address: response::AccountAddress {
-            type_field: "accountAddress".to_owned(),
+            type_tag: Default::default(),
             account_address: s
                 .address
                 .as_user_friendly_with_flags_from(requested_address)?,
@@ -206,24 +240,27 @@ pub fn map_extended_account_state(
         extra_currencies: map_extra_currencies(&s.extra_currencies),
         last_transaction_id: map_internal_transaction_id(&s.last_transaction_id),
         block_id: map_block_id(&s.block_id),
-        sync_utime: s.sync_utime,
+        sync_utime: s.sync_utime as i64,
         account_state,
-        revision,
+        revision: i64::from(revision),
     })
 }
 
 fn map_extended_account_state_kind(
     state: &LocalnetAccountState,
-) -> anyhow::Result<(response::AccountStateKind, i32)> {
+) -> anyhow::Result<(response::AccountState, i32)> {
     if state.code.is_none() {
         return Ok((
-            response::AccountStateKind::Uninited {
-                frozen_hash: state
-                    .frozen_hash
-                    .as_ref()
-                    .map(Hash256::to_base64)
-                    .unwrap_or_default(),
-            },
+            response::AccountState::AccountStateUninited(Box::new(
+                response::AccountStateUninited {
+                    type_tag: Default::default(),
+                    frozen_hash: state
+                        .frozen_hash
+                        .as_ref()
+                        .map(Hash256::to_base64)
+                        .unwrap_or_default(),
+                },
+            )),
             0,
         ));
     }
@@ -239,15 +276,36 @@ fn map_extended_account_state_kind(
                         .to_be_bytes(),
                 ));
                 match wallet.version {
-                    V2WalletVersion::V3R1 => {
-                        (response::AccountStateKind::WalletV3 { wallet_id, seqno }, 1)
-                    }
-                    V2WalletVersion::V3R2 => {
-                        (response::AccountStateKind::WalletV3 { wallet_id, seqno }, 2)
-                    }
-                    V2WalletVersion::V4R2 => {
-                        (response::AccountStateKind::WalletV4 { wallet_id, seqno }, 2)
-                    }
+                    V2WalletVersion::V3R1 => (
+                        response::AccountState::AccountStateWalletV3(Box::new(
+                            response::AccountStateWalletV3 {
+                                type_tag: Default::default(),
+                                wallet_id,
+                                seqno,
+                            },
+                        )),
+                        1,
+                    ),
+                    V2WalletVersion::V3R2 => (
+                        response::AccountState::AccountStateWalletV3(Box::new(
+                            response::AccountStateWalletV3 {
+                                type_tag: Default::default(),
+                                wallet_id,
+                                seqno,
+                            },
+                        )),
+                        2,
+                    ),
+                    V2WalletVersion::V4R2 => (
+                        response::AccountState::AccountStateWalletV4(Box::new(
+                            response::AccountStateWalletV4 {
+                                type_tag: Default::default(),
+                                wallet_id,
+                                seqno,
+                            },
+                        )),
+                        2,
+                    ),
                     version => {
                         anyhow::bail!("Unsupported specialized V2 wallet state: {version:?}")
                     }
@@ -258,35 +316,43 @@ fn map_extended_account_state_kind(
                 wallet_id,
                 seqno,
             } => (
-                response::AccountStateKind::WalletHighloadV1 {
-                    wallet_id: i64::from(wallet_id),
-                    seqno: i32::from_be_bytes(seqno.to_be_bytes()),
-                },
+                response::AccountState::AccountStateWalletHighloadV1(Box::new(
+                    response::AccountStateWalletHighloadV1 {
+                        type_tag: Default::default(),
+                        wallet_id: i64::from(wallet_id),
+                        seqno: i32::from_be_bytes(seqno.to_be_bytes()),
+                    },
+                )),
                 revision,
             ),
             V2ExtendedAccountState::HighloadV2 {
                 revision,
                 wallet_id,
             } => (
-                response::AccountStateKind::WalletHighloadV2 {
-                    wallet_id: i64::from(wallet_id),
-                },
+                response::AccountState::AccountStateWalletHighloadV2(Box::new(
+                    response::AccountStateWalletHighloadV2 {
+                        type_tag: Default::default(),
+                        wallet_id: i64::from(wallet_id),
+                    },
+                )),
                 revision,
             ),
             V2ExtendedAccountState::Dns {
                 revision,
                 wallet_id,
             } => (
-                response::AccountStateKind::Dns {
+                response::AccountState::AccountStateDns(Box::new(response::AccountStateDns {
+                    type_tag: Default::default(),
                     wallet_id: i64::from(wallet_id),
-                },
+                })),
                 revision,
             ),
         });
     }
 
     Ok((
-        response::AccountStateKind::Raw {
+        response::AccountState::AccountStateRaw(Box::new(response::AccountStateRaw {
+            type_tag: Default::default(),
             code: encode_optional_boc(state.code.as_ref()),
             data: encode_optional_boc(state.data.as_ref()),
             frozen_hash: state
@@ -294,7 +360,7 @@ fn map_extended_account_state_kind(
                 .as_ref()
                 .map(Hash256::to_base64)
                 .unwrap_or_default(),
-        },
+        })),
         0,
     ))
 }
@@ -350,14 +416,14 @@ pub(crate) fn map_wallet_information(
     wallet: Option<&V2WalletState>,
 ) -> response::WalletInformation {
     response::WalletInformation {
-        type_field: "ext.accounts.walletInformation".to_owned(),
+        type_tag: Default::default(),
         wallet: wallet.is_some(),
         balance: s.balance.to_string(),
-        account_state: map_account_status(&s.state).to_owned(),
+        account_state: map_account_status(&s.state),
         last_transaction_id: map_internal_transaction_id(&s.last_transaction_id),
-        wallet_type: wallet.map(|wallet| wallet.version.name().to_owned()),
+        wallet_type: wallet.map(|wallet| wallet.version.into()),
         seqno: wallet.map(|wallet| i64::from(i32::from_be_bytes(wallet.seqno.to_be_bytes()))),
-        wallet_id: wallet.and_then(|wallet| wallet.wallet_id),
+        wallet_id: wallet.and_then(|wallet| wallet.wallet_id).map(i64::from),
         is_signature_allowed: wallet.and_then(|wallet| wallet.is_signature_allowed),
     }
 }
@@ -368,31 +434,37 @@ pub fn map_token_data(
     jetton_wallet_code: Option<&BocBytes>,
 ) -> Option<response::TokenData> {
     if let Some(master) = info.jetton_master.as_ref() {
-        return Some(response::TokenData::JettonMaster {
-            address: master.address.to_string(),
-            contract_type: "jetton_master".to_owned(),
-            total_supply: master.total_supply.to_string(),
-            mintable: master.mintable,
-            admin_address: master.admin_address.as_ref().map(ToString::to_string),
-            jetton_content: map_token_content(&master.jetton_content),
-            jetton_wallet_code: jetton_wallet_code
-                .map(BocBytes::to_base64)
-                .unwrap_or_default(),
-        });
+        return Some(response::TokenData::JettonMasterData(Box::new(
+            response::JettonMasterData {
+                type_tag: Default::default(),
+                address: master.address.to_string(),
+                contract_type: response::JettonMasterDataContractType::JettonMaster,
+                total_supply: master.total_supply.to_string(),
+                mintable: master.mintable,
+                admin_address: master.admin_address.as_ref().map(ToString::to_string),
+                jetton_content: map_token_content(&master.jetton_content),
+                jetton_wallet_code: jetton_wallet_code
+                    .map(BocBytes::to_base64)
+                    .unwrap_or_default(),
+            },
+        )));
     }
 
     if let Some(wallet) = info.jetton_wallet.as_ref() {
-        return Some(response::TokenData::JettonWallet {
-            address: wallet.address.to_string(),
-            contract_type: "jetton_wallet".to_owned(),
-            balance: wallet.balance.to_string(),
-            owner: wallet.owner_address.to_string(),
-            jetton: wallet.jetton_address.to_string(),
-            mintless_is_claimed: wallet.mintless_is_claimed,
-            jetton_wallet_code: jetton_wallet_code
-                .map(BocBytes::to_base64)
-                .unwrap_or_default(),
-        });
+        return Some(response::TokenData::JettonWalletData(Box::new(
+            response::JettonWalletData {
+                type_tag: Default::default(),
+                address: wallet.address.to_string(),
+                contract_type: response::JettonWalletDataContractType::JettonWallet,
+                balance: wallet.balance.to_string(),
+                owner: wallet.owner_address.to_string(),
+                jetton: wallet.jetton_address.to_string(),
+                mintless_is_claimed: wallet.mintless_is_claimed,
+                jetton_wallet_code: jetton_wallet_code
+                    .map(BocBytes::to_base64)
+                    .unwrap_or_default(),
+            },
+        )));
     }
 
     if let Some(collection) = info.nft_collection.as_ref() {
@@ -405,63 +477,78 @@ pub fn map_token_data(
 }
 
 fn map_nft_collection_data(collection: &NftCollectionMeta) -> response::TokenData {
-    response::TokenData::NftCollection {
+    response::TokenData::NftCollectionData(Box::new(response::NftCollectionData {
+        type_tag: Default::default(),
         address: collection.address.to_string(),
-        contract_type: "nft_collection".to_owned(),
+        contract_type: response::NftCollectionDataContractType::NftCollection,
         next_item_index: collection.next_item_index.clone(),
         owner_address: collection.owner_address.as_ref().map(ToString::to_string),
         collection_content: map_token_content(&collection.collection_content),
-    }
+    }))
 }
 
 fn map_nft_item_data(item: &NftItemMeta, dns: Option<&DnsRecordMeta>) -> response::TokenData {
-    response::TokenData::NftItem {
+    response::TokenData::NftItemData(Box::new(response::NftItemData {
+        type_tag: Default::default(),
         address: item.address.to_string(),
-        contract_type: "nft_item".to_owned(),
+        contract_type: response::NftItemDataContractType::NftItem,
         init: item.init,
         index: item.index.clone(),
         collection_address: item.collection_address.as_ref().map(ToString::to_string),
         owner_address: item.owner_address.as_ref().map(ToString::to_string),
         content: dns.map_or_else(
-            || response::NftContent::Token(map_token_content(&item.content)),
+            || {
+                response::NftItemDataContent::TokenContent(Box::new(map_token_content(
+                    &item.content,
+                )))
+            },
             map_dns_content,
         ),
-    }
+    }))
 }
 
-fn map_dns_content(record: &DnsRecordMeta) -> response::NftContent {
-    response::NftContent::Dns(Box::new(response::DnsContent {
+fn map_dns_content(record: &DnsRecordMeta) -> response::NftItemDataContent {
+    response::NftItemDataContent::DnsContent(Box::new(response::DnsContent {
         domain: record.domain.clone(),
         data: response::DnsRecordSet {
             dns_next_resolver: record.next_resolver.as_ref().map(|address| {
-                response::DnsRecord::NextResolver {
-                    resolver: map_smc_address(address),
-                }
+                response::DnsRecord::DnsRecordNextResolver(Box::new(
+                    response::DnsRecordNextResolver {
+                        type_tag: Default::default(),
+                        resolver: map_smc_address(address),
+                    },
+                ))
             }),
-            wallet: record
-                .wallet
-                .as_ref()
-                .map(|address| response::DnsRecord::SmcAddress {
+            wallet: record.wallet.as_ref().map(|address| {
+                response::DnsRecord::DnsRecordSmcAddress(Box::new(response::DnsRecordSmcAddress {
+                    type_tag: Default::default(),
                     smc_addr: map_smc_address(address),
-                }),
-            site: record
-                .site_adnl
-                .map(|hash| response::DnsRecord::AdnlAddress {
-                    adnl_addr: hash.to_hex(),
-                }),
-            storage: record
-                .storage_bag_id
-                .map(|hash| response::DnsRecord::StorageAddress {
-                    bag_id: hash.to_hex(),
-                }),
+                }))
+            }),
+            site: record.site_adnl.map(|hash| {
+                response::DnsRecord::DnsRecordAdnlAddress(Box::new(
+                    response::DnsRecordAdnlAddress {
+                        type_tag: Default::default(),
+                        adnl_addr: hash.to_hex(),
+                    },
+                ))
+            }),
+            storage: record.storage_bag_id.map(|hash| {
+                response::DnsRecord::DnsRecordStorageAddress(Box::new(
+                    response::DnsRecordStorageAddress {
+                        type_tag: Default::default(),
+                        bag_id: hash.to_hex(),
+                    },
+                ))
+            }),
             ..Default::default()
         },
     }))
 }
 
-fn map_smc_address(address: &Addr) -> response::SmcAddress {
-    response::SmcAddress {
-        type_field: "addr_std".to_owned(),
+fn map_smc_address(address: &Addr) -> response::SmcAddr {
+    response::SmcAddr {
+        type_tag: Default::default(),
         workchain_id: address.workchain,
         address: Hash256(address.addr).to_hex(),
     }
@@ -470,8 +557,8 @@ fn map_smc_address(address: &Addr) -> response::SmcAddress {
 fn map_token_content(content: &Value) -> response::TokenContent {
     let Some(map) = content.as_object() else {
         return response::TokenContent {
-            kind: "onchain".to_owned(),
-            data: content.clone(),
+            kind: response::TokenContentType::Onchain,
+            data: token_content_data(content),
         };
     };
 
@@ -479,21 +566,21 @@ fn map_token_content(content: &Value) -> response::TokenContent {
         && let Some(uri) = map.get("uri").and_then(Value::as_str)
     {
         return response::TokenContent {
-            kind: "offchain".to_owned(),
-            data: Value::String(uri.to_owned()),
+            kind: response::TokenContentType::Offchain,
+            data: response::TokenContentData::String(uri.to_owned()),
         };
     }
 
     response::TokenContent {
-        kind: "onchain".to_owned(),
-        data: content.clone(),
+        kind: response::TokenContentType::Onchain,
+        data: token_content_data(content),
     }
 }
 
 #[must_use]
-pub fn map_shard_account_cell(boc: &BocBytes) -> response::TvmCell {
-    response::TvmCell {
-        type_field: "tvm.cell".to_owned(),
+pub fn map_shard_account_cell(boc: &BocBytes) -> stack::TvmCell {
+    stack::TvmCell {
+        type_tag: Default::default(),
         bytes: boc.to_base64(),
     }
 }
@@ -506,17 +593,19 @@ pub struct RunGetMethodStackDepthError;
 
 pub fn map_run_get_method(
     r: &LocalnetRunGetMethodResult,
-) -> anyhow::Result<response::RunGetMethodResult> {
+) -> anyhow::Result<SimulatorGetMethodResult> {
     let stack = decode_run_get_method_stack(r)?;
     ensure_legacy_stack_depth(&stack)?;
 
-    Ok(response::RunGetMethodResult {
-        type_field: "smc.runResult".to_owned(),
-        gas_used: response::StringOrNumber::Unsigned(r.gas_used),
-        stack: legacy_stack_to_json(&stack)?,
-        exit_code: r.exit_code,
-        block_id: map_block_id(&r.block_id),
-        last_transaction_id: map_internal_transaction_id(&r.last_transaction_id),
+    Ok(SimulatorGetMethodResult {
+        result: response::RunGetMethodResult {
+            type_tag: Default::default(),
+            gas_used: i64::try_from(r.gas_used)?,
+            stack: tvm_ffi::json_stack::legacy_stack_to_json(&stack)?,
+            exit_code: r.exit_code,
+            block_id: map_block_id(&r.block_id),
+            last_transaction_id: map_internal_transaction_id(&r.last_transaction_id),
+        },
         vm_log: Some(r.vm_log.to_string()),
     })
 }
@@ -528,7 +617,7 @@ pub fn map_run_get_method_std(
     ensure_std_stack_depth(&stack)?;
 
     Ok(response::RunGetMethodStdResult {
-        type_field: "smc.runResult".to_owned(),
+        type_tag: Default::default(),
         gas_used: i64::try_from(r.gas_used)?,
         stack: std_stack_from_tuple(&stack),
         exit_code: r.exit_code,
@@ -569,15 +658,15 @@ fn ensure_stack_depth<'a>(
 #[must_use]
 pub fn map_block_transactions(block: &LocalnetBlockTransactions) -> response::BlockTransactions {
     response::BlockTransactions {
-        type_field: "blocks.transactions".to_owned(),
+        type_tag: Default::default(),
         id: map_block_id(&block.id),
-        req_count: block.requested_count,
+        req_count: block.requested_count as i64,
         incomplete: block.incomplete,
         transactions: block
             .transactions
             .iter()
             .map(|transaction| response::ShortTxId {
-                type_field: "blocks.shortTxId".to_owned(),
+                type_tag: Default::default(),
                 mode: 135,
                 account: transaction.address.to_string(),
                 lt: transaction.transaction_id.lt.to_string(),
@@ -590,7 +679,7 @@ pub fn map_block_transactions(block: &LocalnetBlockTransactions) -> response::Bl
 #[must_use]
 pub fn map_send_boc(_: &LocalnetAcceptedExternalMessage) -> response::ResultOk {
     response::ResultOk {
-        type_field: "ok".to_owned(),
+        type_tag: Default::default(),
     }
 }
 
@@ -598,9 +687,9 @@ pub fn map_block_transactions_ext(
     bt: &LocalnetBlockTransactions,
 ) -> response::BlockTransactionsExt {
     response::BlockTransactionsExt {
-        type_field: "blocks.transactionsExt".to_owned(),
+        type_tag: Default::default(),
         id: map_block_id(&bt.id),
-        req_count: bt.requested_count,
+        req_count: bt.requested_count as i64,
         incomplete: bt.incomplete,
         transactions: bt.transactions.iter().map(map_transaction_ext).collect(),
     }
@@ -609,7 +698,7 @@ pub fn map_block_transactions_ext(
 #[must_use]
 pub fn map_masterchain_info(mi: &LocalnetMasterchainInfo) -> response::MasterchainInfo {
     response::MasterchainInfo {
-        type_field: "blocks.masterchainInfo".to_owned(),
+        type_tag: Default::default(),
         last: map_block_id(&mi.last),
         state_root_hash: mi.state_root_hash.to_base64(),
         init: map_block_id(&mi.init),
@@ -619,21 +708,21 @@ pub fn map_masterchain_info(mi: &LocalnetMasterchainInfo) -> response::Mastercha
 #[must_use]
 pub fn map_consensus_block(cb: &LocalnetConsensusBlock) -> response::ConsensusBlock {
     response::ConsensusBlock {
-        type_field: "ext.blocks.consensusBlock".to_owned(),
-        consensus_block: cb.consensus_block,
-        timestamp: cb.timestamp,
+        type_tag: Default::default(),
+        consensus_block: cb.consensus_block as i32,
+        timestamp: cb.timestamp as i32,
     }
 }
 
 #[must_use]
 pub fn map_libraries(libs: &[LocalnetLibrary]) -> response::LibraryResult {
     response::LibraryResult {
-        type_field: "smc.libraryResult".to_owned(),
+        type_tag: Default::default(),
         result: libs
             .iter()
             .filter_map(|lib| lib.data.as_ref().map(|data| (lib, data)))
             .map(|(lib, data)| response::LibraryEntry {
-                type_field: "smc.libraryEntry".to_owned(),
+                type_tag: Default::default(),
                 hash: lib.hash.to_base64(),
                 data: data.to_base64(),
             })
@@ -646,18 +735,16 @@ pub fn map_send_boc_return_hash(
     message: &LocalnetAcceptedExternalMessage,
 ) -> response::ExtMessageInfo {
     response::ExtMessageInfo {
-        type_field: "raw.extMessageInfo".to_owned(),
+        type_tag: Default::default(),
         hash: message.msg_hash.to_base64(),
         hash_norm: message.msg_hash_norm.to_base64(),
     }
 }
 
 #[must_use]
-pub fn map_send_internal_message(
-    message: &LocalnetAcceptedInternalMessage,
-) -> response::InternalMessageInfo {
-    response::InternalMessageInfo {
-        type_field: "ok".to_owned(),
+pub fn map_send_internal_message(message: &LocalnetAcceptedInternalMessage) -> InternalMessageInfo {
+    InternalMessageInfo {
+        type_tag: Default::default(),
         hash: message.msg_hash.to_base64(),
     }
 }
@@ -665,30 +752,30 @@ pub fn map_send_internal_message(
 #[must_use]
 pub fn map_block_header(bh: &LocalnetBlockHeader) -> response::BlockHeader {
     response::BlockHeader {
-        type_field: "blocks.header".to_owned(),
+        type_tag: Default::default(),
         id: map_block_id(&bh.id),
-        global_id: bh.global_id,
-        version: bh.version,
+        global_id: i64::from(bh.global_id),
+        version: i64::from(bh.version),
         after_merge: bh.after_merge,
         after_split: bh.after_split,
         before_split: bh.before_split,
         want_merge: bh.want_merge,
         want_split: bh.want_split,
-        validator_list_hash_short: bh.validator_list_hash_short,
-        catchain_seqno: bh.catchain_seqno,
-        min_ref_mc_seqno: bh.min_ref_mc_seqno,
+        validator_list_hash_short: i64::from(bh.validator_list_hash_short),
+        catchain_seqno: i64::from(bh.catchain_seqno),
+        min_ref_mc_seqno: i64::from(bh.min_ref_mc_seqno),
         is_key_block: bh.is_key_block,
-        prev_key_block_seqno: bh.prev_key_block_seqno,
+        prev_key_block_seqno: i64::from(bh.prev_key_block_seqno),
         start_lt: bh.start_lt.to_string(),
         end_lt: bh.end_lt.to_string(),
-        gen_utime: bh.gen_utime,
+        gen_utime: i64::from(bh.gen_utime),
         prev_blocks: bh.prev_blocks.iter().map(map_block_id).collect(),
     }
 }
 
 pub fn map_shards(shards: &[LocalnetBlockId]) -> response::Shards {
     response::Shards {
-        type_field: "blocks.shards".to_owned(),
+        type_tag: Default::default(),
         shards: shards.iter().map(map_block_id).collect(),
     }
 }
@@ -701,9 +788,9 @@ pub fn map_lookup_block(id: &LocalnetBlockId) -> response::TonBlockIdExt {
 #[must_use]
 pub fn map_config_info(config: &BocBytes) -> response::ConfigInfo {
     response::ConfigInfo {
-        type_field: "configInfo".to_owned(),
-        config: response::TvmCell {
-            type_field: "tvm.cell".to_owned(),
+        type_tag: Default::default(),
+        config: stack::TvmCell {
+            type_tag: Default::default(),
             bytes: config.to_base64(),
         },
     }
@@ -712,9 +799,9 @@ pub fn map_config_info(config: &BocBytes) -> response::ConfigInfo {
 #[must_use]
 pub fn map_out_msg_queue_sizes(mi: &LocalnetMasterchainInfo) -> response::OutMsgQueueSizes {
     response::OutMsgQueueSizes {
-        type_field: "blocks.outMsgQueueSizes".to_owned(),
+        type_tag: Default::default(),
         shards: vec![response::OutMsgQueueSize {
-            type_field: "blocks.outMsgQueueSize".to_owned(),
+            type_tag: Default::default(),
             id: map_block_id(&mi.last),
             size: 0,
         }],
@@ -767,19 +854,23 @@ pub fn map_detect_address(
     .to_string();
 
     response::DetectAddress {
-        type_field: "ext.utils.detectedAddress".to_owned(),
+        type_tag: Default::default(),
         raw_form: addr.to_string(),
         bounceable: response::DetectAddressBase64Variant {
-            type_field: "ext.utils.detectedAddressVariant".to_owned(),
+            type_tag: Default::default(),
             b64: bounceable_b64,
             b64url: bounceable_b64url,
         },
         non_bounceable: response::DetectAddressBase64Variant {
-            type_field: "ext.utils.detectedAddressVariant".to_owned(),
+            type_tag: Default::default(),
             b64: non_bounceable_b64,
             b64url: non_bounceable_b64url,
         },
-        given_type: given_type.to_owned(),
+        given_type: match given_type {
+            "raw_form" => response::DetectAddressGivenType::RawForm,
+            "friendly_bounceable" => response::DetectAddressGivenType::FriendlyBounceable,
+            _ => response::DetectAddressGivenType::FriendlyNonBounceable,
+        },
         test_only: flags.testnet,
     }
 }
@@ -787,7 +878,7 @@ pub fn map_detect_address(
 #[must_use]
 pub fn map_detect_hash(hash: &Hash256) -> response::DetectHash {
     response::DetectHash {
-        type_field: "ext.utils.detectedHash".to_owned(),
+        type_tag: Default::default(),
         b64: hash.to_base64(),
         b64url: base64::engine::general_purpose::URL_SAFE.encode(hash.0),
         hex: hash.to_hex(),
@@ -818,7 +909,7 @@ fn encode_optional_boc(data: Option<&BocBytes>) -> String {
 
 fn map_internal_transaction_id(id: &LocalnetTransactionId) -> response::InternalTransactionId {
     response::InternalTransactionId {
-        type_field: "internal.transactionId".to_owned(),
+        type_tag: Default::default(),
         lt: id.lt.to_string(),
         hash: id.hash.to_base64(),
     }
@@ -826,14 +917,14 @@ fn map_internal_transaction_id(id: &LocalnetTransactionId) -> response::Internal
 
 fn map_account_address(addr: &Addr) -> response::AccountAddress {
     response::AccountAddress {
-        type_field: "accountAddress".to_owned(),
+        type_tag: Default::default(),
         account_address: addr.as_user_friendly(),
     }
 }
 
 fn map_optional_account_address(addr: Option<&Addr>) -> response::AccountAddress {
     response::AccountAddress {
-        type_field: "accountAddress".to_owned(),
+        type_tag: Default::default(),
         account_address: addr
             .copied()
             .map(Addr::as_user_friendly)
@@ -841,15 +932,16 @@ fn map_optional_account_address(addr: Option<&Addr>) -> response::AccountAddress
     }
 }
 
-fn map_raw_message_data(msg: &crate::localnet::LocalnetMessage) -> response::MessageData {
-    response::MessageData::Raw {
-        body: msg.body.to_base64(),
-        init_state: msg.init_state.to_base64(),
-    }
+fn map_raw_message_data(msg: &crate::localnet::LocalnetMessage) -> response::MsgData {
+    response::MsgData::MsgDataRaw(Box::new(response::MsgDataRaw {
+        type_tag: Default::default(),
+        body: Some(msg.body.to_base64()),
+        init_state: Some(msg.init_state.to_base64()),
+    }))
 }
 
 struct MappedMessageData {
-    data: response::MessageData,
+    data: response::MsgData,
     message: Option<String>,
     decode_error: Option<String>,
 }
@@ -863,9 +955,10 @@ fn map_decoded_message_data(msg: &crate::localnet::LocalnetMessage) -> MappedMes
         && let Ok(message) = String::from_utf8(bytes.clone())
     {
         return MappedMessageData {
-            data: response::MessageData::Text {
-                text: base64::engine::general_purpose::STANDARD.encode(bytes),
-            },
+            data: response::MsgData::MsgDataText(Box::new(response::MsgDataText {
+                type_tag: Default::default(),
+                text: Some(base64::engine::general_purpose::STANDARD.encode(bytes)),
+            })),
             message: Some(message),
             decode_error: None,
         };
@@ -901,9 +994,9 @@ fn map_extra_currencies(currencies: &[ExtraCurrency]) -> Vec<response::ExtraCurr
     currencies
         .iter()
         .map(|currency| response::ExtraCurrencyBalance {
-            type_field: "extraCurrency".to_owned(),
+            type_tag: Default::default(),
             id: i32::from_be_bytes(currency.id.to_be_bytes()),
-            amount: response::StringOrNumber::String(currency.amount.to_string()),
+            amount: currency.amount.to_string(),
         })
         .collect()
 }
@@ -989,13 +1082,19 @@ mod tests {
         };
         let mapped = map_wallet_information(&account_state(None), Some(&wallet));
 
-        assert_eq!(mapped.type_field, "ext.accounts.walletInformation");
+        assert_eq!(mapped.type_tag, Default::default());
         assert!(mapped.wallet);
-        assert_eq!(mapped.wallet_type.as_deref(), Some("wallet v4 r2"));
+        assert_eq!(
+            mapped
+                .wallet_type
+                .as_ref()
+                .map(response::WalletInformationWalletType::as_str),
+            Some("wallet v4 r2")
+        );
         assert_eq!(mapped.seqno, Some(-1));
         assert_eq!(mapped.wallet_id, Some(42));
         assert_eq!(mapped.balance, "123");
-        assert_eq!(mapped.account_state, "active");
+        assert_eq!(mapped.account_state, response::AccountStateEnum::Active);
     }
 
     #[test]
@@ -1026,7 +1125,10 @@ mod tests {
             .expect("V5 beta data must parse")
             .expect("V5 beta code must be recognized");
         let mapped = map_wallet_information(&account, Some(&wallet));
-        assert_eq!(wallet.version.name(), "wallet v5 beta");
+        assert_eq!(
+            response::WalletInformationWalletType::from(wallet.version).as_str(),
+            "wallet v5 beta"
+        );
         assert_eq!(mapped.seqno, Some(-1));
         assert_eq!(mapped.wallet_id, Some(-1));
         assert_eq!(mapped.is_signature_allowed, Some(false));
@@ -1104,7 +1206,7 @@ mod tests {
 
         assert!(matches!(
             mapped.account_state,
-            response::AccountStateKind::Uninited { .. }
+            response::AccountState::AccountStateUninited(_)
         ));
     }
 
@@ -1207,21 +1309,23 @@ mod tests {
 
         let mapped = map_token_data(&info, Some(&wallet_code)).expect("jetton data must map");
 
-        let response::TokenData::JettonMaster {
-            contract_type,
-            total_supply,
-            jetton_wallet_code,
-            jetton_content,
-            ..
-        } = mapped
-        else {
+        let response::TokenData::JettonMasterData(data) = mapped else {
             panic!("expected jetton master token data");
         };
-        assert_eq!(contract_type, "jetton_master");
-        assert_eq!(total_supply, "1000");
-        assert_eq!(jetton_wallet_code, "AQID");
-        assert_eq!(jetton_content.kind, "onchain");
-        assert_eq!(jetton_content.data["symbol"].as_str(), Some("LOC"));
+        assert_eq!(
+            data.contract_type,
+            response::JettonMasterDataContractType::JettonMaster
+        );
+        assert_eq!(data.total_supply, "1000");
+        assert_eq!(data.jetton_wallet_code, "AQID");
+        assert_eq!(
+            data.jetton_content.kind,
+            response::TokenContentType::Onchain
+        );
+        assert_eq!(
+            serde_json::to_value(data.jetton_content.data).unwrap()["symbol"],
+            "LOC"
+        );
     }
 
     #[test]

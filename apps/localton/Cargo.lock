@@ -1741,6 +1741,7 @@ dependencies = [
  "ton-fullnode-master",
  "ton-hardfork",
  "ton-liteapi",
+ "toncenter",
  "tonutils",
  "tower-http",
  "tracing",
@@ -3485,6 +3486,14 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 2.0.119",
+]
+
+[[package]]
+name = "toncenter"
+version = "2.1.15"
+dependencies = [
+ "serde",
+ "serde_json",
 ]
 
 [[package]]

@@ -26,7 +26,8 @@ use ton_executor::DEFAULT_CONFIG;
 use ton_executor::ExecutorVerbosity;
 use ton_executor::get::{GetExecutor, GetMethodResult, RunGetMethodArgs};
 use ton_executor::message::PrevBlockId;
-use tvm_ffi::json_stack::{TvmStackEntry, json_to_legacy_stack, std_stack_into_tuple};
+use toncenter::v2::stack::TvmStackEntry;
+use tvm_ffi::json_stack::{json_to_legacy_stack, std_stack_into_tuple};
 use tvm_ffi::stack::{Tuple, TupleItem};
 use tycho_types::boc::Boc;
 use tycho_types::cell::{Cell, CellBuilder, CellFamily, Store};
@@ -91,7 +92,7 @@ impl LocalnetBlockId {
 }
 
 fn localnet_block_id_from_v2(
-    block: &ton_api::toncenter::v2::TonBlockIdExt,
+    block: &toncenter::v2::responses::TonBlockIdExt,
 ) -> anyhow::Result<LocalnetBlockId> {
     let shard = block.shard.trim();
     let shard = if shard.starts_with('-') {
@@ -104,7 +105,10 @@ fn localnet_block_id_from_v2(
         u64::from_str_radix(hex, 16)? as i64
     };
     Ok(LocalnetBlockId {
-        workchain: block.workchain,
+        workchain: block
+            .workchain
+            .try_into()
+            .context("Remote workchain does not fit i32")?,
         shard,
         seqno: Seqno::try_from(block.seqno)
             .context("Remote block seqno does not fit localnet block numbering")?,
@@ -1154,21 +1158,21 @@ impl Localnet {
 
     pub async fn get_fork_masterchain_block_v2(
         &self,
-    ) -> anyhow::Result<Option<ton_api::toncenter::v2::BlockHeader>> {
+    ) -> anyhow::Result<Option<toncenter::v2::responses::BlockHeader>> {
         let StateSource::Remote(provider) = self.state_source().await? else {
             return Ok(None);
         };
         let Some(seqno) = provider
             .fork_block_number
-            .map(u32::try_from)
+            .map(i32::try_from)
             .transpose()
             .context("Fork block seqno does not fit TON Center v2 request")?
         else {
             return Ok(None);
         };
-        let request = ton_api::toncenter::v2::BlockHeaderRequest {
+        let request = toncenter::v2::requests::BlockHeaderRequest {
             workchain: (-1).into(),
-            shard: ton_api::toncenter::v2::StringOrNumber::String(i64::MIN.to_string()),
+            shard: i64::MIN.into(),
             seqno: seqno.into(),
             root_hash: None,
             file_hash: None,
@@ -1412,8 +1416,8 @@ impl Localnet {
         workchain: i32,
         shard: i64,
         seqno: u32,
-        request: ton_api::toncenter::v2::BlockHeaderRequest,
-    ) -> anyhow::Result<Option<ton_api::toncenter::v2::BlockHeader>> {
+        request: toncenter::v2::requests::BlockHeaderRequest,
+    ) -> anyhow::Result<Option<toncenter::v2::responses::BlockHeader>> {
         let Some(provider) = self
             .historical_block_provider(workchain, shard, seqno)
             .await?
@@ -1434,8 +1438,8 @@ impl Localnet {
         workchain: i32,
         shard: i64,
         seqno: u32,
-        request: ton_api::toncenter::v2::BlockDataRequest,
-    ) -> anyhow::Result<Option<ton_api::toncenter::v2::BlockData>> {
+        request: toncenter::v2::requests::BlockDataRequest,
+    ) -> anyhow::Result<Option<toncenter::v2::responses::BlockData>> {
         let Some(provider) = self
             .historical_block_provider(workchain, shard, seqno)
             .await?
@@ -1451,8 +1455,8 @@ impl Localnet {
         workchain: i32,
         shard: i64,
         seqno: u32,
-        request: ton_api::toncenter::v2::BlockTransactionsRequest,
-    ) -> anyhow::Result<Option<ton_api::toncenter::v2::BlockTransactions>> {
+        request: toncenter::v2::requests::BlockTransactionsRequest,
+    ) -> anyhow::Result<Option<toncenter::v2::responses::BlockTransactions>> {
         let Some(provider) = self
             .historical_block_provider(workchain, shard, seqno)
             .await?
@@ -1469,8 +1473,8 @@ impl Localnet {
         workchain: i32,
         shard: i64,
         seqno: u32,
-        request: ton_api::toncenter::v2::BlockTransactionsRequest,
-    ) -> anyhow::Result<Option<ton_api::toncenter::v2::BlockTransactionsExt>> {
+        request: toncenter::v2::requests::BlockTransactionsRequest,
+    ) -> anyhow::Result<Option<toncenter::v2::responses::BlockTransactionsExt>> {
         let Some(provider) = self
             .historical_block_provider(workchain, shard, seqno)
             .await?
@@ -1485,7 +1489,7 @@ impl Localnet {
     pub async fn get_historical_shards_v2(
         &self,
         seqno: u32,
-    ) -> anyhow::Result<Option<ton_api::toncenter::v2::Shards>> {
+    ) -> anyhow::Result<Option<toncenter::v2::responses::Shards>> {
         let Some(provider) = self.historical_provider(i32::try_from(seqno).ok()).await? else {
             return Ok(None);
         };
@@ -1530,8 +1534,8 @@ impl Localnet {
         workchain: i32,
         shard: i64,
         requested_seqno: Option<u32>,
-        request: ton_api::toncenter::v2::LookupBlockRequest,
-    ) -> anyhow::Result<Option<ton_api::toncenter::v2::TonBlockIdExt>> {
+        request: toncenter::v2::requests::LookupBlockRequest,
+    ) -> anyhow::Result<Option<toncenter::v2::responses::TonBlockIdExt>> {
         let provider = if let Some(seqno) = requested_seqno {
             let Some(provider) = self
                 .historical_block_provider(workchain, shard, seqno)

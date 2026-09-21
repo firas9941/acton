@@ -31,20 +31,20 @@ pub(crate) enum V2WalletVersion {
     V5R1,
 }
 
-impl V2WalletVersion {
-    pub(crate) const fn name(self) -> &'static str {
-        match self {
-            Self::V1R1 => "wallet v1 r1",
-            Self::V1R2 => "wallet v1 r2",
-            Self::V1R3 => "wallet v1 r3",
-            Self::V2R1 => "wallet v2 r1",
-            Self::V2R2 => "wallet v2 r2",
-            Self::V3R1 => "wallet v3 r1",
-            Self::V3R2 => "wallet v3 r2",
-            Self::V4R1 => "wallet v4 r1",
-            Self::V4R2 => "wallet v4 r2",
-            Self::V5Beta => "wallet v5 beta",
-            Self::V5R1 => "wallet v5 r1",
+impl From<V2WalletVersion> for toncenter::v2::responses::WalletInformationWalletType {
+    fn from(version: V2WalletVersion) -> Self {
+        match version {
+            V2WalletVersion::V1R1 => Self::WalletV1R1,
+            V2WalletVersion::V1R2 => Self::WalletV1R2,
+            V2WalletVersion::V1R3 => Self::WalletV1R3,
+            V2WalletVersion::V2R1 => Self::WalletV2R1,
+            V2WalletVersion::V2R2 => Self::WalletV2R2,
+            V2WalletVersion::V3R1 => Self::WalletV3R1,
+            V2WalletVersion::V3R2 => Self::WalletV3R2,
+            V2WalletVersion::V4R1 => Self::WalletV4R1,
+            V2WalletVersion::V4R2 => Self::WalletV4R2,
+            V2WalletVersion::V5Beta => Self::WalletV5Beta,
+            V2WalletVersion::V5R1 => Self::WalletV5R1,
         }
     }
 }

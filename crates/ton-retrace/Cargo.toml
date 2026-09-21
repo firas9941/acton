@@ -11,6 +11,7 @@ repository = { workspace = true }
 license = { workspace = true }
 
 [dependencies]
+toncenter = { workspace = true }
 ton-api = { workspace = true }
 ton-executor = { workspace = true }
 tasm-core = { workspace = true }

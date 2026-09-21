@@ -1,3 +1,5 @@
+use self::toncenter::v3;
+use ::toncenter::v2;
 use anyhow::{Context, anyhow};
 use num_bigint::BigInt;
 use reqwest::blocking::Response;
@@ -11,7 +13,6 @@ use std::path::{Path, PathBuf};
 use std::sync::{LazyLock, Mutex};
 use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 pub use ton_networks::{CustomNetworkUrls, Network};
-use toncenter::{v2, v3};
 use toncenter_keys::api_key as toncenter_api_key;
 use tvm_ffi::stack::TupleItem;
 use tycho_types::boc::Boc;
@@ -469,7 +470,7 @@ impl TonApiClient {
         address: &str,
         method: &str,
         stack: &[serde_json::Value],
-    ) -> anyhow::Result<v2::RunGetMethodResult> {
+    ) -> anyhow::Result<v2::responses::RunGetMethodResult<serde_json::Value>> {
         self.run_get_method_at_block(address, method, stack, None)
     }
 
@@ -480,26 +481,26 @@ impl TonApiClient {
         method: &str,
         stack: &[serde_json::Value],
         seqno: Option<u64>,
-    ) -> anyhow::Result<v2::RunGetMethodResult> {
+    ) -> anyhow::Result<v2::responses::RunGetMethodResult<serde_json::Value>> {
         let url = format!(
             "{}/jsonRPC",
             self.network.toncenter_v2_url(&self.custom_networks)?
         );
 
         let seqno = seqno
-            .map(u32::try_from)
+            .map(i32::try_from)
             .transpose()
             .context("Masterchain seqno does not fit TON Center v2 request")?;
-        let json = v2::JsonRpcRequest::new(
-            "1",
-            "runGetMethod",
-            v2::RunGetMethodRequest {
+        let json = v2::requests::JsonRpcRequest {
+            jsonrpc: Some(serde_json::json!("2.0")),
+            id: Some(serde_json::json!("1")),
+            call: v2::requests::JsonRpcCall::RunGetMethod(v2::requests::RunGetMethodRequest {
                 address: address.to_owned(),
-                method: v2::StringOrNumber::String(method.to_owned()),
+                method: method.into(),
                 stack: stack.to_vec(),
-                seqno: seqno.map(Into::into),
-            },
-        );
+                seqno,
+            }),
+        };
 
         let response = self.send_with_retry(
             || self.build_post_request(&url).json(&json),
@@ -513,11 +514,12 @@ impl TonApiClient {
             anyhow::bail!("Run get method failed: {error_text}");
         }
 
-        let result: v2::JsonRpcResponse<v2::RunGetMethodResult> = response
-            .json()
-            .context("Failed to parse runGetMethod response")?;
+        let result: v2::TonlibResponse<v2::responses::RunGetMethodResult<serde_json::Value>> =
+            response
+                .json()
+                .context("Failed to parse runGetMethod response")?;
 
-        Ok(result.into_result())
+        Ok(result.result)
     }
 
     /// Get wallet seqno
@@ -534,8 +536,7 @@ impl TonApiClient {
             return Ok((0, true));
         }
 
-        let stack = result
-            .parse_stack_tuple()
+        let stack = tvm_ffi::json_stack::json_to_legacy_stack(result.stack)
             .context("Failed to parse runGetMethod stack for seqno")?;
 
         if let Some(TupleItem::Int(value)) = stack.first() {
@@ -560,7 +561,7 @@ impl TonApiClient {
             .map_err(|err| SendBocError::new(SendBocErrorKind::Other, format!("{err:#}")))?;
         let url = format!("{base_url}/sendBoc");
 
-        let json = v2::SendBocRequest {
+        let json = v2::requests::SendBocRequest {
             boc: boc.to_owned(),
         };
 
@@ -580,7 +581,9 @@ impl TonApiClient {
         Ok(())
     }
 
-    pub fn get_masterchain_info(&self) -> anyhow::Result<v2::TonlibResponse<v2::MasterchainInfo>> {
+    pub fn get_masterchain_info(
+        &self,
+    ) -> anyhow::Result<v2::TonlibResponse<v2::responses::MasterchainInfo>> {
         let url = format!(
             "{}/getMasterchainInfo",
             self.network.toncenter_v2_url(&self.custom_networks)?
@@ -601,7 +604,8 @@ impl TonApiClient {
     }
 
     pub fn get_last_block_seqno(&self) -> anyhow::Result<u64> {
-        Ok(self.get_masterchain_info()?.result.last.seqno)
+        u64::try_from(self.get_masterchain_info()?.result.last.seqno)
+            .context("Invalid masterchain seqno")
     }
 
     pub fn get_masterchain_snapshot(
@@ -626,15 +630,15 @@ impl TonApiClient {
 
     fn get_masterchain_block_time(&self, seqno: u64) -> anyhow::Result<u32> {
         let request_seqno =
-            u32::try_from(seqno).context("Masterchain seqno does not fit TON Center v2 request")?;
-        let header = self.get_block_header_v2(&v2::BlockHeaderRequest {
+            i32::try_from(seqno).context("Masterchain seqno does not fit TON Center v2 request")?;
+        let header = self.get_block_header_v2(&v2::requests::BlockHeaderRequest {
             workchain: (-1).into(),
-            shard: v2::StringOrNumber::String(i64::MIN.to_string()),
+            shard: i64::MIN.into(),
             seqno: request_seqno.into(),
             root_hash: None,
             file_hash: None,
         })?;
-        Ok(header.gen_utime)
+        u32::try_from(header.gen_utime).context("Invalid block timestamp")
     }
 
     pub fn get_masterchain_snapshot_cached(
@@ -760,12 +764,12 @@ impl TonApiClient {
         )
     }
 
-    pub fn get_shards(&self, seqno: u32) -> anyhow::Result<v2::Shards> {
+    pub fn get_shards(&self, seqno: u32) -> anyhow::Result<v2::responses::Shards> {
         let url = format!(
             "{}/getShards?seqno={seqno}",
             self.network.toncenter_v2_url(&self.custom_networks)?
         );
-        let response: v2::TonlibResponse<v2::Shards> = self.get_json(
+        let response: v2::TonlibResponse<v2::responses::Shards> = self.get_json(
             &url,
             "Failed to send getShards request",
             "Failed to parse getShards response",
@@ -775,34 +779,37 @@ impl TonApiClient {
 
     pub fn get_block_header_v2(
         &self,
-        request: &v2::BlockHeaderRequest,
-    ) -> anyhow::Result<v2::BlockHeader> {
+        request: &v2::requests::BlockHeaderRequest,
+    ) -> anyhow::Result<v2::responses::BlockHeader> {
         self.get_v2_result("/getBlockHeader", request)
     }
 
     /// Fetches the exact serialized block selected by a `TON Center` v2 block request.
-    pub fn get_block_v2(&self, request: &v2::BlockDataRequest) -> anyhow::Result<v2::BlockData> {
+    pub fn get_block_v2(
+        &self,
+        request: &v2::requests::BlockDataRequest,
+    ) -> anyhow::Result<v2::responses::BlockData> {
         self.get_v2_result("/getBlock", request)
     }
 
     pub fn get_block_transactions_v2(
         &self,
-        request: &v2::BlockTransactionsRequest,
-    ) -> anyhow::Result<v2::BlockTransactions> {
+        request: &v2::requests::BlockTransactionsRequest,
+    ) -> anyhow::Result<v2::responses::BlockTransactions> {
         self.get_v2_result("/getBlockTransactions", request)
     }
 
     pub fn get_block_transactions_ext_v2(
         &self,
-        request: &v2::BlockTransactionsRequest,
-    ) -> anyhow::Result<v2::BlockTransactionsExt> {
+        request: &v2::requests::BlockTransactionsRequest,
+    ) -> anyhow::Result<v2::responses::BlockTransactionsExt> {
         self.get_v2_result("/getBlockTransactionsExt", request)
     }
 
     pub fn lookup_block_v2(
         &self,
-        request: &v2::LookupBlockRequest,
-    ) -> anyhow::Result<v2::TonBlockIdExt> {
+        request: &v2::requests::LookupBlockRequest,
+    ) -> anyhow::Result<v2::responses::TonBlockIdExt> {
         self.get_v2_result("/lookupBlock", request)
     }
 
@@ -810,7 +817,7 @@ impl TonApiClient {
         &self,
         seqno: Option<u64>,
         address: &str,
-    ) -> anyhow::Result<v2::AddressInformation> {
+    ) -> anyhow::Result<v2::responses::AddressInformation> {
         let url = format!(
             "{}/getAddressInformation?address={}{}",
             self.network.toncenter_v2_url(&self.custom_networks)?,
@@ -829,7 +836,7 @@ impl TonApiClient {
             return Err(Self::handle_fail(response));
         }
 
-        let data: v2::TonlibResponse<v2::AddressInformation> = response
+        let data: v2::TonlibResponse<v2::responses::AddressInformation> = response
             .json()
             .context("Failed to parse TON Center response")?;
 
@@ -859,7 +866,7 @@ impl TonApiClient {
             return Err(Self::handle_fail(response));
         }
 
-        let data: v2::TonlibResponse<v2::TvmCell> = response
+        let data: v2::TonlibResponse<v2::stack::TvmCell> = response
             .json()
             .context("Failed to parse getShardAccountCell response")?;
 
@@ -887,7 +894,7 @@ impl TonApiClient {
             return Err(Self::handle_fail(response));
         }
 
-        let data: v2::TonlibResponse<v2::LibraryResult> = response
+        let data: v2::TonlibResponse<v2::responses::LibraryResult> = response
             .json()
             .context("Failed to parse TON Center libraries response")?;
 
@@ -903,12 +910,12 @@ impl TonApiClient {
 
     pub fn get_config_all(&self, seqno: Option<u64>) -> anyhow::Result<Cell> {
         let seqno = seqno
-            .map(u32::try_from)
+            .map(i32::try_from)
             .transpose()
             .context("Masterchain seqno does not fit TON Center v2 request")?;
-        let data: v2::ConfigInfo = self.get_v2_result(
+        let data: v2::responses::ConfigInfo = self.get_v2_result(
             "/getConfigAll",
-            &v2::ConfigAllRequest {
+            &v2::requests::ConfigAllRequest {
                 seqno: seqno.map(Into::into),
             },
         )?;
@@ -930,7 +937,7 @@ impl TonApiClient {
         limit: Option<u32>,
         lt: Option<String>,
         hash: Option<String>,
-    ) -> anyhow::Result<Vec<v2::Transaction>> {
+    ) -> anyhow::Result<Vec<v2::responses::Transaction>> {
         let url = format!(
             "{}/getTransactions",
             self.network.toncenter_v2_url(&self.custom_networks)?
@@ -956,7 +963,7 @@ impl TonApiClient {
             anyhow::bail!("TON Center API returned status: {}", response.status());
         }
 
-        let data: v2::TonlibResponse<Vec<v2::Transaction>> = response
+        let data: v2::TonlibResponse<Vec<v2::responses::Transaction>> = response
             .json()
             .context("Failed to parse getTransactions response")?;
 
@@ -979,11 +986,11 @@ impl TonApiClient {
             return Err(Self::handle_fail(response));
         }
 
-        let data: v2::TonlibResponse<v2::StringOrNumber> = response
+        let data: v2::TonlibResponse<String> = response
             .json()
             .context("Failed to parse getAddressBalance response")?;
 
-        data.result.to_bigint()
+        data.result.parse().context("Invalid account balance")
     }
 
     fn handle_fail(response: Response) -> anyhow::Error {

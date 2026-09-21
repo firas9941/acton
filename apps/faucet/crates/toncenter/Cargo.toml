@@ -12,6 +12,7 @@ license = { workspace = true }
 doctest = false
 
 [dependencies]
+toncenter-api = { package = "toncenter", path = "../../../../crates/toncenter" }
 anyhow = { workspace = true }
 faucet-config = { workspace = true }
 reqwest = { workspace = true, features = ["json"] }
@@ -19,3 +20,8 @@ serde = { workspace = true }
 serde_json = { workspace = true }
 tokio = { workspace = true, features = ["time"] }
 tracing = { workspace = true }
+
+[dev-dependencies]
+axum = "0.8.8"
+expect-test = "1.5"
+tokio = { workspace = true, features = ["macros", "rt-multi-thread", "net"] }

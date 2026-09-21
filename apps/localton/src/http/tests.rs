@@ -380,9 +380,11 @@ async fn faucet_submission_returns_confirmed_internal_message_hash() {
                 assert_eq!(payload["boc"], "AQID");
                 Json(json!({
                     "ok": true,
+                    "@extra": "test",
                     "result": {
                         "@type": "raw.extMessageInfo",
-                        "hash": "external-message-hash"
+                        "hash": "external-message-hash",
+                        "hash_norm": "normalized-external-message-hash"
                     }
                 }))
             }),
@@ -399,25 +401,37 @@ async fn faucet_submission_returns_confirmed_internal_message_hash() {
                     let result = if attempts.fetch_add(1, Ordering::SeqCst) == 0 {
                         json!([])
                     } else {
+                        let message = |hash: &str, sender: &str, recipient: &str| json!({
+                            "@type": "ext.message",
+                            "hash": hash,
+                            "source": sender,
+                            "destination": recipient,
+                            "value": "0",
+                            "extra_currencies": [],
+                            "fwd_fee": "0",
+                            "ihr_fee": "0",
+                            "created_lt": "1",
+                            "body_hash": "body-hash",
+                            "msg_data": { "@type": "msg.dataRaw", "body": "" }
+                        });
                         json!([{
-                            "in_msg": {
-                                "hash": "external-message-hash"
-                            },
+                            "@type": "ext.transaction",
+                            "address": { "@type": "accountAddress", "account_address": source },
+                            "account": source,
+                            "utime": 1,
+                            "data": "",
+                            "transaction_id": { "@type": "internal.transactionId", "lt": "1", "hash": "transaction-hash" },
+                            "fee": "0",
+                            "storage_fee": "0",
+                            "other_fee": "0",
+                            "in_msg": message("external-message-hash", "", &source),
                             "out_msgs": [
-                                {
-                                    "hash": "other-internal-message-hash",
-                                    "destination": {
-                                        "account_address": source
-                                    }
-                                },
-                                {
-                                    "hash": "internal-message-hash",
-                                    "destination": destination
-                                }
+                                message("other-internal-message-hash", &source, &source),
+                                message("internal-message-hash", &source, &destination),
                             ]
                         }])
                     };
-                    Json(json!({ "ok": true, "result": result }))
+                    Json(json!({ "ok": true, "@extra": "test", "result": result }))
                 }
             }),
         );

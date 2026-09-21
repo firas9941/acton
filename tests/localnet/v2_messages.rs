@@ -7,8 +7,8 @@ use crate::support::toncenter::{
 };
 use base64::Engine as _;
 use serde_json::{Value, json};
-use ton_api::toncenter::v2::{requests as v2_requests, responses as v2_responses};
 use ton_api::toncenter::v3::responses as v3_responses;
+use toncenter::v2::{requests as v2_requests, responses as v2_responses};
 use tycho_types::boc::{Boc, BocRepr};
 use tycho_types::cell::CellBuilder;
 use tycho_types::models::{CurrencyCollection, ExtraCurrencyCollection, MsgInfo, OwnedMessage};
@@ -65,13 +65,14 @@ fn rich_bounced_opcodes_are_indexed_through_public_message_apis() -> anyhow::Res
             info.bounce = false;
             info.bounced = case != "unmarked";
         }
-        let sent: v2_responses::TonlibResponse<v2_responses::InternalMessageInfo> = node
-            .post_json_as(
-                "/acton_sendInternalMessage",
-                &v2_requests::SendBocRequest {
-                    boc: Boc::encode_base64(CellBuilder::build_from(message)?),
-                },
-            );
+        let sent: toncenter::v2::TonlibResponse<
+            ton_localnet::api::toncenter_v2::InternalMessageInfo,
+        > = node.post_json_as(
+            "/acton_sendInternalMessage",
+            &v2_requests::SendBocRequest {
+                boc: Boc::encode_base64(CellBuilder::build_from(message)?),
+            },
+        );
         let (transaction, _) = find_v2_internal_message_by_hash(&node, &sent.result.hash);
         let transactions: v3_responses::TransactionsResponse = node.get_json_as(&format!(
             "/api/v3/transactions?account={destination}&limit=100"
@@ -117,20 +118,21 @@ fn transaction_messages_match_decoded_and_raw_upstream_dtos() {
         (u32::MAX, VarUint248::from_words(1, 0)),
     ])
     .expect("extra currencies must encode");
-    let text_send: v2_responses::TonlibResponse<v2_responses::InternalMessageInfo> = node
-        .post_json_as(
-            "/acton_sendInternalMessage",
-            &v2_requests::SendBocRequest {
-                boc: base64::engine::general_purpose::STANDARD.encode(
-                    build_internal_message_boc_with_currency_and_body(
-                        source,
-                        destination.clone(),
-                        text_value,
-                        text_body,
-                    ),
+    let text_send: toncenter::v2::TonlibResponse<
+        ton_localnet::api::toncenter_v2::InternalMessageInfo,
+    > = node.post_json_as(
+        "/acton_sendInternalMessage",
+        &v2_requests::SendBocRequest {
+            boc: base64::engine::general_purpose::STANDARD.encode(
+                build_internal_message_boc_with_currency_and_body(
+                    source,
+                    destination.clone(),
+                    text_value,
+                    text_body,
                 ),
-            },
-        );
+            ),
+        },
+    );
 
     let mut binary_body = CellBuilder::new();
     binary_body
@@ -142,29 +144,30 @@ fn transaction_messages_match_decoded_and_raw_upstream_dtos() {
     let binary_body = binary_body.build().expect("binary body must build");
     let binary_body_b64 =
         base64::engine::general_purpose::STANDARD.encode(Boc::encode(&binary_body));
-    let binary_send: v2_responses::TonlibResponse<v2_responses::InternalMessageInfo> = node
-        .post_json_as(
-            "/acton_sendInternalMessage",
-            &v2_requests::SendBocRequest {
-                boc: base64::engine::general_purpose::STANDARD.encode(
-                    build_internal_message_boc_with_currency_and_body(
-                        test_std_addr(0x33),
-                        destination,
-                        CurrencyCollection::new(50_000_000),
-                        binary_body,
-                    ),
+    let binary_send: toncenter::v2::TonlibResponse<
+        ton_localnet::api::toncenter_v2::InternalMessageInfo,
+    > = node.post_json_as(
+        "/acton_sendInternalMessage",
+        &v2_requests::SendBocRequest {
+            boc: base64::engine::general_purpose::STANDARD.encode(
+                build_internal_message_boc_with_currency_and_body(
+                    test_std_addr(0x33),
+                    destination,
+                    CurrencyCollection::new(50_000_000),
+                    binary_body,
                 ),
-            },
-        );
+            ),
+        },
+    );
 
     let (text_block_tx, text_block_message) =
         find_v2_internal_message_by_hash(&node, &text_send.result.hash);
     let (binary_block_tx, binary_block_message) =
         find_v2_internal_message_by_hash(&node, &binary_send.result.hash);
-    let decoded: v2_responses::TonlibResponse<Vec<v2_responses::Transaction>> = node.get_json_as(
+    let decoded: toncenter::v2::TonlibResponse<Vec<v2_responses::Transaction>> = node.get_json_as(
         &format!("/api/v2/getTransactions?address={destination_raw}&limit=100"),
     );
-    let raw: v2_responses::TonlibResponse<v2_responses::RawTransactions> = node.get_json_as(
+    let raw: toncenter::v2::TonlibResponse<v2_responses::TransactionsStd> = node.get_json_as(
         &format!("/api/v2/getTransactionsStd?address={destination_raw}&limit=100"),
     );
 
@@ -176,7 +179,7 @@ fn transaction_messages_match_decoded_and_raw_upstream_dtos() {
     let text_raw = raw_in_message(&raw.result, &text_block_tx.transaction_id.hash);
     let binary_raw = raw_in_message(&raw.result, &binary_block_tx.transaction_id.hash);
 
-    let text_located: v2_responses::TonlibResponse<v2_responses::Transaction> =
+    let text_located: toncenter::v2::TonlibResponse<v2_responses::Transaction> =
         node.get_json_as(&format!(
             "/api/v2/tryLocateTx?source={}&destination={}&created_lt={}",
             text_block_message.source.account_address,
@@ -198,9 +201,9 @@ fn transaction_messages_match_decoded_and_raw_upstream_dtos() {
     let snapshot = json!({
         "send": {
             "text_ok": text_send.ok,
-            "text_type": text_send.result.type_field,
+            "text_type": text_send.result.type_tag,
             "binary_ok": binary_send.ok,
-            "binary_type": binary_send.result.type_field,
+            "binary_type": binary_send.result.type_tag,
         },
         "text": {
             "decoded_history": decoded_message_snapshot(text_decoded),
@@ -246,17 +249,15 @@ fn decoded_transaction<'a>(
         .expect("decoded transaction must be present")
 }
 
-fn full_in_message(transaction: &v2_responses::Transaction) -> &v2_responses::MessageFull {
-    match transaction.in_msg.as_ref() {
-        Some(v2_responses::Message::Full(message)) => message,
-        Some(v2_responses::Message::Empty) | None => {
-            panic!("transaction must contain a full incoming message")
-        }
-    }
+fn full_in_message(transaction: &v2_responses::Transaction) -> &v2_responses::Message {
+    transaction
+        .in_msg
+        .as_ref()
+        .expect("transaction must contain its incoming message")
 }
 
 fn raw_in_message<'a>(
-    transactions: &'a v2_responses::RawTransactions,
+    transactions: &'a v2_responses::TransactionsStd,
     hash: &str,
 ) -> &'a v2_responses::MessageStd {
     transactions
@@ -267,31 +268,31 @@ fn raw_in_message<'a>(
         .expect("raw transaction must contain its incoming message")
 }
 
-fn decoded_message_snapshot(message: &v2_responses::MessageFull) -> Value {
+fn decoded_message_snapshot(message: &v2_responses::Message) -> Value {
     let (data, legacy_message) = match &message.msg_data {
-        v2_responses::MessageData::Text { text } => (
+        v2_responses::MsgData::MsgDataText(data) => (
             json!({
                 "type": "text",
                 "decoded": base64::engine::general_purpose::STANDARD
-                    .decode(text)
+                    .decode(data.text.as_deref().unwrap_or_default())
                     .ok()
                     .and_then(|bytes| String::from_utf8(bytes).ok()),
             }),
             json!({"text_matches": message.message.as_deref() == Some(TEXT_COMMENT)}),
         ),
-        v2_responses::MessageData::Raw { body, init_state } => (
+        v2_responses::MsgData::MsgDataRaw(data) => (
             json!({
                 "type": "raw",
-                "body_is_boc": Boc::decode_base64(body).is_ok(),
-                "init_state_is_empty": init_state.is_empty(),
+                "body_is_boc": Boc::decode_base64(data.body.as_deref().unwrap_or_default()).is_ok(),
+                "init_state_is_empty": data.init_state.as_deref().unwrap_or_default().is_empty(),
             }),
             json!({"binary_matches": message.message.as_deref() == Some("3q2+76g=\n")}),
         ),
-        v2_responses::MessageData::DecryptedText { .. } => (
+        v2_responses::MsgData::MsgDataDecryptedText(_) => (
             json!({"type": "decrypted"}),
             json!({"classified": "decrypted"}),
         ),
-        v2_responses::MessageData::EncryptedText { .. } => (
+        v2_responses::MsgData::MsgDataEncryptedText(_) => (
             json!({"type": "encrypted"}),
             json!({"classified": "encrypted"}),
         ),
@@ -306,13 +307,14 @@ fn decoded_message_snapshot(message: &v2_responses::MessageFull) -> Value {
 
 fn raw_message_snapshot(message: &v2_responses::MessageStd, expected_body: &str) -> Value {
     let (body_matches, init_state_is_empty) = match &message.msg_data {
-        v2_responses::MessageData::Raw { body, init_state } => {
-            (body == expected_body, init_state.is_empty())
-        }
+        v2_responses::MsgData::MsgDataRaw(data) => (
+            data.body.as_deref() == Some(expected_body),
+            data.init_state.as_deref().unwrap_or_default().is_empty(),
+        ),
         _ => (false, false),
     };
     json!({
-        "type": message.type_field,
+        "type": message.type_tag,
         "body_matches": body_matches,
         "init_state_is_empty": init_state_is_empty,
         "extra_currencies": message.extra_currencies,

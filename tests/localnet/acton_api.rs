@@ -3,12 +3,12 @@ use crate::support::localnet::pretty_json_for_snapshot;
 use crate::support::project::ProjectBuilder;
 use reqwest::blocking::Client;
 use serde_json::{Value, json};
-use ton_api::toncenter::v2::responses::{TonlibErrorResponse, TonlibResponse};
 use ton_api::toncenter::v3::responses::RequestError;
 use ton_localnet::server::models::{
     BuildSourceTraceRequest, SourceTraceBundleRequest, SourceTraceCompilerRequest,
     SourceTraceFileRequest, SourceTraceResponse,
 };
+use toncenter::v2::{TonlibErrorResponse, TonlibResponse};
 
 const MINIMAL_CONTRACT: &str = r"
 fun onInternalMessage(_: InMessage) {}

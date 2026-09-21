@@ -4,7 +4,7 @@ use crate::support::toncenter::{
     find_v2_transaction_block, jetton_v1_action_project, run_localnet_action_project,
 };
 use serde_json::{Value, json};
-use ton_api::toncenter::v2::{StringOrNumber, requests, responses};
+use toncenter::v2::{Int32Input, Int64Input, requests, responses};
 use tycho_types::boc::Boc;
 
 const SHARD: i64 = i64::MIN;
@@ -19,34 +19,35 @@ fn block_transactions_match_upstream_pagination_contract() {
     let after_hash = account_hash(&first.account);
     let query = block_query(0, seqno);
 
-    let default_page: responses::TonlibResponse<responses::BlockTransactions> =
+    let default_page: toncenter::v2::TonlibResponse<responses::BlockTransactions> =
         node.get_json_as(&format!("/api/v2/getBlockTransactions?{query}&count=2"));
-    let zero_cursor: responses::TonlibResponse<responses::BlockTransactions> = node.get_json_as(
-        &format!("/api/v2/getBlockTransactions?{query}&count=2&after_lt=0&after_hash={ZERO_HASH}"),
-    );
-    let exact_cursor: responses::JsonRpcResponse<responses::BlockTransactions> = node
+    let zero_cursor: toncenter::v2::TonlibResponse<responses::BlockTransactions> = node
+        .get_json_as(&format!(
+            "/api/v2/getBlockTransactions?{query}&count=2&after_lt=0&after_hash={ZERO_HASH}"
+        ));
+    let exact_cursor: toncenter::v2::TonlibResponse<responses::BlockTransactions> = node
         .post_v2_json_rpc(
             "/api/v2",
-            StringOrNumber::String("exact".to_owned()),
+            "exact".into(),
             "getBlockTransactions",
             block_transactions_request(seqno, Some((&first.lt, after_hash))),
         );
-    let exact_ext: responses::JsonRpcResponse<responses::BlockTransactionsExt> = node
+    let exact_ext: toncenter::v2::TonlibResponse<responses::BlockTransactionsExt> = node
         .post_v2_json_rpc(
             "/api/v2",
-            StringOrNumber::String("exact-ext".to_owned()),
+            "exact-ext".into(),
             "getBlockTransactionsExt",
             block_transactions_request(seqno, Some((&first.lt, after_hash))),
         );
-    let unknown_cursor: responses::TonlibResponse<responses::BlockTransactions> =
-        node.get_json_as(&format!(
+    let unknown_cursor: toncenter::v2::TonlibResponse<responses::BlockTransactions> = node
+        .get_json_as(&format!(
             "/api/v2/getBlockTransactions?{query}&count=2&after_lt={}&after_hash={ZERO_HASH}",
             first.lt
         ));
-    let root_only: responses::TonlibResponse<responses::BlockTransactions> = node.get_json_as(
+    let root_only: toncenter::v2::TonlibResponse<responses::BlockTransactions> = node.get_json_as(
         &format!("/api/v2/getBlockTransactions?{query}&count=1&root_hash={ZERO_HASH}"),
     );
-    let file_only: responses::TonlibResponse<responses::BlockTransactions> = node.get_json_as(
+    let file_only: toncenter::v2::TonlibResponse<responses::BlockTransactions> = node.get_json_as(
         &format!("/api/v2/getBlockTransactions?{query}&count=1&file_hash={ZERO_HASH}"),
     );
 
@@ -73,7 +74,7 @@ fn block_transactions_match_upstream_pagination_contract() {
         } else {
             format!("/api/v2/getBlockTransactions?{query}&{suffix}")
         };
-        let (status, error): (u16, responses::TonlibErrorResponse) =
+        let (status, error): (u16, toncenter::v2::TonlibErrorResponse) =
             node.get_json_with_status_as(&path);
         errors.push(json!({
             "case": case,
@@ -83,11 +84,11 @@ fn block_transactions_match_upstream_pagination_contract() {
         }));
     }
     let mut invalid_rpc_request = block_transactions_request(seqno, None);
-    invalid_rpc_request.count = Some(StringOrNumber::Unsigned(i32::MAX as u64 + 1));
-    let (rpc_status, rpc_error): (u16, responses::TonlibErrorResponse) = node
+    invalid_rpc_request.count = Some((i32::MAX as u64 + 1).to_string().into());
+    let (rpc_status, rpc_error): (u16, toncenter::v2::TonlibErrorResponse) = node
         .post_v2_json_rpc_with_status(
             "/api/v2",
-            StringOrNumber::String("invalid-count".to_owned()),
+            "invalid-count".into(),
             "getBlockTransactions",
             invalid_rpc_request,
         );
@@ -112,14 +113,14 @@ fn block_transactions_match_upstream_pagination_contract() {
         "zero_cursor_starts_at_first": transaction_hashes(&zero_cursor.result)
             == transaction_hashes(&default_page.result),
         "exact_cursor": {
-            "count": exact_cursor.response.result.transactions.len(),
-            "starts_after_cursor": exact_cursor.response.result.transactions.first()
+            "count": exact_cursor.result.transactions.len(),
+            "starts_after_cursor": exact_cursor.result.transactions.first()
                 .is_some_and(|tx| tx.hash == all.transactions[1].hash),
         },
         "exact_ext_cursor": {
-            "count": exact_ext.response.result.transactions.len(),
-            "incomplete": exact_ext.response.result.incomplete,
-            "req_count": exact_ext.response.result.req_count,
+            "count": exact_ext.result.transactions.len(),
+            "incomplete": exact_ext.result.incomplete,
+            "req_count": exact_ext.result.req_count,
         },
         "unknown_cursor_starts_at_first": transaction_hashes(&unknown_cursor.result)
             == transaction_hashes(&default_page.result),
@@ -144,9 +145,9 @@ fn block_data_matches_upstream_rest_and_json_rpc_contract() {
     let (seqno, transactions) = find_v2_transaction_block(&node, 1);
     let query = block_query(0, seqno);
 
-    let get_response: responses::TonlibResponse<responses::BlockData> =
+    let get_response: toncenter::v2::TonlibResponse<responses::BlockData> =
         node.get_json_as(&format!("/api/v2/getBlock?{query}&archival=true"));
-    let post_response: responses::TonlibResponse<responses::BlockData> = node.post_json_as(
+    let post_response: toncenter::v2::TonlibResponse<responses::BlockData> = node.post_json_as(
         "/api/v2/getBlock",
         &json!({
             "workchain": 0,
@@ -157,9 +158,9 @@ fn block_data_matches_upstream_rest_and_json_rpc_contract() {
             "archival": "false",
         }),
     );
-    let rpc_response: responses::JsonRpcResponse<responses::BlockData> = node.post_v2_json_rpc(
+    let rpc_response: toncenter::v2::TonlibResponse<responses::BlockData> = node.post_v2_json_rpc(
         "/api/v2/jsonRPC",
-        StringOrNumber::String("block-data".to_owned()),
+        "block-data".into(),
         "getBlock",
         json!({
             "workchain": 0,
@@ -168,9 +169,9 @@ fn block_data_matches_upstream_rest_and_json_rpc_contract() {
             "archival": 1,
         }),
     );
-    let root_only: responses::TonlibResponse<responses::BlockData> =
+    let root_only: toncenter::v2::TonlibResponse<responses::BlockData> =
         node.get_json_as(&format!("/api/v2/getBlock?{query}&root_hash={ZERO_HASH}"));
-    let (wrong_hashes_status, wrong_hashes_error): (u16, responses::TonlibErrorResponse) = node
+    let (wrong_hashes_status, wrong_hashes_error): (u16, toncenter::v2::TonlibErrorResponse) = node
         .get_json_with_status_as(&format!(
             "/api/v2/getBlock?{query}&root_hash={ZERO_HASH}&file_hash={ZERO_HASH}"
         ));
@@ -178,13 +179,13 @@ fn block_data_matches_upstream_rest_and_json_rpc_contract() {
     let results = [
         &get_response.result,
         &post_response.result,
-        &rpc_response.response.result,
+        &rpc_response.result,
     ];
     let snapshot = json!({
-        "type": get_response.result.type_field,
+        "type": get_response.result.type_tag,
         "matches_requested_block": results.iter().all(|result| {
             result.id.workchain == 0 && result.id.shard == SHARD.to_string()
-                && result.id.seqno == u64::from(seqno)
+                && result.id.seqno == i64::from(seqno)
         }),
         "rest_and_json_rpc_match": results.iter().all(|result| {
             result.id.root_hash == get_response.result.id.root_hash
@@ -214,31 +215,33 @@ fn block_lookup_and_headers_match_upstream_contract() {
     let (node, _) = run_localnet_action_project(&project, "scripts/jetton.tolk");
     let (seqno, transactions) = find_v2_transaction_block(&node, 1);
     let query = block_query(0, seqno);
-    let header: responses::TonlibResponse<responses::BlockHeader> =
+    let header: toncenter::v2::TonlibResponse<responses::BlockHeader> =
         node.get_json_as(&format!("/api/v2/getBlockHeader?{query}"));
-    let root_only: responses::TonlibResponse<responses::BlockHeader> = node.get_json_as(&format!(
-        "/api/v2/getBlockHeader?{query}&root_hash={ZERO_HASH}"
-    ));
-    let by_seqno: responses::JsonRpcResponse<responses::TonBlockIdExt> = node.post_v2_json_rpc(
-        "/api/v2",
-        StringOrNumber::String("seqno".to_owned()),
-        "lookupBlock",
-        lookup_request(Some(seqno.into()), None, None),
+    let root_only: toncenter::v2::TonlibResponse<responses::BlockHeader> = node.get_json_as(
+        &format!("/api/v2/getBlockHeader?{query}&root_hash={ZERO_HASH}"),
     );
-    let by_lt: responses::TonlibResponse<responses::TonBlockIdExt> = node.get_json_as(&format!(
-        "/api/v2/lookupBlock?workchain=0&shard={SHARD}&lt={}",
-        transactions.transactions[0].lt
-    ));
-    let by_time: responses::TonlibResponse<responses::TonBlockIdExt> = node.get_json_as(&format!(
-        "/api/v2/lookupBlock?workchain=0&shard={SHARD}&unixtime={}",
-        header.result.gen_utime
-    ));
+    let by_seqno: toncenter::v2::TonlibResponse<responses::TonBlockIdExt> = node.post_v2_json_rpc(
+        "/api/v2",
+        "seqno".into(),
+        "lookupBlock",
+        lookup_request(Some(seqno.to_string().into()), None, None),
+    );
+    let by_lt: toncenter::v2::TonlibResponse<responses::TonBlockIdExt> =
+        node.get_json_as(&format!(
+            "/api/v2/lookupBlock?workchain=0&shard={SHARD}&lt={}",
+            transactions.transactions[0].lt
+        ));
+    let by_time: toncenter::v2::TonlibResponse<responses::TonBlockIdExt> =
+        node.get_json_as(&format!(
+            "/api/v2/lookupBlock?workchain=0&shard={SHARD}&unixtime={}",
+            header.result.gen_utime
+        ));
 
     let masterchain_query = block_query(-1, seqno);
-    let masterchain_header: responses::TonlibResponse<responses::BlockHeader> =
+    let masterchain_header: toncenter::v2::TonlibResponse<responses::BlockHeader> =
         node.get_json_as(&format!("/api/v2/getBlockHeader?{masterchain_query}"));
-    let masterchain_transactions: responses::TonlibResponse<responses::BlockTransactions> = node
-        .get_json_as(&format!(
+    let masterchain_transactions: toncenter::v2::TonlibResponse<responses::BlockTransactions> =
+        node.get_json_as(&format!(
             "/api/v2/getBlockTransactions?{masterchain_query}&count=2"
         ));
 
@@ -246,17 +249,13 @@ fn block_lookup_and_headers_match_upstream_contract() {
         ("missing selector", lookup_request(None, None, None)),
         (
             "multiple selectors",
-            lookup_request(Some(seqno.into()), Some(0.into()), None),
+            lookup_request(Some(seqno.to_string().into()), Some(0.into()), None),
         ),
         ("zero seqno", lookup_request(Some(0.into()), None, None)),
         ("negative lt", lookup_request(None, Some((-1).into()), None)),
         (
             "lt i64 overflow",
-            lookup_request(
-                None,
-                Some(StringOrNumber::Unsigned(i64::MAX as u64 + 1)),
-                None,
-            ),
+            lookup_request(None, Some((i64::MAX as u64 + 1).to_string().into()), None),
         ),
         (
             "negative unixtime",
@@ -264,19 +263,15 @@ fn block_lookup_and_headers_match_upstream_contract() {
         ),
         (
             "unixtime i32 overflow",
-            lookup_request(
-                None,
-                None,
-                Some(StringOrNumber::Unsigned(i32::MAX as u64 + 1)),
-            ),
+            lookup_request(None, None, Some((i32::MAX as u64 + 1).to_string().into())),
         ),
     ];
     let mut validation = Vec::new();
     for (case, request) in invalid_lookup_requests {
-        let (status, error): (u16, responses::TonlibErrorResponse) = node
+        let (status, error): (u16, toncenter::v2::TonlibErrorResponse) = node
             .post_v2_json_rpc_with_status(
                 "/api/v2",
-                StringOrNumber::String(case.to_owned()),
+                case.to_owned().into(),
                 "lookupBlock",
                 request,
             );
@@ -288,9 +283,10 @@ fn block_lookup_and_headers_match_upstream_contract() {
         }));
     }
     for (case, selector) in [("zero lt", "lt=0"), ("zero unixtime", "unixtime=0")] {
-        let (status, error): (u16, responses::TonlibErrorResponse) = node.get_json_with_status_as(
-            &format!("/api/v2/lookupBlock?workchain=0&shard={SHARD}&{selector}"),
-        );
+        let (status, error): (u16, toncenter::v2::TonlibErrorResponse) = node
+            .get_json_with_status_as(&format!(
+                "/api/v2/lookupBlock?workchain=0&shard={SHARD}&{selector}"
+            ));
         validation.push(json!({
             "case": case,
             "status": status,
@@ -299,7 +295,7 @@ fn block_lookup_and_headers_match_upstream_contract() {
         }));
     }
 
-    let (both_hashes_status, both_hashes_error): (u16, responses::TonlibErrorResponse) = node
+    let (both_hashes_status, both_hashes_error): (u16, toncenter::v2::TonlibErrorResponse) = node
         .get_json_with_status_as(&format!(
             "/api/v2/getBlockHeader?{query}&root_hash={ZERO_HASH}&file_hash={ZERO_HASH}"
         ));
@@ -313,9 +309,9 @@ fn block_lookup_and_headers_match_upstream_contract() {
             "error": both_hashes_error.error,
         },
         "lookup": {
-            "by_seqno": by_seqno.response.result.seqno == u64::from(seqno),
-            "by_lt": by_lt.result.seqno == u64::from(seqno),
-            "by_time_is_at_or_after_fixture": by_time.result.seqno >= u64::from(seqno),
+            "by_seqno": by_seqno.result.seqno == i64::from(seqno),
+            "by_lt": by_lt.result.seqno == i64::from(seqno),
+            "by_time_is_at_or_after_fixture": by_time.result.seqno >= i64::from(seqno),
         },
         "masterchain_transactions": {
             "count": masterchain_transactions.result.transactions.len(),
@@ -346,24 +342,24 @@ fn block_transactions_request(
 ) -> requests::BlockTransactionsRequest {
     requests::BlockTransactionsRequest {
         workchain: 0.into(),
-        shard: StringOrNumber::String(SHARD.to_string()),
-        seqno: seqno.into(),
+        shard: SHARD.to_string().into(),
+        seqno: seqno.to_string().into(),
         root_hash: None,
         file_hash: None,
-        after_lt: cursor.map(|(lt, _)| StringOrNumber::String(lt.to_owned())),
+        after_lt: cursor.map(|(lt, _)| lt.to_owned().into()),
         after_hash: cursor.map(|(_, hash)| hash.to_owned()),
         count: Some(2.into()),
     }
 }
 
 fn lookup_request(
-    seqno: Option<StringOrNumber>,
-    lt: Option<StringOrNumber>,
-    unixtime: Option<StringOrNumber>,
+    seqno: Option<Int32Input>,
+    lt: Option<Int64Input>,
+    unixtime: Option<Int32Input>,
 ) -> requests::LookupBlockRequest {
     requests::LookupBlockRequest {
         workchain: 0.into(),
-        shard: StringOrNumber::String(SHARD.to_string()),
+        shard: SHARD.to_string().into(),
         seqno,
         lt,
         unixtime,

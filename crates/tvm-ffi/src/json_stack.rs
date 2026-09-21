@@ -1,73 +1,10 @@
 use crate::stack::{Tuple, TupleItem};
 use anyhow::Context;
 use num_bigint::BigInt;
-use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use std::ops::Mul;
 use tycho_types::boc::Boc;
 
-const TVM_SLICE_TYPE: &str = "tvm.slice";
-const TVM_CELL_TYPE: &str = "tvm.cell";
-const TVM_NUMBER_DECIMAL_TYPE: &str = "tvm.numberDecimal";
-const TVM_TUPLE_TYPE: &str = "tvm.tuple";
-const TVM_LIST_TYPE: &str = "tvm.list";
-
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(tag = "@type", deny_unknown_fields)]
-pub enum TvmStackEntry {
-    #[serde(rename = "tvm.stackEntrySlice")]
-    Slice { slice: TvmSlice },
-    #[serde(rename = "tvm.stackEntryCell")]
-    Cell { cell: TvmCell },
-    #[serde(rename = "tvm.stackEntryNumber")]
-    Number { number: TvmNumberDecimal },
-    #[serde(rename = "tvm.stackEntryTuple")]
-    Tuple { tuple: TvmTuple },
-    #[serde(rename = "tvm.stackEntryList")]
-    List { list: TvmList },
-    #[serde(rename = "tvm.stackEntryUnsupported")]
-    Unsupported {},
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(deny_unknown_fields)]
-pub struct TvmSlice {
-    #[serde(rename = "@type")]
-    pub type_field: String,
-    pub bytes: String,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(deny_unknown_fields)]
-pub struct TvmCell {
-    #[serde(rename = "@type")]
-    pub type_field: String,
-    pub bytes: String,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(deny_unknown_fields)]
-pub struct TvmNumberDecimal {
-    #[serde(rename = "@type")]
-    pub type_field: String,
-    pub number: String,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(deny_unknown_fields)]
-pub struct TvmTuple {
-    #[serde(rename = "@type")]
-    pub type_field: String,
-    pub elements: Vec<TvmStackEntry>,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(deny_unknown_fields)]
-pub struct TvmList {
-    #[serde(rename = "@type")]
-    pub type_field: String,
-    pub elements: Vec<TvmStackEntry>,
-}
+use toncenter::v2::stack::{TvmStackEntry, TvmStackEntryUnsupported};
 
 pub fn legacy_stack_to_json(stack: &Tuple) -> anyhow::Result<Vec<Value>> {
     let mut entries = Vec::new();
@@ -82,7 +19,7 @@ pub fn legacy_item_to_json(item: &TupleItem) -> anyhow::Result<Value> {
         TupleItem::Null => Ok(serde_json::json!(["null", null])),
         TupleItem::Int(i) => {
             if i < &BigInt::from(0u64) {
-                return Ok(serde_json::json!(["num", format!("-0x{:x}", i.mul(-1))]));
+                return Ok(serde_json::json!(["num", format!("-0x{:x}", -i)]));
             }
             Ok(serde_json::json!(["num", format!("0x{i:x}")]))
         }
@@ -113,72 +50,24 @@ pub fn json_to_legacy_stack(entries: Vec<Value>) -> anyhow::Result<Tuple> {
     Ok(Tuple(items))
 }
 
-impl TvmStackEntry {
-    #[must_use]
-    pub fn number(value: impl ToString) -> Self {
-        Self::Number {
-            number: TvmNumberDecimal {
-                type_field: TVM_NUMBER_DECIMAL_TYPE.to_owned(),
-                number: value.to_string(),
-            },
-        }
-    }
+impl TryFrom<TvmStackEntry> for TupleItem {
+    type Error = anyhow::Error;
 
-    #[must_use]
-    pub fn cell(bytes: impl Into<String>) -> Self {
-        Self::Cell {
-            cell: TvmCell {
-                type_field: TVM_CELL_TYPE.to_owned(),
-                bytes: bytes.into(),
-            },
-        }
-    }
-
-    #[must_use]
-    pub fn slice(bytes: impl Into<String>) -> Self {
-        Self::Slice {
-            slice: TvmSlice {
-                type_field: TVM_SLICE_TYPE.to_owned(),
-                bytes: bytes.into(),
-            },
-        }
-    }
-
-    #[must_use]
-    pub fn tuple(elements: Vec<Self>) -> Self {
-        Self::Tuple {
-            tuple: TvmTuple {
-                type_field: TVM_TUPLE_TYPE.to_owned(),
-                elements,
-            },
-        }
-    }
-
-    #[must_use]
-    pub fn list(elements: Vec<Self>) -> Self {
-        Self::List {
-            list: TvmList {
-                type_field: TVM_LIST_TYPE.to_owned(),
-                elements,
-            },
-        }
-    }
-
-    pub fn into_tuple_item(self) -> anyhow::Result<TupleItem> {
-        match self {
-            Self::Slice { slice } => {
-                ensure_type(&slice.type_field, TVM_SLICE_TYPE)?;
+    fn try_from(entry: TvmStackEntry) -> Result<Self, Self::Error> {
+        match entry {
+            TvmStackEntry::Slice(entry) => {
+                let slice = entry.slice;
                 let cell =
                     Boc::decode_base64(&slice.bytes).context("Failed to decode slice BOC")?;
                 Ok(TupleItem::Slice(cell))
             }
-            Self::Cell { cell } => {
-                ensure_type(&cell.type_field, TVM_CELL_TYPE)?;
+            TvmStackEntry::Cell(entry) => {
+                let cell = entry.cell;
                 let cell = Boc::decode_base64(&cell.bytes).context("Failed to decode cell BOC")?;
                 Ok(TupleItem::Cell(cell))
             }
-            Self::Number { number } => {
-                ensure_type(&number.type_field, TVM_NUMBER_DECIMAL_TYPE)?;
+            TvmStackEntry::Number(entry) => {
+                let number = entry.number;
                 Ok(TupleItem::Int(
                     number
                         .number
@@ -186,40 +75,43 @@ impl TvmStackEntry {
                         .context("Failed to parse stack number")?,
                 ))
             }
-            Self::Tuple { tuple } => {
-                ensure_type(&tuple.type_field, TVM_TUPLE_TYPE)?;
+            TvmStackEntry::Tuple(entry) => {
+                let tuple = entry.tuple;
                 Ok(TupleItem::Tuple(Tuple(
                     tuple
                         .elements
                         .into_iter()
-                        .map(Self::into_tuple_item)
+                        .map(Self::try_from)
                         .collect::<anyhow::Result<_>>()?,
                 )))
             }
-            Self::List { list } => {
-                ensure_type(&list.type_field, TVM_LIST_TYPE)?;
+            TvmStackEntry::List(entry) => {
+                let list = entry.list;
                 Ok(TupleItem::Tuple(Tuple(
                     list.elements
                         .into_iter()
-                        .map(Self::into_tuple_item)
+                        .map(Self::try_from)
                         .collect::<anyhow::Result<_>>()?,
                 )))
             }
-            Self::Unsupported {} => anyhow::bail!("Unsupported TVM stack entry"),
+            TvmStackEntry::Unsupported(_) => anyhow::bail!("Unsupported TVM stack entry"),
         }
     }
+}
 
-    #[must_use]
-    pub fn from_tuple_item(item: &TupleItem) -> Self {
+impl From<&TupleItem> for TvmStackEntry {
+    fn from(item: &TupleItem) -> Self {
         match item {
             TupleItem::Int(value) => Self::number(value),
             TupleItem::Cell(cell) => Self::cell(Boc::encode_base64(cell)),
             TupleItem::Slice(cell) => Self::slice(Boc::encode_base64(cell)),
             TupleItem::Cont(continuation) => Self::slice(Boc::encode_base64(&continuation.code)),
-            TupleItem::Tuple(tuple) => {
-                Self::tuple(tuple.0.iter().map(Self::from_tuple_item).collect())
+            TupleItem::Tuple(tuple) => Self::tuple(tuple.0.iter().map(Self::from).collect()),
+            TupleItem::Null | TupleItem::Nan | TupleItem::Builder(_) => {
+                Self::Unsupported(TvmStackEntryUnsupported {
+                    type_tag: Default::default(),
+                })
             }
-            TupleItem::Null | TupleItem::Nan | TupleItem::Builder(_) => Self::Unsupported {},
         }
     }
 }
@@ -228,22 +120,14 @@ pub fn std_stack_into_tuple(entries: Vec<TvmStackEntry>) -> anyhow::Result<Tuple
     Ok(Tuple(
         entries
             .into_iter()
-            .map(TvmStackEntry::into_tuple_item)
+            .map(TupleItem::try_from)
             .collect::<anyhow::Result<_>>()?,
     ))
 }
 
 #[must_use]
 pub fn std_stack_from_tuple(stack: &Tuple) -> Vec<TvmStackEntry> {
-    stack.0.iter().map(TvmStackEntry::from_tuple_item).collect()
-}
-
-fn ensure_type(actual: &str, expected: &str) -> anyhow::Result<()> {
-    anyhow::ensure!(
-        actual == expected,
-        "Invalid `@type`: expected `{expected}`, got `{actual}`"
-    );
-    Ok(())
+    stack.0.iter().map(TvmStackEntry::from).collect()
 }
 
 fn json_to_mixed_item(value: Value) -> anyhow::Result<TupleItem> {
@@ -252,7 +136,7 @@ fn json_to_mixed_item(value: Value) -> anyhow::Result<TupleItem> {
         Err(legacy_err) => {
             let entry: TvmStackEntry = serde_json::from_value(value)
                 .with_context(|| format!("Failed to parse stack entry as legacy or std format. Legacy error: {legacy_err}"))?;
-            entry.into_tuple_item()
+            TupleItem::try_from(entry)
         }
     }
 }
@@ -288,14 +172,7 @@ pub fn json_to_legacy_item(value: Value) -> anyhow::Result<TupleItem> {
                     }
                 })
                 .context("num value must be string or number")?;
-            let i = if let Some(hex) = s.strip_prefix("-0x").or_else(|| s.strip_prefix("-0X")) {
-                -BigInt::parse_bytes(hex.as_bytes(), 16).context("Failed to parse hex BigInt")?
-            } else if let Some(hex) = s.strip_prefix("0x").or_else(|| s.strip_prefix("0X")) {
-                BigInt::parse_bytes(hex.as_bytes(), 16).context("Failed to parse hex BigInt")?
-            } else {
-                s.parse::<BigInt>().context("Failed to parse BigInt")?
-            };
-            Ok(TupleItem::Int(i))
+            parse_legacy_number(&s).map(TupleItem::Int)
         }
         "cell" => {
             let bytes = legacy_stack_bytes(val, "cell")?;
@@ -319,7 +196,7 @@ pub fn json_to_legacy_item(value: Value) -> anyhow::Result<TupleItem> {
                 .context("tuple must have elements")?;
             let items = elements
                 .iter()
-                .map(|v| json_to_legacy_item(v.clone()))
+                .map(|v| json_to_mixed_item(v.clone()))
                 .collect::<anyhow::Result<Vec<_>>>()?;
             Ok(TupleItem::Tuple(Tuple(items)))
         }
@@ -343,6 +220,22 @@ pub fn json_to_legacy_item(value: Value) -> anyhow::Result<TupleItem> {
             Ok(TupleItem::Tuple(Tuple(items)))
         }
         _ => anyhow::bail!("Unsupported legacy stack entry type: {type_str}"),
+    }
+}
+
+fn parse_legacy_number(value: &str) -> anyhow::Result<BigInt> {
+    if let Some(hex) = value
+        .strip_prefix("-0x")
+        .or_else(|| value.strip_prefix("-0X"))
+    {
+        Ok(-BigInt::parse_bytes(hex.as_bytes(), 16).context("Failed to parse hex BigInt")?)
+    } else if let Some(hex) = value
+        .strip_prefix("0x")
+        .or_else(|| value.strip_prefix("0X"))
+    {
+        BigInt::parse_bytes(hex.as_bytes(), 16).context("Failed to parse hex BigInt")
+    } else {
+        value.parse().context("Failed to parse BigInt")
     }
 }
 
@@ -466,82 +359,80 @@ mod tests {
 
     #[test]
     fn test_std_stack_validates_nested_type_markers() {
-        let entry: TvmStackEntry = serde_json::from_value(serde_json::json!({
+        let entry = serde_json::from_value::<TvmStackEntry>(serde_json::json!({
             "@type": "tvm.stackEntryNumber",
             "number": {"@type": "wrong", "number": "1"}
-        }))
-        .unwrap();
-
-        assert_eq!(
-            entry.into_tuple_item().unwrap_err().to_string(),
-            "Invalid `@type`: expected `tvm.numberDecimal`, got `wrong`"
-        );
+        }));
+        assert!(entry.is_err());
     }
 
     #[test]
     fn test_std_stack_rejects_unsupported_input() {
         assert_eq!(
-            TvmStackEntry::Unsupported {}
-                .into_tuple_item()
-                .unwrap_err()
-                .to_string(),
+            TupleItem::try_from(TvmStackEntry::Unsupported(TvmStackEntryUnsupported {
+                type_tag: Default::default()
+            }))
+            .unwrap_err()
+            .to_string(),
             "Unsupported TVM stack entry"
         );
     }
 
     #[test]
-    fn test_legacy_stack_accepts_toncenter_mixed_list_entries() {
+    fn test_legacy_stack_accepts_toncenter_nested_entries() {
         let mut builder = CellBuilder::new();
         builder.store_small_uint(42, 8).unwrap();
         let cell = builder.build().unwrap();
         let boc = Boc::encode_base64(&cell);
 
-        assert_eq!(
-            json_to_legacy_stack(vec![serde_json::json!([
-                "list",
-                {
-                    "@type": "tvm.list",
-                    "elements": [
-                        {
-                            "@type": "tvm.stackEntryTuple",
-                            "tuple": {
-                                "@type": "tvm.tuple",
-                                "elements": [
-                                    {
-                                        "@type": "tvm.stackEntryNumber",
-                                        "number": {
-                                            "@type": "tvm.numberDecimal",
-                                            "number": "11"
+        for kind in ["list", "tuple"] {
+            assert_eq!(
+                json_to_legacy_stack(vec![serde_json::json!([
+                    kind,
+                    {
+                        "@type": format!("tvm.{kind}"),
+                        "elements": [
+                            {
+                                "@type": "tvm.stackEntryTuple",
+                                "tuple": {
+                                    "@type": "tvm.tuple",
+                                    "elements": [
+                                        {
+                                            "@type": "tvm.stackEntryNumber",
+                                            "number": {
+                                                "@type": "tvm.numberDecimal",
+                                                "number": "11"
+                                            }
+                                        },
+                                        {
+                                            "@type": "tvm.stackEntryNumber",
+                                            "number": {
+                                                "@type": "tvm.numberDecimal",
+                                                "number": "22"
+                                            }
+                                        },
+                                        {
+                                            "@type": "tvm.stackEntryCell",
+                                            "cell": {
+                                                "@type": "tvm.cell",
+                                                "bytes": boc
+                                            }
                                         }
-                                    },
-                                    {
-                                        "@type": "tvm.stackEntryNumber",
-                                        "number": {
-                                            "@type": "tvm.numberDecimal",
-                                            "number": "22"
-                                        }
-                                    },
-                                    {
-                                        "@type": "tvm.stackEntryCell",
-                                        "cell": {
-                                            "@type": "tvm.cell",
-                                            "bytes": boc
-                                        }
-                                    }
-                                ]
+                                    ]
+                                }
                             }
-                        }
-                    ]
-                }
-            ])])
-            .unwrap(),
-            Tuple(vec![TupleItem::Tuple(Tuple(vec![TupleItem::Tuple(
-                Tuple(vec![
-                    TupleItem::Int(BigInt::from(11)),
-                    TupleItem::Int(BigInt::from(22)),
-                    TupleItem::Cell(cell)
-                ])
-            )]))])
-        );
+                        ]
+                    }
+                ])])
+                .unwrap(),
+                Tuple(vec![TupleItem::Tuple(Tuple(vec![TupleItem::Tuple(
+                    Tuple(vec![
+                        TupleItem::Int(BigInt::from(11)),
+                        TupleItem::Int(BigInt::from(22)),
+                        TupleItem::Cell(cell.clone())
+                    ])
+                )]))])
+            );
+        }
     }
 }

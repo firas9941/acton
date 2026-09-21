@@ -5637,7 +5637,7 @@
           "jetton_wallet"
         ]
       },
-      "JsonRpcCall": {
+      "JsonRpcCall_LegacyStackEntry": {
         "oneOf": [
           {
             "type": "object",
@@ -6306,7 +6306,7 @@
                 ]
               },
               "params": {
-                "$ref": "#/components/schemas/RunGetMethodRequest",
+                "$ref": "#/components/schemas/RunGetMethodRequest_LegacyStackEntry",
                 "description": "Executes a read-only method on a smart contract. Get methods query contract state without sending a transaction. Common methods include `seqno` (wallet sequence number), `get_wallet_data` (wallet info), and `get_jetton_data` (token info). Method arguments are provided in the `stack` array."
               }
             }
@@ -6438,12 +6438,12 @@
             }
           }
         ],
-        "description": "Case-sensitive JSON-RPC method paired with its concrete parameter object.\n\nThis models canonical calls. The server also tolerates omitted or non-object\nparams for parameterless methods; transports should send an empty object."
+        "description": "Case-sensitive JSON-RPC method paired with its concrete parameter object.\n\nThis models canonical calls. The server also tolerates omitted or non-object\nparams for parameterless methods; transports should send an empty object.\n`S` selects the legacy get-method stack entry type and defaults to the v2 contract."
       },
       "JsonRpcRequest": {
         "allOf": [
           {
-            "$ref": "#/components/schemas/JsonRpcCall",
+            "$ref": "#/components/schemas/JsonRpcCall_LegacyStackEntry",
             "description": "Method and its matching object-shaped parameters."
           },
           {
@@ -6458,7 +6458,7 @@
             }
           }
         ],
-        "description": "A typed call through `/jsonRPC`. The C++ proxy ignores JSON-RPC metadata and\nreturns an ordinary `TONLib` envelope; do not require the ID to be echoed."
+        "description": "A typed call through `/jsonRPC`. The C++ proxy ignores JSON-RPC metadata and\nreturns an ordinary `TONLib` envelope; do not require the ID to be echoed.\n\n`S` defaults to TON Center stack entries and can represent custom server extensions."
       },
       "LegacyStackEntry": {
         "oneOf": [
@@ -7636,7 +7636,7 @@
       },
       "RunGetMethodRequest": {
         "type": "object",
-        "description": "Request to execute a smart contract get method. Specify address, method name/ID, and input\nstack.",
+        "description": "Request to execute a smart contract get method. Specify address, method name/ID, and input\nstack. `S` defaults to TON Center stack entries; custom servers can use an extended entry type.",
         "required": [
           "address",
           "method",
@@ -7669,9 +7669,286 @@
         },
         "additionalProperties": false
       },
+      "RunGetMethodRequest_LegacyStackEntry": {
+        "type": "object",
+        "description": "Request to execute a smart contract get method. Specify address, method name/ID, and input\nstack. `S` defaults to TON Center stack entries; custom servers can use an extended entry type.",
+        "required": [
+          "address",
+          "method",
+          "stack"
+        ],
+        "properties": {
+          "address": {
+            "type": "string",
+            "description": "Account to query, in raw workchain:hex or user-friendly base64 form."
+          },
+          "method": {
+            "$ref": "#/components/schemas/Int32Input",
+            "description": "The get method name (e.g., `seqno`, `get_wallet_data`) or its numeric ID."
+          },
+          "seqno": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int32",
+            "description": "Masterchain block sequence number. Run the get method against the contract state at this\nspecific block height. If omitted, uses the current state."
+          },
+          "stack": {
+            "type": "array",
+            "items": {
+              "oneOf": [
+                {
+                  "type": "array",
+                  "items": false,
+                  "prefixItems": [
+                    {
+                      "type": "string",
+                      "description": "Accepted integer tags for legacy stack requests.",
+                      "enum": [
+                        "num",
+                        "int",
+                        "number",
+                        "integer"
+                      ]
+                    },
+                    {
+                      "oneOf": [
+                        {
+                          "type": "string",
+                          "description": "Decimal text; the server validates syntax and range."
+                        },
+                        {
+                          "type": "integer",
+                          "format": "int64",
+                          "description": "A JSON integer, preserved without floating-point conversion."
+                        }
+                      ],
+                      "description": "A request integer accepted as signed 64-bit JSON number or decimal string. Use a string when passing through JavaScript to avoid precision loss."
+                    }
+                  ],
+                  "maxItems": 2,
+                  "minItems": 2
+                },
+                {
+                  "type": "array",
+                  "items": false,
+                  "prefixItems": [
+                    {
+                      "type": "string",
+                      "description": "Legacy tag for a cell object with a bytes property.",
+                      "enum": [
+                        "cell"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "description": "Legacy cell payload containing its base64 `BoC` and an optional expanded representation.",
+                      "required": [
+                        "bytes"
+                      ],
+                      "properties": {
+                        "bytes": {
+                          "type": "string",
+                          "description": "Raw cell bytes in base64."
+                        },
+                        "object": {
+                          "oneOf": [
+                            {
+                              "type": "null"
+                            },
+                            {
+                              "$ref": "#/components/schemas/LegacyTvmCell",
+                              "description": "Parsed cell object with data, refs, and type info."
+                            }
+                          ],
+                          "description": "Parsed cell object with data, refs, and type info."
+                        }
+                      }
+                    }
+                  ],
+                  "maxItems": 2,
+                  "minItems": 2
+                },
+                {
+                  "type": "array",
+                  "items": false,
+                  "prefixItems": [
+                    {
+                      "type": "string",
+                      "description": "Legacy tag for a slice object with a bytes property.",
+                      "enum": [
+                        "slice"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "description": "Legacy cell payload containing its base64 `BoC` and an optional expanded representation.",
+                      "required": [
+                        "bytes"
+                      ],
+                      "properties": {
+                        "bytes": {
+                          "type": "string",
+                          "description": "Raw cell bytes in base64."
+                        },
+                        "object": {
+                          "oneOf": [
+                            {
+                              "type": "null"
+                            },
+                            {
+                              "$ref": "#/components/schemas/LegacyTvmCell",
+                              "description": "Parsed cell object with data, refs, and type info."
+                            }
+                          ],
+                          "description": "Parsed cell object with data, refs, and type info."
+                        }
+                      }
+                    }
+                  ],
+                  "maxItems": 2,
+                  "minItems": 2
+                },
+                {
+                  "type": "array",
+                  "items": false,
+                  "prefixItems": [
+                    {
+                      "type": "string",
+                      "description": "Legacy tag for a bare base64 cell `BoC` request argument.",
+                      "enum": [
+                        "tvm.Cell"
+                      ]
+                    },
+                    {
+                      "type": "string"
+                    }
+                  ],
+                  "maxItems": 2,
+                  "minItems": 2
+                },
+                {
+                  "type": "array",
+                  "items": false,
+                  "prefixItems": [
+                    {
+                      "type": "string",
+                      "description": "Legacy tag for a bare base64 slice `BoC` request argument.",
+                      "enum": [
+                        "tvm.Slice"
+                      ]
+                    },
+                    {
+                      "type": "string"
+                    }
+                  ],
+                  "maxItems": 2,
+                  "minItems": 2
+                },
+                {
+                  "type": "array",
+                  "items": false,
+                  "prefixItems": [
+                    {
+                      "type": "string",
+                      "description": "Accepted tuple tags; replies use the lowercase spelling.",
+                      "enum": [
+                        "tuple",
+                        "tvm.Tuple"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "description": "An ordered collection of standard `TONLib` stack entries.",
+                      "required": [
+                        "@type",
+                        "elements"
+                      ],
+                      "properties": {
+                        "@type": {
+                          "$ref": "#/components/schemas/tags.TvmTuple",
+                          "description": "Fixed `TONLib` discriminator `tvm.tuple`; other values are rejected."
+                        },
+                        "elements": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/TvmStackEntry"
+                          },
+                          "description": "Ordered tuple of TVM stack entries. Each element is a typed object with `@type`\ndiscriminator (`tvm.stackEntryNumber`, `tvm.stackEntryCell`, `tvm.stackEntrySlice`,\n`tvm.stackEntryTuple`, or `tvm.stackEntryList`)."
+                        }
+                      }
+                    }
+                  ],
+                  "maxItems": 2,
+                  "minItems": 2
+                },
+                {
+                  "type": "array",
+                  "items": false,
+                  "prefixItems": [
+                    {
+                      "type": "string",
+                      "description": "Accepted list tags; replies use the lowercase spelling.",
+                      "enum": [
+                        "list",
+                        "tvm.List"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "description": "A `TONLib` list containing standard stack entries.",
+                      "required": [
+                        "@type",
+                        "elements"
+                      ],
+                      "properties": {
+                        "@type": {
+                          "$ref": "#/components/schemas/tags.TvmList",
+                          "description": "Fixed `TONLib` discriminator `tvm.list`; other values are rejected."
+                        },
+                        "elements": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/TvmStackEntry"
+                          },
+                          "description": "Ordered list of TVM stack entries. Each element is a typed object with `@type`\ndiscriminator (`tvm.stackEntryNumber`, `tvm.stackEntryCell`, `tvm.stackEntrySlice`,\n`tvm.stackEntryTuple`, or `tvm.stackEntryList`)."
+                        }
+                      }
+                    }
+                  ],
+                  "maxItems": 2,
+                  "minItems": 2
+                },
+                {
+                  "type": "array",
+                  "items": false,
+                  "prefixItems": [
+                    {
+                      "type": "string",
+                      "description": "Output-only tag for unsupported TVM values.",
+                      "enum": [
+                        "unsupported"
+                      ]
+                    },
+                    {
+                      "type": "string"
+                    }
+                  ],
+                  "maxItems": 2,
+                  "minItems": 2
+                }
+              ],
+              "description": "Legacy stack entry: exactly [type, value]. The type determines the payload encoding; nested tuple/list entries use standard TONLib objects."
+            },
+            "description": "Input arguments as `[type, value]` pairs. Numeric values accept decimal or hexadecimal\nstrings and signed 64-bit integers. Use `cell` or `slice` with a `{ \"bytes\": \"...\" }`\nobject, or `tvm.Cell` or `tvm.Slice` with a base64 `BoC` string. Nested tuple and list\nelements use standard `TONLib` stack entries."
+          }
+        },
+        "additionalProperties": false
+      },
       "RunGetMethodResult": {
         "type": "object",
-        "description": "Get-method execution result using the legacy stack format, with the queried block and\ntransaction cursor.",
+        "description": "Get-method execution result using the legacy stack format, with the queried block and\ntransaction cursor.\n\n`S` defaults to TON Center stack entries; use a custom entry type when decoding\nadditional stack values supplied by a compatible server.",
         "required": [
           "@type",
           "gas_used",

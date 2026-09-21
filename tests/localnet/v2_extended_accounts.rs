@@ -5,7 +5,7 @@ use crate::support::toncenter::{
     active_shard_account_boc64, summarize_v2_account_state, test_std_addr,
 };
 use serde_json::{Value, json};
-use ton_api::toncenter::v2::responses as v2;
+use toncenter::v2::responses as v2;
 use tycho_types::boc::Boc;
 use tycho_types::cell::{Cell, CellBuilder};
 
@@ -95,10 +95,10 @@ fn data_cell(words: &[u32]) -> Cell {
 }
 
 fn extended_state_summary(node: &LocalnetHandle, address: &str) -> Value {
-    let extended: v2::TonlibResponse<v2::ExtendedAddressInformation> = node.get_json_as(&format!(
-        "/api/v2/getExtendedAddressInformation?address={address}"
-    ));
-    let wallet: v2::TonlibResponse<v2::WalletInformation> =
+    let extended: toncenter::v2::TonlibResponse<v2::ExtendedAddressInformation> = node.get_json_as(
+        &format!("/api/v2/getExtendedAddressInformation?address={address}"),
+    );
+    let wallet: toncenter::v2::TonlibResponse<v2::WalletInformation> =
         node.get_json_as(&format!("/api/v2/getWalletInformation?address={address}"));
 
     json!({

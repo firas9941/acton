@@ -122,8 +122,7 @@ pub(super) fn rpc_call_cmd(
         process::exit(1);
     }
 
-    let result_tuple = result
-        .parse_stack_tuple()
+    let result_tuple = tvm_ffi::json_stack::json_to_legacy_stack(result.stack.clone())
         .context("Failed to parse runGetMethod result stack")?;
     let decoded_result = if raw {
         None
