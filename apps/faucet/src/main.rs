@@ -16,8 +16,9 @@ use github_auth::GitHubAuth;
 use handlers::CreateClaim;
 use lazy_limit::{Duration, RuleConfig, init_rate_limiter};
 use sqlx::SqlitePool;
-use sqlx::sqlite::{SqliteConnectOptions, SqlitePoolOptions};
+use sqlx::sqlite::{SqliteConnectOptions, SqliteJournalMode, SqlitePoolOptions};
 use std::net::SocketAddr;
+use std::path::PathBuf;
 use std::str::FromStr;
 use std::sync::Arc;
 use std::time::Duration as StdDuration;
@@ -33,6 +34,7 @@ use tracing::{error, info, warn};
 use uuid::Uuid;
 use wallet::Wallet;
 
+use faucet::antifraud_audit::{AntifraudAuditStore, AuditSubject, PayoutAudit};
 use faucet::middlewares::{enter_request_span, insert_client_ip};
 
 mod address;
@@ -60,6 +62,7 @@ async fn main() -> anyhow::Result<()> {
         version = LONG_VERSION,
         bind_addr = %bind_addr,
         database_url = %config.database.url,
+        antifraud_database_url = %config.antifraud_database.url,
         toncenter_url = %config.toncenter.url,
         "Loaded startup config"
     );
@@ -85,13 +88,31 @@ async fn main() -> anyhow::Result<()> {
     let opts = SqliteConnectOptions::from_str(&config.database.url)
         .context("Invalid database URL")?
         .create_if_missing(true);
+    let antifraud_opts = SqliteConnectOptions::from_str(&config.antifraud_database.url)
+        .context("Invalid antifraud database URL")?
+        .create_if_missing(true)
+        .journal_mode(SqliteJournalMode::Wal)
+        .foreign_keys(true)
+        .busy_timeout(StdDuration::from_secs(5));
 
     let pool = SqlitePoolOptions::new()
         .max_connections(5)
-        .connect_with(opts)
+        .connect_with(opts.clone())
         .await
         .context("Failed to connect to database")?;
     info!("Connected to database");
+
+    info!(
+        database_url = %config.antifraud_database.url,
+        "Connecting to antifraud database"
+    );
+    let antifraud_pool = SqlitePoolOptions::new()
+        .max_connections(5)
+        .connect_with(antifraud_opts.clone())
+        .await
+        .context("Failed to connect to antifraud database")?;
+    ensure_distinct_database_files(&opts, &antifraud_opts)?;
+    info!("Connected to antifraud database");
 
     let default_rate_limit = default_rate_limit_rule(&config.rate_limit.default);
     let claim_rate_limit = claim_rate_limit_rule(&config.rate_limit.claim);
@@ -108,6 +129,10 @@ async fn main() -> anyhow::Result<()> {
     SqliteStorage::setup(&pool)
         .await
         .context("Failed to setup storage")?;
+    let antifraud_audit = AntifraudAuditStore::setup(antifraud_pool)
+        .await
+        .context("Failed to setup antifraud audit")?;
+    info!("Initialized antifraud audit");
     let blacklist = BlacklistStore::setup(pool.clone())
         .await
         .context("Failed to setup antifraud blacklist")?;
@@ -158,6 +183,7 @@ async fn main() -> anyhow::Result<()> {
         pow: Pow::new(config.pow.difficulty),
         valkey,
         antifraud,
+        antifraud_audit,
         blacklist,
         github_auth,
         config: Arc::new(config),
@@ -245,6 +271,38 @@ async fn main() -> anyhow::Result<()> {
     Ok(())
 }
 
+fn ensure_distinct_database_files(
+    database: &SqliteConnectOptions,
+    antifraud_database: &SqliteConnectOptions,
+) -> anyhow::Result<()> {
+    let database_path = canonical_database_file(database, "DATABASE_URL")?;
+    let antifraud_database_path =
+        canonical_database_file(antifraud_database, "ANTIFRAUD_DATABASE_URL")?;
+
+    anyhow::ensure!(
+        database_path != antifraud_database_path,
+        "DATABASE_URL and ANTIFRAUD_DATABASE_URL must point to different SQLite files"
+    );
+    Ok(())
+}
+
+fn canonical_database_file(
+    options: &SqliteConnectOptions,
+    variable: &str,
+) -> anyhow::Result<PathBuf> {
+    let path = options.get_filename();
+    anyhow::ensure!(
+        path != std::path::Path::new(":memory:"),
+        "{variable} must point to a SQLite file"
+    );
+    dunce::canonicalize(path).with_context(|| {
+        format!(
+            "Failed to resolve SQLite file from {variable}: {}",
+            path.display()
+        )
+    })
+}
+
 async fn wait_for_shutdown(mut shutdown: watch::Receiver<bool>) {
     while !*shutdown.borrow() {
         if shutdown.changed().await.is_err() {
@@ -308,6 +366,7 @@ pub(crate) struct AppState {
     pub(crate) pow: Pow,
     pub(crate) valkey: ValkeyStore,
     pub(crate) antifraud: Antifraud,
+    pub(crate) antifraud_audit: AntifraudAuditStore,
     pub(crate) blacklist: BlacklistStore,
     pub(crate) github_auth: GitHubAuth,
     pub(crate) config: Arc<Config>,
@@ -335,6 +394,7 @@ async fn send_claim(task: CreateClaim, state: Data<AppState>) -> anyhow::Result<
     let wallet = state.wallet.as_ref();
     let client = state.client.as_ref();
     let amount = state.config.faucet.amount;
+    let payout_audit = payout_audit(&task, amount)?;
 
     info!("Processing claim for address: {}", task.address);
 
@@ -362,6 +422,8 @@ async fn send_claim(task: CreateClaim, state: Data<AppState>) -> anyhow::Result<
 
         match status {
             Ok(_) => {
+                let paid_at = chrono::Utc::now().timestamp();
+                record_payout_audit(&state, &payout_audit, paid_at).await;
                 record_successful_claim(&state, &task).await;
                 record_sent_subnet_amount(&state, &task, amount).await;
                 match state.valkey.add_sent_amount(amount).await {
@@ -413,6 +475,43 @@ async fn send_claim(task: CreateClaim, state: Data<AppState>) -> anyhow::Result<
     }
 
     unreachable!("send_claim loop should always return");
+}
+
+fn payout_audit(task: &CreateClaim, amount: u64) -> anyhow::Result<PayoutAudit> {
+    let mut subjects = vec![
+        AuditSubject::wallet(task.address.clone())?,
+        AuditSubject::ip(task.client_ip),
+        AuditSubject::device_uid(&task.device_uid)?,
+    ];
+
+    if let Some(github_user_id) = task.github_user_id {
+        subjects.push(AuditSubject::github_user_id(github_user_id));
+    }
+
+    PayoutAudit::new(task.request_id.clone(), amount, &task.client_kind, subjects)
+}
+
+async fn record_payout_audit(state: &AppState, payout: &PayoutAudit, paid_at: i64) {
+    let mut attempt = 0;
+    loop {
+        match state.antifraud_audit.record_payout(payout, paid_at).await {
+            Ok(()) => {
+                info!(paid_at, "Recorded successful payout in antifraud audit");
+                return;
+            }
+            Err(err) => {
+                let delay = exponential_backoff(state.config.worker.retry_base_delay_ms, attempt);
+                warn!(
+                    attempt = attempt.saturating_add(1),
+                    retry_in_ms = delay.as_millis(),
+                    error = %err,
+                    "Failed to record successful payout in antifraud audit; retrying without resending"
+                );
+                tokio::time::sleep(delay).await;
+                attempt = attempt.saturating_add(1);
+            }
+        }
+    }
 }
 
 async fn can_process_subnet_amount_window(

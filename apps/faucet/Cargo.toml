@@ -45,6 +45,7 @@ axum-governor = "1"
 base64 = "0.22.1"
 chrono = { workspace = true }
 dotenvy = "0.15.7"
+dunce = "1.0.5"
 faucet-antifraud = { path = "crates/faucet-antifraud" }
 faucet-config = { workspace = true }
 faucet-pow = { path = "crates/faucet-pow" }

@@ -11,8 +11,11 @@ services:
       - ./.env
     environment:
       VALKEY_URI: "redis://redis:6379"
+      DATABASE_URL: "sqlite:///data/faucet/db.sqlite"
+      ANTIFRAUD_DATABASE_URL: "sqlite:///data/antifraud/db.sqlite"
     volumes:
-      - faucet-data:/data
+      - faucet-data:/data/faucet
+      - faucet-antifraud:/data/antifraud
     depends_on:
       redis:
         condition: service_healthy
@@ -47,4 +50,5 @@ services:
 
 volumes:
   faucet-data:
+  faucet-antifraud:
   redis-data:

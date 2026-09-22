@@ -47,7 +47,7 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends ca-certificates libssl3 libsqlite3-0 sqlite3 tini wget \
     && rm -rf /var/lib/apt/lists/*
 
-RUN mkdir /data && chown faucet:faucet /data
+RUN mkdir -p /data/faucet /data/antifraud && chown -R faucet:faucet /data
 
 WORKDIR /var/lib/faucet
 
@@ -56,7 +56,7 @@ COPY --chown=faucet:faucet apps/faucet/build/.env.production ./.env
 
 USER faucet
 
-ENV DATABASE_URL=sqlite:///data/db.sqlite \
+ENV DATABASE_URL=sqlite:///data/faucet/db.sqlite \
     HOST=0.0.0.0 \
     PORT=3000 \
     LOG_LEVEL=info \

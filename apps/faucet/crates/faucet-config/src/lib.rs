@@ -8,6 +8,7 @@ const NANOCOINS_PER_GRAM: u64 = 1_000_000_000;
 #[derive(Clone, Debug)]
 pub struct Config {
     pub database: DatabaseConfig,
+    pub antifraud_database: DatabaseConfig,
     pub server: ServerConfig,
     pub rate_limit: RateLimitConfig,
     pub toncenter: ToncenterConfig,
@@ -167,6 +168,10 @@ impl Config {
             database: DatabaseConfig {
                 url: std::env::var("DATABASE_URL")
                     .unwrap_or_else(|_| "sqlite:./db.sqlite".to_string()),
+            },
+            antifraud_database: DatabaseConfig {
+                url: std::env::var("ANTIFRAUD_DATABASE_URL")
+                    .context("ANTIFRAUD_DATABASE_URL must be set")?,
             },
             server: ServerConfig {
                 host: std::env::var("HOST").unwrap_or_else(|_| "127.0.0.1".to_string()),
@@ -516,6 +521,9 @@ mod tests {
     fn valid_config() -> Config {
         Config {
             database: DatabaseConfig {
+                url: "sqlite::memory:".to_string(),
+            },
+            antifraud_database: DatabaseConfig {
                 url: "sqlite::memory:".to_string(),
             },
             server: ServerConfig {

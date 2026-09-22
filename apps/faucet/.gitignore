@@ -29,4 +29,6 @@ Thumbs.db
 !build/.env.production
 db.sqlite
 db.sqlite-*
+antifraud.db
+antifraud.db-*
 test*.sh

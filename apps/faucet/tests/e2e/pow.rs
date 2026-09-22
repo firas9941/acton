@@ -68,6 +68,9 @@ pub(super) fn config(pow_enabled: bool) -> Config {
         database: DatabaseConfig {
             url: "sqlite::memory:".to_string(),
         },
+        antifraud_database: DatabaseConfig {
+            url: "sqlite::memory:".to_string(),
+        },
         server: ServerConfig {
             host: "127.0.0.1".to_string(),
             port: 3001,

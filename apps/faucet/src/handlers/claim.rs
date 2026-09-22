@@ -23,6 +23,9 @@ pub(crate) struct CreateClaim {
     pub(crate) address: String,
     pub(crate) challenge: String,
     pub(crate) nonce: u64,
+    pub(crate) client_ip: std::net::IpAddr,
+    pub(crate) device_uid: String,
+    pub(crate) client_kind: String,
     #[serde(default)]
     pub(crate) github_user_id: Option<u64>,
     #[serde(default)]
@@ -205,6 +208,9 @@ pub(super) async fn create_claim(
             address,
             challenge: payload.challenge,
             nonce: payload.nonce,
+            client_ip: client_ip.ip(),
+            device_uid: client.device_uid.clone(),
+            client_kind: client.client_kind.as_str().to_owned(),
             github_user_id,
             tier,
             max_requests,
@@ -425,10 +431,19 @@ mod tests {
             "address": "0:abc",
             "challenge": "challenge",
             "nonce": 42,
+            "client_ip": "192.0.2.1",
+            "device_uid": "00000000000000000000000000000000",
+            "client_kind": "test-client",
         }))
         .unwrap();
 
         assert_eq!(claim.github_user_id, None);
+        assert_eq!(
+            claim.client_ip,
+            "192.0.2.1".parse::<std::net::IpAddr>().unwrap()
+        );
+        assert_eq!(claim.device_uid, "00000000000000000000000000000000");
+        assert_eq!(claim.client_kind, "test-client");
         assert_eq!(claim.request_id, "00000000-0000-4000-8000-000000000001");
         assert_eq!(claim.tier, FaucetTier::Guest);
         assert_eq!(claim.max_requests, 0);
