@@ -3,12 +3,24 @@ import process from "node:process";
 import { compileFunc } from "./languages/func.mjs";
 import { compileTact } from "./languages/tact.mjs";
 import { compileTolk } from "./languages/tolk.mjs";
-import { readStdin, validateInput, writeOutput } from "./languages/common.mjs";
+import {
+  readStdin,
+  validateCompileInput,
+  validateInput,
+  writeOutput,
+} from "./languages/common.mjs";
 
 try {
-  const input = JSON.parse(await readStdin(process.stdin));
-  validateInput(input);
-  writeOutput(process.stdout, await compile(input));
+  const input = validateInput(JSON.parse(await readStdin(process.stdin)));
+  switch (input.operation) {
+    case "compile": {
+      const compileInput = validateCompileInput(input);
+      writeOutput(process.stdout, await compile(compileInput));
+      break;
+    }
+    default:
+      throw new Error(`unsupported operation: ${String(input?.operation)}`);
+  }
 } catch (error) {
   writeOutput(process.stdout, {
     status: "compile_error",
@@ -16,6 +28,9 @@ try {
   });
 }
 
+/**
+ * @param {import("./languages/common.mjs").CompileInput} input
+ */
 async function compile(input) {
   switch (input.language) {
     case "func":

@@ -40,7 +40,8 @@ impl NodeCompilerService {
 #[async_trait]
 impl CompilerService for NodeCompilerService {
     async fn compile(&self, request: CompileRequest) -> Result<CompileOutput, CompilerError> {
-        let input = serde_json::to_vec(&request).map_err(CompilerError::SerializeInput)?;
+        let input = serde_json::to_vec(&WorkerRequest::Compile { request: &request })
+            .map_err(CompilerError::SerializeInput)?;
         let worker_path = dunce::canonicalize(&self.worker_path).map_err(|source| {
             CompilerError::ResolveWorkerPath {
                 path: self.worker_path.clone(),
@@ -207,6 +208,15 @@ enum WorkerOutput {
     },
 }
 
+#[derive(Serialize)]
+#[serde(tag = "operation", rename_all = "snake_case")]
+enum WorkerRequest<'a> {
+    Compile {
+        #[serde(flatten)]
+        request: &'a CompileRequest,
+    },
+}
+
 #[derive(Debug, Error)]
 pub enum CompilerError {
     #[error("failed to serialize compiler input: {0}")]
@@ -319,7 +329,7 @@ mod tests {
                     const request = JSON.parse(input);
                     process.stdout.write(JSON.stringify({
                         status: 'ok',
-                        code_hash: String(request.sources[0].content.length),
+                        code_hash: `${request.operation}:${request.sources[0].content.length}`,
                         used_source_paths: ['main.tolk']
                     }));
                 });
@@ -329,7 +339,7 @@ mod tests {
         )
         .await
         .expect("full duplex exchange must complete");
-        assert_eq!(result.code_hash, "1048576");
+        assert_eq!(result.code_hash, "compile:1048576");
         assert_eq!(result.used_source_paths, Some(vec!["main.tolk".to_owned()]));
     }
 
