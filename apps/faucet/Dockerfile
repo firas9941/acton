@@ -18,6 +18,9 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends build-essential pkg-config ca-certificates git libssl-dev \
     && rm -rf /var/lib/apt/lists/*
 
+COPY Cargo.toml /build/Cargo.toml
+COPY src/lib.rs /build/src/lib.rs
+COPY crates/toncenter /build/crates/toncenter
 COPY apps/faucet/Cargo.toml apps/faucet/Cargo.lock apps/faucet/rust-toolchain.toml apps/faucet/build.rs ./
 COPY apps/faucet/crates ./crates
 COPY apps/faucet/src ./src

@@ -2,6 +2,15 @@
 
 !package.json
 !bun.lock
+!Cargo.toml
+
+!src/
+src/*
+!src/lib.rs
+
+!crates/
+crates/*
+!crates/toncenter/
 
 !apps/
 apps/*
