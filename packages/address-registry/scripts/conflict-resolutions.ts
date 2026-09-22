@@ -72,24 +72,9 @@ export const CONFLICT_RESOLUTIONS = [
     name: "Bybit 2",
   },
   {
-    address: "0:57eb74407604a19f7e04005315ef70aeb7b675e6551977586756f6baf12125ee",
-    source: "ton-assets",
-    name: "MEXC 1",
-  },
-  {
-    address: "0:1c7bd690f4f93de8b93db5790129dab65926c6e1fc9b57380089db5529516630",
-    source: "ton-assets",
-    name: "MEXC 2",
-  },
-  {
-    address: "0:d887d0e2d1c4fc4126e71c970d33ab1896940000eae703bb1ab6cecc830777e3",
-    source: "ton-assets",
-    name: "MEXC 3",
-  },
-  {
-    address: "0:3d7ee4917dc75c195b975a17b8fb7d367978fdc30bd9649200aa1255a93a3e57",
-    source: "ton-assets",
-    name: "Changelly 2",
+    address: "0:8b070edb01a700f3f6a4624c7e086e036da86060ebb04f19908ee61a3537335f",
+    source: "address-book",
+    name: "Changelly 1",
   },
   {
     address: "0:cd525c15904d7b4027eae08b318624260f371ce8c9f4fcca0cdb7b583854107c",
@@ -175,41 +160,6 @@ export const CONFLICT_RESOLUTIONS = [
     address: "0:66a1e72196d64d6faf48fa4b2ea861f67b0484d2d14a59caf701d8c286ce44e5",
     source: "ton-assets",
     name: "OKX 11",
-  },
-  {
-    address: "0:0338def34b84c6ee9134a04ab1601450be446340a37ae259de57cb37bdb590cd",
-    source: "ton-assets",
-    name: "OKX 4",
-  },
-  {
-    address: "0:24da1e7b8da901e5b3dd0f98c397feb6e5a5ea483195a8b6bd0682cf2c5327ae",
-    source: "ton-assets",
-    name: "OKX 6",
-  },
-  {
-    address: "0:7f2e84c723d8b6b6b1aacf810c8c26ab23c22022b464b87104b2d3065b0ea70b",
-    source: "ton-assets",
-    name: "OKX 7",
-  },
-  {
-    address: "0:854ec4521efd52ad43bcf1988e4c44ebdf9a26ad18fa51abfdb685fc3b348a5c",
-    source: "ton-assets",
-    name: "OKX 8",
-  },
-  {
-    address: "0:a30a49ec725e9f57244b66af4c2da7ab76004b4fce80d3a34b1cd0c37762abce",
-    source: "ton-assets",
-    name: "OKX 5",
-  },
-  {
-    address: "0:e7e86da08742ed933434ffeb8f08a63c7e100ee842e25f599a9cbf0891574a6c",
-    source: "ton-assets",
-    name: "OKX 3",
-  },
-  {
-    address: "0:f15db2c62cd86aff0860d39c491fc73a31395fafeb5945e644498562260c782e",
-    source: "ton-assets",
-    name: "OKX 2",
   },
   {
     address: "-1:386e6a793b70ed6235e67560183040734cfb2ef9c3cc720e758b767d6df748ef",
@@ -341,6 +291,41 @@ export const CONFLICT_RESOLUTIONS = [
     address: "0:c6f5916443f6f707139b108edce317ea52a8c4c5e5afaf9a3c6e93d64685d95d",
     source: "address-book",
     name: "TonAPI Gas Proxy 9",
+  },
+  {
+    address: "0:695a70302a23c2b4a1b987a85efa97ecbb9d1595e6f3fe95259290e04b54cf1f",
+    source: "address-book",
+    name: "TonAPI Gas Proxy 10",
+  },
+  {
+    address: "0:3bd3aad670168c4b1c6ec9bd29fdd65b139670b71d39c653fb5882430e1db58e",
+    source: "address-book",
+    name: "TonAPI Gas Proxy 11",
+  },
+  {
+    address: "0:2fa8b698bd32c65e8c936341804a7acdea1f92e3d366be4b0e243debc3dc1260",
+    source: "address-book",
+    name: "TonAPI Gas Proxy 12",
+  },
+  {
+    address: "0:463b36b05b642dcd8e7892796b4bf3e5aa67f1c73eec76d4be6fc2e0bcddb391",
+    source: "address-book",
+    name: "TonAPI Gas Proxy 13",
+  },
+  {
+    address: "0:b6eacb041642f30b424d2f6f58795e6e932acefffa779326f1c256347820b4cd",
+    source: "address-book",
+    name: "TonAPI Gas Proxy 14",
+  },
+  {
+    address: "0:87116a10bfc9cc340b837eb03b059ee162aaef9b6fa22dc9e435b3e73a173df9",
+    source: "address-book",
+    name: "TonAPI Gas Proxy 15",
+  },
+  {
+    address: "0:51b3631fe3f915981f4114cdeb1237e850b7fae43055b13dbcdc96e50f1c16ce",
+    source: "address-book",
+    name: "TonAPI Gas Proxy 16",
   },
   {
     address: "-1:3333333333333333333333333333333333333333333333333333333333333333",
@@ -551,16 +536,6 @@ export const CONFLICT_RESOLUTIONS = [
     address: "-1:34517c7bdf5187c55af4f8b61fdc321588c7ab768dee24b006df29106458d7cf",
     source: "ton-assets",
     name: "Log tests Contract",
-  },
-  {
-    address: "0:8d195793baad9a08c46dc353aebe999341dabd07721b9725f19e18abc3d10d92",
-    source: "ton-assets",
-    name: "EXMO Cold Storage 1",
-  },
-  {
-    address: "0:26ab8ae763a3a7c3067d882b7b01cd5d37254cb8768f57b6a47c00028effc7b8",
-    source: "ton-assets",
-    name: "EXMO Cold Storage 2",
   },
   {
     address: "0:555f3053e257130374bb831ae0e219e5e5f9ec0ca8f8a0d133369d3d690c64c2",

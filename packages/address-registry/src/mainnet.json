@@ -12,8 +12,16 @@
     "name": "Telegram Pool 21"
   },
   {
+    "address": "-1:0155ae03f975d1fc31e45d029b28953c8e6c241046493a8da95f59b110ef0648",
+    "name": "Telegram Validator 51"
+  },
+  {
     "address": "-1:026e0c2150c627db21d4df8ddd71ecca92f99eddcc85241ed21d5637157854f6",
     "name": "Token Oracle 1"
+  },
+  {
+    "address": "-1:0284ec61b0f59bc12e032786feb48305588166e15fb99556c6d6b694154f17f7",
+    "name": "Telegram Validator 50"
   },
   {
     "address": "-1:033f1fcb0f93d56cba43a6fb7a9fd45dce68fd3e5e43f8925d0b06f30a544514",
@@ -36,8 +44,20 @@
     "name": "TON Strategy Validator 37"
   },
   {
+    "address": "-1:0545fbffc1b2b95b431266450e0d03d90e7e642df83b5d6f695831b2e85c9680",
+    "name": "Telegram Validator 42"
+  },
+  {
+    "address": "-1:05a67c16a5f06ff5e12ce40ed1637ccb44273b23464625cf647c06fb4d259940",
+    "name": "Telegram Validator 30"
+  },
+  {
     "address": "-1:0657a79f88a4c0fb42da72ff5dd0a96cdd461e80c5ab39bf51e5c3ccaecbcf82",
     "name": "TON Strategy Single Pool 35"
+  },
+  {
+    "address": "-1:06b787af8c16e7132bfa71d9a8b41ebc65c8aa35c4a87bbf4433f47a5df41f81",
+    "name": "Telegram Validator 45"
   },
   {
     "address": "-1:092aac7823e5c408bb95853a9e63558c81b813a7c2ddde6ccdf8952880117864",
@@ -108,6 +128,10 @@
     "name": "Whales Nominators"
   },
   {
+    "address": "-1:17e76db7b2bcbef11625431137a76d7bcd8011c8e2c973b1240b239206ff5cb4",
+    "name": "Telegram Validator 47"
+  },
+  {
     "address": "-1:1976e71b92c9c2747e6b35a0dcf73ca351e70242022d7025a8287a96c316545f",
     "name": "TON Strategy Pool 6"
   },
@@ -128,8 +152,16 @@
     "name": "Large Giver 1"
   },
   {
+    "address": "-1:20f95014f1d283f190dd1d5529431b71b67527df5e003d16a9cc94b24b59fcc7",
+    "name": "Telegram Pool 42"
+  },
+  {
     "address": "-1:211f1574bf623d14787708c5fdd565e329a25abfa49095e984426f19bcf04974",
     "name": "ETH Token Bridge Governance"
+  },
+  {
+    "address": "-1:211f538f18d7783bc65f7ca15aacea8d197916df788bb9868d609e1c9f054114",
+    "name": "Telegram Pool 32"
   },
   {
     "address": "-1:21a56f2ebf9360cf99b99d5fed49105fa3f552987cfaa70fc943a63f3d757943",
@@ -160,6 +192,10 @@
     "name": "Large Giver 10"
   },
   {
+    "address": "-1:2debd3953e441e3145a0e463a8c0f912f579f0c3f090244d5534c834aeb0749e",
+    "name": "Telegram Pool 36"
+  },
+  {
     "address": "-1:2e0d3bb658270976db8a9a40e60b5c91295c59ad3a7cde47b93e730408e71c83",
     "name": "Token Oracle 6"
   },
@@ -186,6 +222,10 @@
   {
     "address": "-1:2faf5262978e84c2309de6c38a9710f5351cc0f190dc228952b4e55ddf1f47cb",
     "name": "DWF Labs Pool 1"
+  },
+  {
+    "address": "-1:3014948ac9befa1ceded7f4dc46ee3de8682a94d6f96e297d2897ae470a8172e",
+    "name": "Telegram Validator 36"
   },
   {
     "address": "-1:307185ed370cfa2eecf653ced413d16b415f12bc370a0252c30a7cc9dd7b6d8a",
@@ -248,6 +288,10 @@
     "name": "TON Strategy Validator 10"
   },
   {
+    "address": "-1:3b7c596840e1989d51ed2f28e9f3684ef66f761ff952a77e623a1e0eb67eef9f",
+    "name": "Telegram Pool 40"
+  },
+  {
     "address": "-1:3b9bbfd0ad5338b9700f0833380ee17d463e51c1ae671ee6f08901bde899b202",
     "name": "ETH Bridge Governance"
   },
@@ -284,6 +328,10 @@
     "name": "Telegram Validator 14"
   },
   {
+    "address": "-1:42af385ff6556efe167f5c07f9174eb4e1dfdb12de4ccc0d273746545f711e07",
+    "name": "Telegram Validator 25"
+  },
+  {
     "address": "-1:42c51791c9a1a3d2fa521f48116643808ad9bfc831ef822306b66bc6f994e2ae",
     "name": "Large Giver 2"
   },
@@ -300,6 +348,10 @@
     "name": "KTON Validator 1 Controller 1"
   },
   {
+    "address": "-1:470022554c0277ec8f9915170ff6e8ad017674f74d117d0f1fcb0d98bb5cf201",
+    "name": "Telegram Validator 27"
+  },
+  {
     "address": "-1:477be96b16fcabed0afcc423c626685223d008ce3afc39447f9c21645f1219be",
     "name": "Telegram Validator 2"
   },
@@ -310,6 +362,10 @@
   {
     "address": "-1:492cbaa51893ec79f7c9cf569c2cac0e91286daa1af79ef45354e81c5d077dfe",
     "name": "TON Strategy Validator 16"
+  },
+  {
+    "address": "-1:4aecd08c9e70f24cadf7cb4243ba4f43b447ef402c3d469b355c9f9773920ffc",
+    "name": "Telegram Pool 39"
   },
   {
     "address": "-1:4b0792e9e1fd927fce04e2e512c49a968e9c21028f0b89d1b77caa9cc9af7fe4",
@@ -326,6 +382,10 @@
   {
     "address": "-1:4e399e5d71178392c573610cc97371497da5786fd1919f3688d23e8a4096a4bc",
     "name": "TON Strategy Pool 17"
+  },
+  {
+    "address": "-1:4f0b7f16834f752eb9d1ab9677e1aae542b9789e050dfafdaa80072943e82735",
+    "name": "Telegram Validator 33"
   },
   {
     "address": "-1:5003d3b6cc19b32b8af83d1e7bef89fbbb766e453c8d012dfba867dcb8ae7f8c",
@@ -352,8 +412,16 @@
     "name": "TON Strategy Validator 20"
   },
   {
+    "address": "-1:52d942f5295c32966ec4f6483bce16859ed129d73a96b92c9c80b4e4026c9ab5",
+    "name": "Telegram Pool 31"
+  },
+  {
     "address": "-1:53c3a33c6be43978ce4c0229e76b8bf4a81311c4487b89ca5e953320eee405f7",
     "name": "TON Strategy Validator 23"
+  },
+  {
+    "address": "-1:541cfe04f463f08a60cfb2e256d3c3eae8df80fb383d8547dd921ba3883f9012",
+    "name": "Telegram Validator 49"
   },
   {
     "address": "-1:546e0f7ac50f2354a6e5ed0409d64f290a540b98ed428baf27b8d7db2dd9bdb9",
@@ -436,6 +504,10 @@
     "name": "TON Strategy Validator 25"
   },
   {
+    "address": "-1:680e09ba3909fdc26991e3a00ca3b5bcad8bc43344bd2ff23ebf8fb4400ae85b",
+    "name": "Telegram Validator 43"
+  },
+  {
     "address": "-1:68f2869234586033cb855b8048a3b3fc2142b6a958d1682e7f19dd8edc9a8f80",
     "name": "Stakee Validator 1"
   },
@@ -492,6 +564,10 @@
     "name": "TON Strategy Single Pool 25"
   },
   {
+    "address": "-1:78d796dfc72f5cc3bd6f3f37b77a2798263ca67106a65d93bfefafbd19b3b6fd",
+    "name": "Telegram Validator 32"
+  },
+  {
     "address": "-1:7902e6500601ca1041310b4d8934b939f81b22c26119d2bc6a1ce8fba8ce62e6",
     "name": "Telegram Pool 23"
   },
@@ -506,6 +582,10 @@
   {
     "address": "-1:7c6ded804a8e3103fb764365481f471da582b2943c9f84bde72fb0728f3d7cd1",
     "name": "CAT Staking Pool 7"
+  },
+  {
+    "address": "-1:7dc083fc449f68ac7d485bea9c849e3413da664f447d8a0eff8e79a09de11c2f",
+    "name": "Telegram Pool 43"
   },
   {
     "address": "-1:80070f80b4538f03756f3d7b2407dc74eae7e084daa77d5049d9d4dec5e77e9a",
@@ -564,8 +644,16 @@
     "name": "TON Strategy Pool 13"
   },
   {
+    "address": "-1:88e59c425eb59a7bb53d549df6df719a9785b05eb73299880eda10fc8ffdeea0",
+    "name": "Telegram Pool 28"
+  },
+  {
     "address": "-1:89a0f35822bcb5005aa7390b4c3d729eec2a02744252a5092f4262fbef07382c",
     "name": "Telegram Pool 13"
+  },
+  {
+    "address": "-1:8a682fa272eb74af2526665223d9cd0e05cc89ab745184b63701fc59a8d89df7",
+    "name": "Telegram Pool 37"
   },
   {
     "address": "-1:8ab4e60adf4a46e09f9c7057329dee21b2c5f736b1d3ef5ca07e3d7789e13837",
@@ -578,6 +666,10 @@
   {
     "address": "-1:8b0504efbca8da822499485c0c4a6144c511d9a154cd2354e45a3dc14750196f",
     "name": "Telegram Validator 4"
+  },
+  {
+    "address": "-1:8d3f8bf185fc4db680cd3081be7481cf83a4d37ae4c710f3649eba5ba1390f69",
+    "name": "Telegram Pool 44"
   },
   {
     "address": "-1:8ffd339dc1c0a1d005c7841a480833314adc477a759d2c20cb347e5070da7030",
@@ -612,6 +704,18 @@
     "name": "Large Giver 3"
   },
   {
+    "address": "-1:9850385b2cf5e189ae4100c9bd0d8d2709f24ed694a9e25c1a6d1f8e8fed6083",
+    "name": "Telegram Pool 48"
+  },
+  {
+    "address": "-1:9940205c2a2046ce02e9410d01beb0041420654ec4888135803abf891edbf50e",
+    "name": "Telegram Pool 45"
+  },
+  {
+    "address": "-1:9d4f6955ccd8c3ea25a4d1c46ca1e2ce1e0a3c0374a1f06535f033ab27f73776",
+    "name": "Telegram Validator 46"
+  },
+  {
     "address": "-1:9d9235904ee02d53944a4c306c43f97a66028f4f2612077bc63ee49a3993bcb9",
     "name": "pKTON Validator 1"
   },
@@ -624,8 +728,24 @@
     "name": "Stakee Validator 11"
   },
   {
+    "address": "-1:9e2a4648a4379ccfe14ea979bfbef013d780cc01eeff526829880407a7d4d107",
+    "name": "Telegram Validator 38"
+  },
+  {
+    "address": "-1:9f31139ce0af9b3299ee0a2f89a298af6469a776491424880ef577fbf95e6d7d",
+    "name": "Telegram Validator 41"
+  },
+  {
     "address": "-1:9fa3d0bb032bea82f31f84b4d5f5549c167684f011bb10635991b3ff84506cc1",
     "name": "Telegram Pool 16"
+  },
+  {
+    "address": "-1:a0b2c75fdc2e31d57da6176b95a96d0cc59c79cbccc06e2b75c8c4f9e7e2bbe2",
+    "name": "Telegram Pool 27"
+  },
+  {
+    "address": "-1:a0fa8bf46d9939933c0b5f1e1aedbc0c270dc9d75296e522da0364a51bb1ea0e",
+    "name": "Telegram Validator 37"
   },
   {
     "address": "-1:a2b4672396a0afc27eb34fd8052a73d37ac1e7fb39c9cb641080fde50752a97c",
@@ -634,6 +754,10 @@
   {
     "address": "-1:a35ac5f32a3ed8b0cda0c988d9b66e19167232d57d649db0e22bd53ab867fdb0",
     "name": "Stakee Validator 12"
+  },
+  {
+    "address": "-1:a4458c80f5899651cfb2a9ffe7b4755ef4fbc1aff3d9bfa7bd4e6bb949a4339c",
+    "name": "Telegram Pool 46"
   },
   {
     "address": "-1:a491d63f07ba7eefb4cb9f685484ce9089d5abaec97c15858222f04ca592a9ac",
@@ -668,6 +792,10 @@
     "name": "CAT Validator 2"
   },
   {
+    "address": "-1:aa4815379f802d5e248cd5ffcb878a6a60e9611f0ff5bbea31579ab8ab61187e",
+    "name": "Telegram Pool 25"
+  },
+  {
     "address": "-1:ad1d2cbf7bf41ac059e2043c61400a45219386e9b12ae1ec7eec503ee89e16fd",
     "name": "Telegram Pool 8"
   },
@@ -696,8 +824,16 @@
     "name": "ETH Token Bridge"
   },
   {
+    "address": "-1:b531a134315eb279cbf09e5e655bb9357a86dc0ca8b3fb7909bbf79323ad4d11",
+    "name": "Telegram Pool 26"
+  },
+  {
     "address": "-1:b56b91e5c40812d9c5d5059aaf0e69d138abe400fcb4314c6f67587bb1df299b",
     "name": "Telegram Validator 1"
+  },
+  {
+    "address": "-1:b6f42c26a2a9ddac73cbcdbc4a2c80f206049613c49c71eab66032af58c23d13",
+    "name": "Telegram Pool 47"
   },
   {
     "address": "-1:b74dd9593f9bd8eaa2c514211258a0ea38c71252ebf876362514bc7742c8dfad",
@@ -716,8 +852,16 @@
     "name": "TON Strategy Single Pool 39"
   },
   {
+    "address": "-1:bc3a3a7739bf557b409f228dc26a58529ab03910853a8dad2615385b7a5d6982",
+    "name": "Telegram Validator 40"
+  },
+  {
     "address": "-1:bc8bbd5c4bba73f5fbb3402c5134e231df51336933e99ac365b866f3242e9c54",
     "name": "HB Pool 2"
+  },
+  {
+    "address": "-1:bcfd611ca8f6488d4d701fa2e7c92db1e0ffbfde4a48f3fbf566530e92426d9f",
+    "name": "Telegram Pool 49"
   },
   {
     "address": "-1:bd4709842b90f7fb7fc51b2f3ea259d55d82711a532b1fcc8fb9b7dfc0dc2355",
@@ -754,6 +898,14 @@
   {
     "address": "-1:c50f890366c81f5c4690c683d894c2940a767fff47da9abb0a4a3c125d4996bf",
     "name": "BSC Bridge Multisig"
+  },
+  {
+    "address": "-1:c581eb2e605389b768c05541e14bc2f343ca57df1b7589eafed57963654b3278",
+    "name": "Telegram Validator 31"
+  },
+  {
+    "address": "-1:c7aceaa3e2bc9af11ddccf607c624832808174d46dbc8b2c7f7af7735bb34fb9",
+    "name": "Telegram Validator 44"
   },
   {
     "address": "-1:c7ede19e0948ec52d3b13afda7db405faefc23d7c6d3c48e0f2da24e02808f7c",
@@ -804,12 +956,20 @@
     "name": "Bridge Oracle 0"
   },
   {
+    "address": "-1:cfe5553c18f4cb548adf4e1e0005135c3fe4eaccbfdde24665e2344474681074",
+    "name": "Telegram Pool 41"
+  },
+  {
     "address": "-1:d1420149351b890157c51f9edb32ad35909990964cf80ad9b056a5501b086ac2",
     "name": "TON Strategy Single Pool 38"
   },
   {
     "address": "-1:d15f796460168d8824e35a3a266169ac69030a1dec8d45ceed32e39fa9cc9809",
     "name": "TON Strategy Validator 9"
+  },
+  {
+    "address": "-1:d31c7dbf53133ec5b1b62836f1361ddf2cc6054833d5fe036555a37baa32a3ec",
+    "name": "Telegram Pool 35"
   },
   {
     "address": "-1:d34cc6c6cebb31e149b85ca25cc033bc6a18db1b87dba622cb133c7a0793c50e",
@@ -852,8 +1012,16 @@
     "name": "TON Strategy Pool 3"
   },
   {
+    "address": "-1:daba814855306200442cb0e4e0ff1500b91722723ba1ec921d494d342c22be57",
+    "name": "Telegram Pool 33"
+  },
+  {
     "address": "-1:db952420893666069f674c14c516296e43bb4808e07f6726ef12ff98ad78bf47",
     "name": "Telegram Pool 15"
+  },
+  {
+    "address": "-1:dc066a9df820681fbc515e8fcff7a0d6ad1b3e01063f94b8f89cbe92094ef701",
+    "name": "Telegram Pool 50"
   },
   {
     "address": "-1:dc7bf7aa4f45d17eb057dfcb6a0965d6477345e0701d29764896d7af17b06a32",
@@ -870,6 +1038,14 @@
   {
     "address": "-1:dda1d87623c063a6fc4922b286e68c28e7f0b5459973919b570b71c62ee35913",
     "name": "Very First Pool 2"
+  },
+  {
+    "address": "-1:de7be8bcbbd9bc9cf356b95ff71e9e0255700d6ffc735155cb3d4cb91bbd4e0d",
+    "name": "Telegram Validator 52"
+  },
+  {
+    "address": "-1:deead6cdecaf342b5f0bb296b16c89c62e28d4076b09d361d5b380b91864ffc2",
+    "name": "Telegram Pool 30"
   },
   {
     "address": "-1:df59a2399c1cade1f02a3776340bf15fc3c0bff98b388b13b13988fe12b989a7",
@@ -908,6 +1084,14 @@
     "name": "KTON Validator 1"
   },
   {
+    "address": "-1:e5cabc13c478db58b2565286bc16bc591716865716560665b213aa6ce6b692d7",
+    "name": "Telegram Pool 29"
+  },
+  {
+    "address": "-1:e7183e24aca728a1abe6d2f1e3e14ed028eaf281d7daf27ca400a55b76425c6c",
+    "name": "Telegram Pool 51"
+  },
+  {
     "address": "-1:e71d1e4850a0817ffa879488c2b145aea3a6dbae1d7be1ffda25f37acc802704",
     "name": "Fastnet Pool B #2"
   },
@@ -924,6 +1108,10 @@
     "name": "TON Strategy Single Pool 28"
   },
   {
+    "address": "-1:ebcf07b427073b9b28c6d6cb5dbeee88efa287e223f9ee61e89356a2de1779d7",
+    "name": "Telegram Validator 26"
+  },
+  {
     "address": "-1:ec845f7420fe58b53815ab5119f10650061165cbe3324f438f8f292e43785153",
     "name": "TON Strategy Pool 1"
   },
@@ -932,16 +1120,36 @@
     "name": "Bridge Oracle 7"
   },
   {
+    "address": "-1:ee1c3d607f7f82a4cb7e772b13268198f294d51d6ea366620eda0b14ac549f08",
+    "name": "Telegram Validator 34"
+  },
+  {
     "address": "-1:ee2554d34e853c6f7a3bf89af9a5c52a7a7c56cc3358a72925be197bdca48803",
     "name": "Bridge Oracle 4"
+  },
+  {
+    "address": "-1:ee8b4dac1afd1e61867d5777c2f8523ba8bcef309e95adfaca298d9a65f98744",
+    "name": "Telegram Validator 29"
+  },
+  {
+    "address": "-1:f023cd86cb2009b7ec0e62b77c9a2da06a9968b8ce0905e254df7e3ab888d45b",
+    "name": "Telegram Validator 35"
   },
   {
     "address": "-1:f0517c7e975121c3491f411805b5628ed3b07a5a14aa7144193728782668fc47",
     "name": "Large Giver 6"
   },
   {
+    "address": "-1:f09294ba5b633e35c2fd740cd4dceb8c59dd0e18835dc122d99073d6baa3f5cf",
+    "name": "Telegram Pool 52"
+  },
+  {
     "address": "-1:f159a9ed2be679be1063a51213325a1ecd0744820bb033582acec101e26b7df4",
     "name": "pKTON Validator 1 Controller 1"
+  },
+  {
+    "address": "-1:f447630f156e2e38e913619ce4a8bf77831232fe202809252454d9f41845f479",
+    "name": "Telegram Pool 34"
   },
   {
     "address": "-1:f449416df066c88b39b1096769a2c8e6d478618ab7f2be2ddcba716a2b3d2ca8",
@@ -960,8 +1168,20 @@
     "name": "Telegram Validator 9"
   },
   {
+    "address": "-1:f692151a92d85f4d8a719067cf9cb55ee06e4d1dd1c8778d2e8f47fc38c6103b",
+    "name": "Telegram Validator 48"
+  },
+  {
+    "address": "-1:f6b9d369b1003c99dd1b36806f360f04aa5c4a201c901f8522e536dd92e716b2",
+    "name": "Telegram Validator 28"
+  },
+  {
     "address": "-1:f7ab16d1976aee43b8eacc794341d38e72a924a134a580eef8f5a43a3c6cb008",
     "name": "Whales Club"
+  },
+  {
+    "address": "-1:fa12d4dcbdebe17fb26a72b9917d378413b46aa01809ea2c1359f907d73b9a35",
+    "name": "Telegram Pool 38"
   },
   {
     "address": "-1:fa3caff8303f5eaf41a460f981ac8982100861300311d108a5d1053da4a79801",
@@ -974,6 +1194,10 @@
   {
     "address": "-1:fafdb64cb06cb06ea6336b852a446b77058674d746c8e78ef2e66199beca6a9b",
     "name": "pKTON Validator 3 Controller 1"
+  },
+  {
+    "address": "-1:fc8cd37c0c408dd2c2f122ff0b713d36bf6aaa9a3f1755ffc121fce077081610",
+    "name": "Telegram Validator 39"
   },
   {
     "address": "-1:fcce4666e24e1f8efdc869d76875f056070324fb44e02ee5864047da10c9b4c4",
@@ -1077,7 +1301,7 @@
   },
   {
     "address": "0:0568f98b2e15ef787730dc06081839476c601b7d05a51f8e5619fe0ae03e8335",
-    "name": "Gram Extra Small Giver 10"
+    "name": "GRM Extra Small Giver 10"
   },
   {
     "address": "0:059a3528654a8a14404660510c6effa6eb5b054ad8007d447c27a8490f0514d3",
@@ -1161,7 +1385,7 @@
   },
   {
     "address": "0:0eee35dc5fe7c925997e92985ba5d85b20352a700898700afd46f565165dfc51",
-    "name": "Gram Small Giver 5"
+    "name": "GRM Small Giver 5"
   },
   {
     "address": "0:0f36eeb8f1f7bfbaa528787e95ffe7c80c961e6bfe57bb6ad79fa899162978f5",
@@ -1189,7 +1413,7 @@
   },
   {
     "address": "0:11f43bcb64c1e8f45015307235bc7bcbec58bb8d68232ad500459d92fe7a2941",
-    "name": "Gram Extra Small Giver 4"
+    "name": "GRM Extra Small Giver 4"
   },
   {
     "address": "0:12826d10bf78761f6985d16d3a8a43ea62ad9cb53dddc973091ffb2f6c428a07",
@@ -1237,7 +1461,7 @@
   },
   {
     "address": "0:15dedb0f5dabb75496a7070e0a08568c93797f9f7b17f0d1d936020216b47ef4",
-    "name": "Gram Extra Small Giver 3"
+    "name": "GRM Extra Small Giver 3"
   },
   {
     "address": "0:16709d273b75ad3654a652329caafe3bdf9602be246abbb2cc349a0f5ec74754",
@@ -1321,7 +1545,7 @@
   },
   {
     "address": "0:22743ce9eafe287bebca156bec57c310cd8fb855a79416718cdc89ab28825422",
-    "name": "Gram Extra Small Giver 9"
+    "name": "GRM Extra Small Giver 9"
   },
   {
     "address": "0:2286cf1175480b00d8cdca95792e06941df76852c3152f9a34e8ad85faa15292",
@@ -1333,7 +1557,7 @@
   },
   {
     "address": "0:232bc48871c799b66662c4a9910da4703b532ead74a8419e8793d570db2886d2",
-    "name": "TON Strategy"
+    "name": "TON Strategy 2"
   },
   {
     "address": "0:23df7cbfb11a78629bb3f3375219fae161d4e05b5b8b863547b943413719ce03",
@@ -1389,7 +1613,7 @@
   },
   {
     "address": "0:28ee551374bca2af58b7737e2b800067e57bea0c35f99a0cbee8403d8c77e53b",
-    "name": "TON Strategy"
+    "name": "TON Strategy 5"
   },
   {
     "address": "0:28fec9c0a430ea17a18a574c5efd3e687b6f2bf38da026d8269203cc857d3e75",
@@ -1445,7 +1669,7 @@
   },
   {
     "address": "0:2ef40b4072dfab14e32e99b521df32da13d1503279985918b40befbb5083837b",
-    "name": "KuCoin"
+    "name": "KuCoin 1"
   },
   {
     "address": "0:2f616a3f7d91b0e8ef7e19e6bc00159aff8caa4821c6fe9f40c89d021608d176",
@@ -1453,11 +1677,11 @@
   },
   {
     "address": "0:2f85e4bf1be539ec2139e5497017edccf9c7387258db2e2ade60298031efd11d",
-    "name": "Gram Small Giver 6"
+    "name": "GRM Small Giver 6"
   },
   {
     "address": "0:2fa8b698bd32c65e8c936341804a7acdea1f92e3d366be4b0e243debc3dc1260",
-    "name": "TONAPI gas proxy (old)"
+    "name": "TonAPI Gas Proxy 12"
   },
   {
     "address": "0:2ff954b638cf344982c1d28b91591729160e09d0bf9e8147f5faeb45f8e27a87",
@@ -1525,11 +1749,11 @@
   },
   {
     "address": "0:34d3aa8bcfb7c065d2790fb31ce1ce5ab2a45f8baef60b04f309d50c4b32d6c8",
-    "name": "Cryptomus"
+    "name": "Cryptomus 2"
   },
   {
     "address": "0:362583c63f2c31e929f9f749d4774e81d8780e905bc9f9c0a74ceeb24c475a71",
-    "name": "Old Walt Storage"
+    "name": "Old Walt Storage 4"
   },
   {
     "address": "0:36448ed7bc8b3dc0940aaf19136fb62da5e52e683fa9d1e4f9b817b86e47064f",
@@ -1541,7 +1765,7 @@
   },
   {
     "address": "0:36bcbaba93714d7aa8ede7c518814712196179121e9f436819d70858254caffc",
-    "name": "MRKT"
+    "name": "MRKT 3"
   },
   {
     "address": "0:3784a56ba6597e8d502d0352a37e968c27b606838e0ce8342e05d057f46e715b",
@@ -1589,7 +1813,7 @@
   },
   {
     "address": "0:3bd3aad670168c4b1c6ec9bd29fdd65b139670b71d39c653fb5882430e1db58e",
-    "name": "TONAPI gas proxy (old)"
+    "name": "TonAPI Gas Proxy 11"
   },
   {
     "address": "0:3bd947afaff307bf36304821c950afae0ba91dfb0f246f1ce1278f562221bea3",
@@ -1717,7 +1941,7 @@
   },
   {
     "address": "0:463b36b05b642dcd8e7892796b4bf3e5aa67f1c73eec76d4be6fc2e0bcddb391",
-    "name": "TONAPI gas proxy (old)"
+    "name": "TonAPI Gas Proxy 13"
   },
   {
     "address": "0:46da8d25a7ee8ecbce8d184266ef5ec17930c0c3f17910b920697da5f54b1f6a",
@@ -1785,7 +2009,7 @@
   },
   {
     "address": "0:4ffc9d6b1e44445357edbfa5d2d48f541cdada81614c6a9667ce067338282304",
-    "name": "MRKT"
+    "name": "MRKT 2"
   },
   {
     "address": "0:5012b262d031e0298b1e207b6b424e0de4240b0abdd7630910204c341cdb38ef",
@@ -1801,7 +2025,7 @@
   },
   {
     "address": "0:51b3631fe3f915981f4114cdeb1237e850b7fae43055b13dbcdc96e50f1c16ce",
-    "name": "TONAPI gas proxy (old)"
+    "name": "TonAPI Gas Proxy 16"
   },
   {
     "address": "0:5220877bb0c9a5a8df2804668c36d51eb9a2de4903d4475072330a677d62f786",
@@ -2013,11 +2237,11 @@
   },
   {
     "address": "0:68013bdb21af6f03bcbc114404e2d96caebb741214942b89a7769e3d574cfb31",
-    "name": "Gram Extra Small Giver 2"
+    "name": "GRM Extra Small Giver 2"
   },
   {
     "address": "0:695a70302a23c2b4a1b987a85efa97ecbb9d1595e6f3fe95259290e04b54cf1f",
-    "name": "TONAPI gas proxy (old)"
+    "name": "TonAPI Gas Proxy 10"
   },
   {
     "address": "0:69b2ddd9589f43aaae60136607fb23ec14afc1a8c3a6822ed9fea2babfb59bac",
@@ -2073,7 +2297,7 @@
   },
   {
     "address": "0:6fba6c2329eef196b8dcdb6a7678b193e1491d467ae6aa6704613f7827a64220",
-    "name": "Gram Small Giver 3"
+    "name": "GRM Small Giver 3"
   },
   {
     "address": "0:708545cef8fc0118022596a056044a61833e923613bf70fd1e25f033fefd8a3c",
@@ -2137,7 +2361,7 @@
   },
   {
     "address": "0:77537578de1d54571b1a6730f1f1dae099e29ac4c1c65298677aee0f09891c5b",
-    "name": "Cryptomus"
+    "name": "Cryptomus 3"
   },
   {
     "address": "0:779dcc815138d9500e449c5291e7f12738c23d575b5310000f6a253bd607384e",
@@ -2265,7 +2489,7 @@
   },
   {
     "address": "0:87116a10bfc9cc340b837eb03b059ee162aaef9b6fa22dc9e435b3e73a173df9",
-    "name": "TONAPI gas proxy (old)"
+    "name": "TonAPI Gas Proxy 15"
   },
   {
     "address": "0:873dc12df46c54ad0dc824ee9df946047b84375aae5162c1e2106b18a3a237bf",
@@ -2293,7 +2517,7 @@
   },
   {
     "address": "0:8b070edb01a700f3f6a4624c7e086e036da86060ebb04f19908ee61a3537335f",
-    "name": "Changelly"
+    "name": "Changelly 1"
   },
   {
     "address": "0:8bc991cfe177bc7e9721433efa3befd199485a55cffd040a06c89af026b71bcf",
@@ -2417,7 +2641,7 @@
   },
   {
     "address": "0:9b6b9abd5686068221b29156b3394678f542bed5196351e66053a13e6d6d1ba8",
-    "name": "Gram Small Giver 7"
+    "name": "GRM Small Giver 7"
   },
   {
     "address": "0:9b8ab637507230b99de26a55ea6d9cd4fef0cffcaafe2d1f15e835d5f5d38a43",
@@ -2457,7 +2681,7 @@
   },
   {
     "address": "0:9fc1ef790090df2ae0283f57c1b6efae9f5c84ecca2ffbd05768533796b259c2",
-    "name": "Gram Extra Small Giver 1"
+    "name": "GRM Extra Small Giver 1"
   },
   {
     "address": "0:a0693c5bdb003fdc18bc11ce0514dbbc09aba81e8d153e99f0c5dae10203ab39",
@@ -2485,7 +2709,7 @@
   },
   {
     "address": "0:a22cdd2012266ab611b2f9d2a5e298b892a5895a347347726fe2398f3ad407bd",
-    "name": "Gram Extra Small Giver 7"
+    "name": "GRM Extra Small Giver 7"
   },
   {
     "address": "0:a2ca9a0158d2043e56ab069d3851e3f2123e731f46431f1b9136a275590c7714",
@@ -2589,7 +2813,7 @@
   },
   {
     "address": "0:af3261e14984ad12d500103ae9577f53d865a5fb42be8aa0b149267b23de8be3",
-    "name": "Gram Small Giver 2"
+    "name": "GRM Small Giver 2"
   },
   {
     "address": "0:b01057d46db47edb67e7dd583152906297b6f0050a841e6ef081061b598f5cd3",
@@ -2641,7 +2865,7 @@
   },
   {
     "address": "0:b34fc3e4d59fda32936e91d57e32ac1ce8b35a08d0edf870fa3e2692b847820f",
-    "name": "Gram Small Giver 8"
+    "name": "GRM Small Giver 8"
   },
   {
     "address": "0:b37e57033db21d10b950e6143b658c10c3bf425bd193025960aef7f22dbcf4fc",
@@ -2677,7 +2901,7 @@
   },
   {
     "address": "0:b5d0bfff1b649e11e3362f0f68b06c98c61a083ea27013ef0f7bbef6f097269c",
-    "name": "Gram Extra Small Giver 5"
+    "name": "GRM Extra Small Giver 5"
   },
   {
     "address": "0:b64ff13043d1afbfb98a59d28ffdf56a6a510105ae705819f623506078871f4b",
@@ -2697,7 +2921,7 @@
   },
   {
     "address": "0:b6eacb041642f30b424d2f6f58795e6e932acefffa779326f1c256347820b4cd",
-    "name": "TONAPI gas proxy (old)"
+    "name": "TonAPI Gas Proxy 14"
   },
   {
     "address": "0:b774d95eb20543f186c06b371ab88ad704f7e256130caf96189368a7d0cb6ccf",
@@ -2801,7 +3025,7 @@
   },
   {
     "address": "0:c1f0ca3d12f881920fc1c5f36fe82d8b3bf7e82515dc804178d69990bccbe707",
-    "name": "Gram Extra Small Giver 8"
+    "name": "GRM Extra Small Giver 8"
   },
   {
     "address": "0:c21fabd3d0cbd5a746c160d8e838da6481be7534c3cd3895c54161b9e17a0802",
@@ -2821,7 +3045,7 @@
   },
   {
     "address": "0:c4ba67b8e72cc321d4b2fc2773eca20a664d07c82148af4c8a75bb4cc8f7c552",
-    "name": "Gram Small Giver 4"
+    "name": "GRM Small Giver 4"
   },
   {
     "address": "0:c4fd715939869efeb97764cb20042b514a662197c078cb605910fee888604386",
@@ -2849,7 +3073,7 @@
   },
   {
     "address": "0:c80ece39b216d74708675e8159837d373e41b60a285b56f417c35934ff2548ab",
-    "name": "Gram Small Giver 10"
+    "name": "GRM Small Giver 10"
   },
   {
     "address": "0:c845e95e3a44f1083e20fd7126f318f42d8360ebecccb13180030080faf11b90",
@@ -2873,7 +3097,7 @@
   },
   {
     "address": "0:c9f02665e81cc208d467c157afcdf3d5d97da5beff00d267c155e1c260d3facd",
-    "name": "MRKT"
+    "name": "MRKT 1"
   },
   {
     "address": "0:ca1d9edeef40b3a9dbd9082f3767859547c3ce0bf641d09d58e33a3cf06fb309",
@@ -2961,7 +3185,7 @@
   },
   {
     "address": "0:d21afa24b682114cbe9f0442bfcac4bc62f2e8ab772a5b64f107fc47be22f7dd",
-    "name": "Gram Small Giver 1"
+    "name": "GRM Small Giver 1"
   },
   {
     "address": "0:d36f5c354c2a2116a9cd7323ebadb6c1250740c303e7f036c2a1a4947744b94f",
@@ -3001,7 +3225,7 @@
   },
   {
     "address": "0:d9245921d76930fb32c6a8a4865437f55763d1cde7466431437059a5e7fd107a",
-    "name": "Gram Extra Small Giver 6"
+    "name": "GRM Extra Small Giver 6"
   },
   {
     "address": "0:d97b2d516119119b9ab138a03a8bf37af818f1cd5d71c17c24c6b54b9312e4ef",
@@ -3065,7 +3289,7 @@
   },
   {
     "address": "0:dfaf143972b5de71cdaf46c34f02bb4d876a449252dfba9e149469206859e109",
-    "name": "TON Strategy"
+    "name": "TON Strategy 3"
   },
   {
     "address": "0:dfb5074f2139dbfb1f3e823ddfd7976da506e7f78175c98c627ed2e840f78606",
@@ -3073,7 +3297,7 @@
   },
   {
     "address": "0:dfdb34012c7831b091e62e28c73061e10d2c6d645beefd7c5f6f809d027cc80d",
-    "name": "TON Strategy"
+    "name": "TON Strategy 4"
   },
   {
     "address": "0:e065d735fc349ad0d8674033798b99af76f8dce671a9c49d4fe9164e644a6a52",
@@ -3085,7 +3309,7 @@
   },
   {
     "address": "0:e0960de123cf5dc9296bf8547f77519008c8ab90b647e933c5f8d7a88cff836d",
-    "name": "Gram Small Giver 9"
+    "name": "GRM Small Giver 9"
   },
   {
     "address": "0:e1a83dc550023933394653aea2f3bb176d480a8a353dc39b41b179a89077ca1e",
@@ -3225,7 +3449,7 @@
   },
   {
     "address": "0:ed6df64f71a80ffd242a4b6fdd9609ac291f9019f00978e1ff100da950109e29",
-    "name": "KuCoin"
+    "name": "KuCoin 5"
   },
   {
     "address": "0:ee59aff2efcd2ba6211ead3bf9259b41abcb24a2f5a9d0d3cb1ed2558b7441e3",
