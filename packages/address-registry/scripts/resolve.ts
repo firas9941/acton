@@ -18,27 +18,39 @@ export const resolveConflicts = (
 ): ConflictResolutionResult => {
   const conflictsByAddress = new Map(conflicts.map(conflict => [conflict.address, conflict]))
   const resolutionsByAddress = new Map<string, ConflictResolution>()
+  const seenResolutionAddresses = new Set<string>()
+  const validationErrors: string[] = []
 
   for (const resolution of resolutions) {
-    if (resolutionsByAddress.has(resolution.address)) {
-      throw new Error(`Duplicate conflict resolution for ${resolution.address}`)
+    if (seenResolutionAddresses.has(resolution.address)) {
+      validationErrors.push(`Duplicate conflict resolution for ${resolution.address}`)
+      continue
     }
+    seenResolutionAddresses.add(resolution.address)
 
     const conflict = conflictsByAddress.get(resolution.address)
     if (!conflict) {
-      throw new Error(`Conflict resolution for ${resolution.address} is stale`)
+      validationErrors.push(`Conflict resolution for ${resolution.address} is stale`)
+      continue
     }
 
     const matchesCandidate = conflict.candidates.some(
       candidate => candidate.source === resolution.source && candidate.name === resolution.name,
     )
     if (!matchesCandidate) {
-      throw new Error(
+      validationErrors.push(
         `Conflict resolution for ${resolution.address} selects an unknown candidate: ${resolution.source} / ${resolution.name}`,
       )
+      continue
     }
 
     resolutionsByAddress.set(resolution.address, resolution)
+  }
+
+  if (validationErrors.length > 0) {
+    throw new Error(
+      `Invalid conflict resolutions:\n${validationErrors.map(error => `- ${error}`).join("\n")}`,
+    )
   }
 
   const addresses: SourceAddress[] = []
