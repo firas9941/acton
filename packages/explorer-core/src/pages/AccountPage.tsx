@@ -1042,6 +1042,11 @@ export const AccountPage: FC<AccountPageProps> = ({
     let isActive = true
 
     const loadVerifiedSource = async () => {
+      if (activeTab !== "contract") {
+        setVerifiedSourceLoading(false)
+        return
+      }
+
       if (!accountCodeLookupHash) {
         setVerifiedSource(undefined)
         setVerifiedSourceLoading(false)
@@ -1070,7 +1075,7 @@ export const AccountPage: FC<AccountPageProps> = ({
     return () => {
       isActive = false
     }
-  }, [accountCodeLookupHash, metadataRegistry])
+  }, [accountCodeLookupHash, activeTab, metadataRegistry])
 
   useEffect(() => {
     if (!formattedAddress || !enableTransactionStreaming) {
