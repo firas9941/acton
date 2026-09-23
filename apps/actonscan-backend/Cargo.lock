@@ -682,6 +682,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "everscale-raptorq"
+version = "1.7.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "719e7eca52068b4712789379ef850e5c08b3316bccab5be12d1cb9fcb323a57c"
+
+[[package]]
 name = "fallible-iterator"
 version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1424,12 +1430,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "raptorq"
-version = "2.0.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4d4215fb79ef19442a0c71616aabb0715a386e6a16ed9031775ee3e3f20e7502"
-
-[[package]]
 name = "redox_syscall"
 version = "0.5.18"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1703,6 +1703,19 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 2.0.119",
+]
+
+[[package]]
+name = "service-pool"
+version = "1.2.0"
+dependencies = [
+ "futures",
+ "serde",
+ "serde_json",
+ "tempfile",
+ "thiserror 2.0.19",
+ "tokio",
+ "tracing",
 ]
 
 [[package]]
@@ -2167,6 +2180,9 @@ version = "1.2.0"
 dependencies = [
  "async-trait",
  "futures",
+ "hex",
+ "service-pool",
+ "sha2",
  "tokio",
  "ton-indexer-core",
  "tonutils",
@@ -2216,11 +2232,12 @@ dependencies = [
  "async-trait",
  "base64",
  "everscale-network",
+ "everscale-raptorq",
  "futures",
  "rand",
- "raptorq",
  "serde",
  "serde_json",
+ "service-pool",
  "tempfile",
  "tl-proto 0.5.4",
  "tokio",
