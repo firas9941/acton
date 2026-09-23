@@ -278,6 +278,18 @@ fn source_storage_error_is_payment_retryable(err: &SourceStorageError) -> bool {
     }
 }
 
+fn should_log_rejection(status: StatusCode, code_hash: Option<&str>) -> bool {
+    if matches!(status, StatusCode::NOT_FOUND | StatusCode::CONFLICT) {
+        return false;
+    }
+
+    if status == StatusCode::BAD_REQUEST && code_hash.is_none() {
+        return false;
+    }
+
+    true
+}
+
 impl From<PaymentError> for ApiError {
     fn from(err: PaymentError) -> Self {
         match err {
@@ -305,7 +317,7 @@ impl IntoResponse for ApiError {
             code_hash,
         } = self;
         let (message, code_hash_matches) = if expose_message {
-            if !matches!(status, StatusCode::NOT_FOUND | StatusCode::CONFLICT) {
+            if should_log_rejection(status, code_hash.as_deref()) {
                 tracing::warn!(
                     status = %status,
                     code_hash = %code_hash.as_deref().unwrap_or("<unknown>"),
@@ -635,6 +647,56 @@ mod tests {
         assert!(content.contains("402 Payment Required"), "{content}");
         assert!(content.contains(message), "{content}");
         assert!(content.contains("verifier operation rejected"), "{content}");
+    }
+
+    #[tokio::test]
+    async fn untargeted_bad_request_errors_are_not_written_to_application_log() {
+        let logs = LogBuffer::default();
+
+        for message in [
+            "missing verification target: provide address or code_hash",
+            "invalid TON address",
+        ] {
+            let subscriber = tracing_subscriber::fmt()
+                .with_ansi(false)
+                .without_time()
+                .with_writer(logs.clone())
+                .finish();
+            let response = tracing::subscriber::with_default(subscriber, || {
+                ApiError::bad_request(message.to_owned()).into_response()
+            });
+            assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+        }
+
+        assert!(logs.content().is_empty());
+    }
+
+    #[tokio::test]
+    async fn targeted_bad_request_errors_are_written_to_application_log() {
+        let logs = LogBuffer::default();
+        let subscriber = tracing_subscriber::fmt()
+            .with_ansi(false)
+            .without_time()
+            .with_writer(logs.clone())
+            .finish();
+        let code_hash = "a".repeat(64);
+        let message = "verification-failed\n   > Packaging";
+
+        let response = tracing::subscriber::with_default(subscriber, || {
+            ApiError::bad_request(message.to_owned())
+                .with_code_hash(&code_hash)
+                .into_response()
+        });
+
+        assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+        let content = logs.content();
+        assert!(content.contains("WARN"), "{content}");
+        assert!(content.contains("400 Bad Request"), "{content}");
+        assert!(
+            content.contains(&format!("code_hash={code_hash}")),
+            "{content}"
+        );
+        assert!(content.contains(message), "{content}");
     }
 
     #[tokio::test]
