@@ -56,6 +56,19 @@ impl StateView {
         self.id
     }
 
+    /// Hash of this state root, distinct from the block's root hash.
+    #[must_use]
+    pub fn root_hash(&self) -> tycho_types::cell::HashBytes {
+        *self.root.repr_hash()
+    }
+
+    /// Block generation time from the state header, in Unix seconds.
+    /// This is chain time, not the time the state was downloaded or opened.
+    pub fn gen_utime(&self) -> Result<u32> {
+        self.reader
+            .run(|| Ok(self.root.parse::<ShardStateUnsplit>()?.gen_utime))
+    }
+
     /// Reports cumulative database reads for this view. Reusing loaded cell
     /// references does not increment the counters.
     #[must_use]

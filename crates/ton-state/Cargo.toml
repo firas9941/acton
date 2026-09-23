@@ -1,0 +1,33 @@
+[package]
+name = "ton-state"
+description = "Persistent TON P2P state synchronization with a read-only HTTP API"
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+repository.workspace = true
+license.workspace = true
+publish = false
+
+[dependencies]
+anyhow.workspace = true
+axum.workspace = true
+base64.workspace = true
+clap.workspace = true
+serde.workspace = true
+tokio.workspace = true
+toncenter.workspace = true
+ton-indexer-core = { path = "../ton-indexer-core" }
+ton-indexer-p2p = { path = "../ton-indexer-p2p" }
+ton-node-db = { path = "../ton-node-db" }
+ton-p2p = { path = "../ton-p2p" }
+tracing.workspace = true
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+tycho-types.workspace = true
+
+[dev-dependencies]
+expect-test.workspace = true
+serde_json.workspace = true
+
+[lints]
+workspace = true

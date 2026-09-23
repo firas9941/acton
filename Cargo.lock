@@ -6303,6 +6303,28 @@ dependencies = [
 ]
 
 [[package]]
+name = "ton-state"
+version = "1.2.0"
+dependencies = [
+ "anyhow",
+ "axum",
+ "base64",
+ "clap",
+ "expect-test",
+ "serde",
+ "serde_json",
+ "tokio",
+ "ton-indexer-core",
+ "ton-indexer-p2p",
+ "ton-node-db",
+ "ton-p2p",
+ "toncenter",
+ "tracing",
+ "tracing-subscriber",
+ "tycho-types",
+]
+
+[[package]]
 name = "ton-syntax"
 version = "1.2.0"
 dependencies = [

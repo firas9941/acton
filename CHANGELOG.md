@@ -23,6 +23,9 @@ All notable changes to this project will be documented in this file.
   the last fully applied masterchain checkpoint without modifying the source snapshot.
   State commits reuse known persisted cells and a bounded record cache to avoid
   redundant snapshot lookups.
+- Add `ton-state` to synchronize a validator snapshot through P2P and serve
+  `getMasterchainInfo`, `getAddressInformation`, and `getAddressBalance` over
+  TON Center API v2 HTTP routes from the last applied state.
 
 ### Actonscan
 

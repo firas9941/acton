@@ -153,6 +153,9 @@ The method does not verify consensus signatures, execute transactions, or persis
 
 ## Persist updates and resume
 
+For continuous synchronization and HTTP account queries, run
+[`ton-state`](../ton-state/README.md).
+
 Keep the snapshot unchanged and use a separate directory for updates. The local
 network that produced the snapshot must be running. This example downloads and
 applies ten complete masterchain/shard batches, then reads the elector:
