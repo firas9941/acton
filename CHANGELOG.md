@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Dependencies
+
+- Replace yanked `chacha20` versions in Faucet and Localton with version `0.10.2`.
+- Limit Faucet's direct SQLx dependency to its SQLite runtime features.
+- Reject RSA dependencies in Faucet builds while excluding the unused SQLx MySQL
+  driver's RSA advisory from lockfile audits.
+
 ### Rust libraries
 
 - Add the MIT-licensed `toncenter` crate with typed TON Center v2 and v3 requests and

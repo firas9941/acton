@@ -22,6 +22,7 @@ license = "MIT OR Apache-2.0"
 
 [workspace.dependencies]
 anyhow = "1.0.100"
+axum = "0.8.8"
 chrono = { version = "0.4", features = ["serde"] }
 faucet-config = { path = "crates/faucet-config" }
 hex = "0.4.3"
@@ -40,7 +41,7 @@ tracing-subscriber = { version = "0.3.22", features = ["env-filter", "json"] }
 anyhow = { workspace = true }
 apalis = "1.0.0-beta.2"
 apalis-sqlite = "1.0.0-beta.4"
-axum = { version = "0.8.8", features = ["macros"] }
+axum = { workspace = true, features = ["macros"] }
 axum-governor = "1"
 base64 = "0.22.1"
 chrono = { workspace = true }
@@ -59,7 +60,7 @@ reqwest = { workspace = true, features = ["json"] }
 serde = { workspace = true }
 serde_json = { workspace = true }
 sha2 = { workspace = true }
-sqlx = { version = "0.8", features = ["runtime-tokio", "sqlite"] }
+sqlx = { version = "0.8", default-features = false, features = ["runtime-tokio", "sqlite"] }
 tokio = { workspace = true, features = ["macros", "rt-multi-thread", "sync"] }
 ton = "0.1.4"
 toncenter = { path = "crates/toncenter" }
