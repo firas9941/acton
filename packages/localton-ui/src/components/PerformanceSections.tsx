@@ -11,7 +11,7 @@ import {
 import {init, use, type EChartsCoreOption, type EChartsType} from "echarts/core"
 import {CanvasRenderer} from "echarts/renderers"
 import {useEffect, useRef, useState} from "react"
-import styles from "./TpsSection.module.css"
+import styles from "./PerformanceSections.module.css"
 
 interface TpsSectionProps {
   readonly series: TpsView | undefined

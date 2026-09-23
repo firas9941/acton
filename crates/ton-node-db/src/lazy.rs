@@ -2,7 +2,7 @@
 //! read errors before returning data or committing a new state root.
 
 use std::sync::atomic::{AtomicUsize, Ordering};
-use std::sync::{Arc, Mutex, OnceLock};
+use std::sync::{Arc, OnceLock};
 
 use anyhow::{Context, Result, anyhow, ensure};
 use rocksdb::DB;
@@ -16,7 +16,8 @@ use tycho_types::util::ArrayVec;
 use crate::cells::{Reference, StoredCell};
 
 /// Database work performed by a state view, including its account queries.
-/// Embedded BoCs count as one record; bytes exclude RocksDB's physical I/O.
+///
+/// Embedded bags of cells count as one record; bytes exclude `RocksDB`'s physical I/O.
 #[derive(Debug, Clone, Copy, Serialize)]
 pub struct ReadStats {
     pub records: usize,
@@ -28,7 +29,7 @@ pub(crate) struct Reader {
     limit: usize,
     records: AtomicUsize,
     bytes: AtomicUsize,
-    error: Mutex<Option<String>>,
+    error: OnceLock<String>,
 }
 
 impl Reader {
@@ -38,7 +39,7 @@ impl Reader {
             limit,
             records: AtomicUsize::new(0),
             bytes: AtomicUsize::new(0),
-            error: Mutex::new(None),
+            error: OnceLock::new(),
         })
     }
 
@@ -50,14 +51,14 @@ impl Reader {
     }
 
     pub(crate) fn check(&self) -> Result<()> {
-        if let Some(error) = &*self.error.lock().unwrap() {
+        if let Some(error) = self.error.get() {
             return Err(anyhow!("{error}"));
         }
 
         Ok(())
     }
 
-    /// CellImpl cannot return I/O errors. No lazy cells may escape this guard:
+    /// `CellImpl` cannot return I/O errors. No lazy cells may escape this guard:
     /// a failed read poisons the view, including apparently successful lookups.
     pub(crate) fn run<T>(&self, operation: impl FnOnce() -> Result<T>) -> Result<T> {
         self.check()?;
@@ -155,7 +156,7 @@ impl LazyCell {
                 match result {
                     Ok(cell) => Some(cell),
                     Err(error) => {
-                        self.reader.error.lock().unwrap().get_or_insert_with(|| {
+                        self.reader.error.get_or_init(|| {
                             format!("cannot load cell {}: {error:#}", self.reference.hash())
                         });
                         None

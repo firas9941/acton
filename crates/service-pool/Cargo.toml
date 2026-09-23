@@ -9,6 +9,9 @@ repository.workspace = true
 license.workspace = true
 publish = false
 
+[lib]
+doctest = false
+
 [dependencies]
 futures.workspace = true
 serde.workspace = true

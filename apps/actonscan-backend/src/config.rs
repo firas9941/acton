@@ -32,7 +32,6 @@ pub struct IndexerConfig {
     pub(crate) source: SourceKind,
     pub(crate) p2p: P2pConfig,
     pub(crate) global_config_path: PathBuf,
-    pub(crate) peer_stats_path: PathBuf,
     pub(crate) parallelism: usize,
     pub(crate) backfill_batches: u32,
     pub(crate) poll_interval: Duration,
@@ -155,7 +154,6 @@ impl Config {
             .storage
             .database_path
             .unwrap_or_else(|| PathBuf::from(DEFAULT_DATABASE_PATH));
-        let peer_stats_path = database_path.with_extension("liteserver-peers.json");
 
         Ok(Self {
             bind_addr,
@@ -168,7 +166,6 @@ impl Config {
                 source: file.indexer.source,
                 p2p: file.indexer.p2p,
                 global_config_path,
-                peer_stats_path,
                 parallelism,
                 backfill_batches,
                 poll_interval: Duration::from_millis(poll_interval_ms),

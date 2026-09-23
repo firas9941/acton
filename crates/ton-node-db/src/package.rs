@@ -20,6 +20,7 @@ pub struct PackageEntry {
 
 impl PackageEntry {
     /// Returns the file category used by TON's `fileref` naming convention.
+    #[must_use]
     pub fn kind(&self) -> &str {
         self.name
             .split_once('_')
@@ -48,6 +49,7 @@ impl PackageEntry {
 }
 
 /// Streams a package without loading its payloads into memory.
+///
 /// Use a stopped node's database or an immutable snapshot: package appends and
 /// index updates do not form a snapshot while a validator is running.
 pub struct PackageReader {

@@ -20,7 +20,7 @@ struct Args {
     /// Extracted database directory containing celldb, state, and archive
     database: PathBuf,
 
-    /// Write BoCs and report.json outside the database directory
+    /// Write bags of cells and report.json outside the database directory
     #[arg(long)]
     export: Option<PathBuf>,
 
@@ -52,11 +52,9 @@ fn main() -> Result<()> {
             .ancestors()
             .find(|path| path.exists())
             .context("export path has no existing ancestor")?;
-        let resolved = ancestor
-            .canonicalize()?
-            .join(absolute.strip_prefix(ancestor)?);
+        let resolved = dunce::canonicalize(ancestor)?.join(absolute.strip_prefix(ancestor)?);
         ensure!(
-            !resolved.starts_with(args.database.canonicalize()?),
+            !resolved.starts_with(dunce::canonicalize(&args.database)?),
             "export directory must be outside the database snapshot"
         );
         fs::create_dir_all(output)?;
@@ -200,7 +198,7 @@ fn inspect_state(args: &Args, db: &NodeDb, record: &StateRecord) -> Result<(Valu
         if let Some(output) = &args.export {
             fs::write(
                 output.join(format!("account-{}-{address}.boc", id.shard.workchain())),
-                Boc::encode(&account_cell),
+                Boc::encode(account_cell),
             )?;
         }
 

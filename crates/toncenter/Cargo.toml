@@ -12,6 +12,9 @@ keywords = ["ton", "toncenter", "blockchain", "openapi"]
 categories = ["api-bindings", "cryptography::cryptocurrencies"]
 include = ["src/**", "examples/**", "tests/**", "openapi.json", "openapi-v3.json", "README.md", "LICENSE-*", "Cargo.toml"]
 
+[lib]
+doctest = false
+
 [features]
 default = []
 openapi = ["dep:utoipa"]

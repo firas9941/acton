@@ -39,6 +39,7 @@ pub struct StateRecord {
 }
 
 /// Independent progress markers persisted by the validator.
+///
 /// `shard_client` identifies the masterchain block whose referenced shards have
 /// been processed. The initialization marker is saved independently and need
 /// not identify the newest retained block.
@@ -68,7 +69,7 @@ pub struct PackageSummary {
     pub entries: BTreeMap<String, u64>,
 }
 
-/// A standalone state BoC stored under `static` or `archive/states`.
+/// A standalone state `BoC` stored under `static` or `archive/states`.
 /// Its filename can contain a file-reference hash rather than its root hash.
 #[derive(Debug, Serialize)]
 pub struct StateFileSummary {
@@ -91,7 +92,8 @@ pub struct DatabaseSummary {
 }
 
 /// Read-only view of an extracted validator-engine database.
-/// The directory must remain unchanged for the reader's lifetime. RocksDB
+///
+/// The directory must remain unchanged for the reader's lifetime. `RocksDB`
 /// snapshots alone cannot make the node's separate package files consistent.
 pub struct NodeDb {
     directory: PathBuf,
@@ -197,7 +199,7 @@ impl NodeDb {
 
     /// Opens a lazy view of one retained state. The read budget belongs to this
     /// view and covers all its queries and subsequent masterchain updates.
-    /// The view keeps the database open even if this NodeDb is dropped.
+    /// The view keeps the database open even if this `NodeDb` is dropped.
     pub fn state(&self, id: &BlockId, max_cells: usize) -> Result<StateView> {
         StateView::open(Arc::clone(&self.cells), self.state_record(id)?, max_cells)
     }

@@ -76,11 +76,9 @@ async fn main() -> Result<()> {
         .ancestors()
         .find(|path| path.exists())
         .context("cache path has no existing ancestor")?;
-    let resolved = ancestor
-        .canonicalize()?
-        .join(absolute.strip_prefix(ancestor)?);
+    let resolved = dunce::canonicalize(ancestor)?.join(absolute.strip_prefix(ancestor)?);
     ensure!(
-        !resolved.starts_with(args.database.canonicalize()?),
+        !resolved.starts_with(dunce::canonicalize(&args.database)?),
         "P2P cache must be outside the database snapshot"
     );
 

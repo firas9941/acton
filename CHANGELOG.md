@@ -9,10 +9,14 @@ All notable changes to this project will be documented in this file.
 - Add the MIT-licensed `toncenter` crate with typed TON Center v2 and v3 requests and
   responses, field documentation, generated OpenAPI, and opt-in live contract tests.
 - Use the shared `toncenter` v2 and v3 types across Rust clients and simulator endpoints.
+- Remove unused dependencies from `ton-emulator` and `tvm-ffi`.
+- Add `ton-node-db` for reading validator database snapshots, querying account
+  states lazily, and applying masterchain updates in memory.
 
 ### Actonscan
 
 - Fix Docker image builds for the Actonscan backend.
+- Fix compilation of the Actonscan backend against the shared `LiteServer` client.
 - Show testnet TPS from its dedicated public backend, with the latest indexed block time
   and partial-window indicators.
 - Download P2P shard blocks from competing peers so an unresponsive peer does not

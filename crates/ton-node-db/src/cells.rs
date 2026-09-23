@@ -1,4 +1,4 @@
-//! Cell records use TON's `CellStorage.cpp` layout, not the BoC container layout.
+//! Cell records use TON's `CellStorage.cpp` layout, not the `BoC` container layout.
 
 use std::collections::{HashMap, HashSet};
 use std::path::Path;
@@ -204,7 +204,7 @@ impl StoredCell {
     }
 }
 
-/// Reconstructs a DAG iteratively, checking each record against its RocksDB key.
+/// Reconstructs a DAG iteratively, checking each record against its `RocksDB` key.
 /// The cache belongs to this load, so a reader does not retain previous states.
 pub(crate) fn load(db: &DB, root: HashBytes, max_cells: usize) -> Result<Cell> {
     let mut loaded = HashMap::new();

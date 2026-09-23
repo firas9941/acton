@@ -24,6 +24,7 @@ pub struct AccountSnapshot {
 }
 
 /// A retained shard state with cells fetched only when traversed.
+///
 /// Lazy references never escape the view: returned accounts are fully owned.
 /// An I/O or cell-integrity error poisons the view; open another to retry.
 pub struct StateView {
@@ -46,12 +47,14 @@ impl StateView {
     }
 
     /// Identifies the state, including successfully applied in-memory updates.
-    pub fn block_id(&self) -> BlockId {
+    #[must_use]
+    pub const fn block_id(&self) -> BlockId {
         self.id
     }
 
     /// Reports cumulative database reads for this view. Reusing loaded cell
     /// references does not increment the counters.
+    #[must_use]
     pub fn read_stats(&self) -> ReadStats {
         self.reader.stats()
     }

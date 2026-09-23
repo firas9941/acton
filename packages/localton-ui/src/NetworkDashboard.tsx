@@ -42,7 +42,7 @@ import type {
   ValidatorObservation,
 } from "./types"
 
-const TpsSection = lazy(() => import("./components/TpsSection"))
+const PerformanceSections = lazy(() => import("./components/PerformanceSections"))
 
 export type NetworkDashboardView = "all" | "overview" | "nodes" | "validators"
 
@@ -402,7 +402,7 @@ function DeferredTpsSection({series}: {readonly series: TpsView | undefined}) {
 
   return (
     <Suspense fallback={<TpsSkeleton />}>
-      <TpsSection series={series} />
+      <PerformanceSections series={series} />
     </Suspense>
   )
 }

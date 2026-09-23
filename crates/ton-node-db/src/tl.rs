@@ -26,7 +26,7 @@ impl From<&BlockId> for StoredBlockId {
     }
 }
 
-/// CellDB hashes the boxed block ID and encodes it as base64. Block IDs nested
+/// `CellDB` hashes the boxed block ID and encodes it as base64. Block IDs nested
 /// inside database values are bare TL, so hashing those bytes gives another key.
 pub(crate) fn state_key(id: &BlockId) -> String {
     use sha2::{Digest, Sha256};
