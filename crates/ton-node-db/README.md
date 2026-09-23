@@ -1,8 +1,9 @@
-# Read TON validator database snapshots
+# Query and synchronize TON state from a validator snapshot
 
 `ton-node-db` reads an extracted validator-engine database without running a node.
 The directory must come from a stopped node or a consistent backup.
 The reader opens RocksDB in read-only mode and includes records from existing WAL files.
+`StateStore` saves subsequent state updates in a separate writable database.
 
 ## Database layout
 
@@ -122,6 +123,9 @@ It verifies each fetched cell against its database key and parent reference meta
 Hashes and depths of unloaded branches come from the stored reference metadata.
 The read budget covers the view's lifetime. A cell read failure makes further queries fail.
 
+Cell lookups share a 32 MiB LRU record cache per open snapshot. It fills on demand
+and is separate from each view's cell read budget.
+
 ## Read the elector after Localton block updates
 
 Available since trunk.
@@ -145,7 +149,47 @@ The reported block identifies the queried state; `--blocks` does not select the 
 
 `StateView::apply_masterchain_block` checks block hashes, the predecessor, and the Merkle update.
 Unchanged branches stay backed by the snapshot. Changed branches live in memory.
-The method does not verify consensus signatures, execute transactions, persist new states, or handle shard splits and merges.
+The method does not verify consensus signatures, execute transactions, or persist new states.
+
+## Persist updates and resume
+
+Keep the snapshot unchanged and use a separate directory for updates. The local
+network that produced the snapshot must be running. This example downloads and
+applies ten complete masterchain/shard batches, then reads the elector:
+
+```sh
+RUST_LOG=info cargo run -p ton-node-db --example sync -- \
+  database global.config.json .ton-state
+```
+
+Run the same command again to apply the next ten batches. It opens the last
+committed state, without replaying earlier updates. The example advertises
+`127.0.0.1:19005` for a Localton node on the same computer.
+
+`.ton-state/states` contains new cells and the applied state checkpoint.
+`.ton-state/blocks` contains the separate P2P download cache. A downloaded block
+does not advance the applied state checkpoint by itself.
+
+`StateStore::apply_batch` checks block hashes, predecessor links, Merkle updates,
+and the complete shard frontier, including splits and merges. New cells and the
+checkpoint are committed in one synchronous RocksDB batch. Missing or invalid shard blocks leave the
+previous checkpoint intact. Repeating the committed masterchain ID is a no-op.
+After a storage write error, reopen the store before retrying.
+
+Pass shard blocks in predecessor-first order. A split uses the same parent
+state for both children. A merge combines the left and right states before
+applying the block's Merkle update. Their sequence numbers can differ.
+
+`StateStore::get_account` reads an account at the committed masterchain frontier.
+Unchanged cells stay in the original snapshot and are loaded lazily. Updated
+cells are read from the writable database. Each query or batch has its own cell
+read budget, and completed batches release their in-memory state graphs.
+
+The snapshot must remain available after restart. The writable database is an
+append-only update store; it is not a replacement validator-engine database.
+It has no cell garbage collection, validator signature verification, or TVM
+transaction execution. Starting a new workchain requires its zerostate and is
+not supported by this update store.
 
 The storage layouts follow TON's
 [package implementation](https://github.com/ton-blockchain/ton/blob/master/validator/db/package.cpp),

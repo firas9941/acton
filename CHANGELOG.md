@@ -18,7 +18,11 @@ All notable changes to this project will be documented in this file.
 - Use the shared `toncenter` v2 and v3 types across Rust clients and simulator endpoints.
 - Remove unused dependencies from `ton-emulator` and `tvm-ffi`.
 - Add `ton-node-db` for reading validator database snapshots, querying account
-  states lazily, and applying masterchain updates in memory.
+  states lazily, and persisting masterchain and shard state updates in a separate
+  database, including shard splits and merges. P2P synchronization resumes from
+  the last fully applied masterchain checkpoint without modifying the source snapshot.
+  State commits reuse known persisted cells and a bounded record cache to avoid
+  redundant snapshot lookups.
 
 ### Actonscan
 

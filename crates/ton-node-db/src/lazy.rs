@@ -1,8 +1,9 @@
 //! Lazy references stay inside a state view. Its fallible API checks deferred
 //! read errors before returning data or committing a new state root.
 
+use std::collections::HashSet;
 use std::sync::atomic::{AtomicUsize, Ordering};
-use std::sync::{Arc, OnceLock};
+use std::sync::{Arc, Mutex, OnceLock};
 
 use anyhow::{Context, Result, anyhow, ensure};
 use rocksdb::DB;
@@ -26,21 +27,38 @@ pub struct ReadStats {
 
 pub(crate) struct Reader {
     db: Arc<DB>,
+    updates: Option<Arc<DB>>,
     limit: usize,
     records: AtomicUsize,
     bytes: AtomicUsize,
     error: OnceLock<String>,
+    stored: Mutex<HashSet<HashBytes>>,
 }
 
 impl Reader {
     pub(crate) fn new(db: Arc<DB>, limit: usize) -> Arc<Self> {
+        Self::with_updates(db, None, limit)
+    }
+
+    pub(crate) fn with_updates(db: Arc<DB>, updates: Option<Arc<DB>>, limit: usize) -> Arc<Self> {
         Arc::new(Self {
             db,
+            updates,
             limit,
             records: AtomicUsize::new(0),
             bytes: AtomicUsize::new(0),
             error: OnceLock::new(),
+            stored: Mutex::new(HashSet::new()),
         })
+    }
+
+    /// Recognizes records already read from either database. An unknown hash
+    /// can still exist on disk; writing it again is safe in the append-only store.
+    pub(crate) fn is_stored(&self, hash: &HashBytes) -> bool {
+        self.stored
+            .lock()
+            .expect("stored cell hashes lock poisoned")
+            .contains(hash)
     }
 
     pub(crate) fn stats(&self) -> ReadStats {
@@ -80,10 +98,19 @@ impl Reader {
             "lazy state read exceeds {} database records",
             self.limit
         );
-        let value = self
-            .db
-            .get_pinned(hash.as_slice())?
-            .with_context(|| format!("cell {hash} is absent from the snapshot"))?;
+        let updated = self
+            .updates
+            .as_ref()
+            .map(|db| db.get_pinned(hash.as_slice()))
+            .transpose()?
+            .flatten();
+        let value = match updated {
+            Some(value) => value,
+            None => self
+                .db
+                .get_pinned(hash.as_slice())?
+                .with_context(|| format!("cell {hash} is absent from the state databases"))?,
+        };
         self.bytes.fetch_add(value.len(), Ordering::Relaxed);
 
         let cell = match StoredCell::parse(&value)
@@ -133,6 +160,15 @@ impl Reader {
             cell.repr_hash() == &hash,
             "cell {hash} representation hash mismatch"
         );
+
+        // Only the record root is independently addressable. Children inside
+        // an embedded BoC need not have their own database entries.
+        if self.updates.is_some() {
+            self.stored
+                .lock()
+                .expect("stored cell hashes lock poisoned")
+                .insert(hash);
+        }
 
         Ok(cell)
     }

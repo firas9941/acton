@@ -4,9 +4,40 @@ use std::collections::{HashMap, HashSet};
 use std::path::Path;
 
 use anyhow::{Context, Result, ensure};
-use rocksdb::{DB, MergeOperands, Options};
+use rocksdb::{Cache, DB, MergeOperands, Options};
 use tycho_types::boc::Boc;
-use tycho_types::cell::{Cell, CellBuilder, HashBytes};
+use tycho_types::cell::{Cell, CellBuilder, DynCell, HashBytes};
+
+/// Stores a cell independently of its children. Child hashes and depths keep
+/// unchanged snapshot branches lazy when the updated state is reopened.
+pub(crate) fn encode(cell: &DynCell) -> Result<Vec<u8>> {
+    let descriptor = cell.descriptor();
+    let mut value = 1_i32.to_le_bytes().to_vec();
+    value.extend_from_slice(&[descriptor.d1 & !16, descriptor.d2]);
+    value.extend_from_slice(cell.data());
+
+    for index in 0..descriptor.reference_count() {
+        let child = cell
+            .reference(index)
+            .context("missing state cell reference")?;
+        let mask = child.level_mask().to_byte();
+        value.push(mask);
+
+        for level in 0..=3 {
+            if level == 0 || mask & (1 << (level - 1)) != 0 {
+                value.extend_from_slice(child.hash(level).as_slice());
+            }
+        }
+
+        for level in 0..=3 {
+            if level == 0 || mask & (1 << (level - 1)) != 0 {
+                value.extend_from_slice(&child.depth(level).to_be_bytes());
+            }
+        }
+    }
+
+    Ok(value)
+}
 
 pub(crate) fn open_database(path: &Path, cells: bool) -> Result<DB> {
     let mut options = Options::default();
@@ -16,6 +47,10 @@ pub(crate) fn open_database(path: &Path, cells: bool) -> Result<DB> {
     options.set_max_open_files(128);
 
     if cells {
+        // Repeated state updates revisit unchanged cells. Cache their records
+        // independently of table readers, which are evicted by the file limit.
+        options.set_row_cache(&Cache::new_lru_cache(32 * 1024 * 1024));
+
         // WALs and SSTs can contain pending reference-count deltas. Reading only
         // the base values would lose those updates, even in a read-only snapshot.
         options.set_merge_operator("MergeOperatorAddCellRefcnt", merge_value, merge_deltas);

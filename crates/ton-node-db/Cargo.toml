@@ -1,6 +1,6 @@
 [package]
 name = "ton-node-db"
-description = "Read-only access to TON validator database snapshots"
+description = "Lazy TON state queries and persistent updates from validator snapshots"
 version.workspace = true
 authors.workspace = true
 edition.workspace = true
@@ -16,17 +16,21 @@ doctest = false
 [dependencies]
 anyhow.workspace = true
 base64.workspace = true
+dunce.workspace = true
 rocksdb = "0.25.0"
 serde.workspace = true
+serde_json.workspace = true
 sha2.workspace = true
 tl-proto.workspace = true
 tycho-types = { workspace = true, features = ["serde"] }
 
 [dev-dependencies]
 clap.workspace = true
-dunce.workspace = true
-serde_json.workspace = true
+expect-test.workspace = true
+tempfile.workspace = true
 tokio.workspace = true
+ton-indexer-core = { path = "../ton-indexer-core" }
+ton-indexer-p2p = { path = "../ton-indexer-p2p" }
 ton-p2p = { path = "../ton-p2p" }
 tracing.workspace = true
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }

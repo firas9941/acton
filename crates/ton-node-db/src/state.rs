@@ -7,8 +7,8 @@ use sha2::{Digest, Sha256};
 use tycho_types::boc::Boc;
 use tycho_types::cell::{Cell, CellBuilder, Lazy, Load};
 use tycho_types::models::{
-    Block, BlockId, PrevBlockRef, ShardAccount, ShardDescription, ShardIdent, ShardStateUnsplit,
-    StdAddr,
+    Block, BlockId, BlockInfo, PrevBlockRef, ShardAccount, ShardDescription, ShardIdent,
+    ShardStateSplit, ShardStateUnsplit, StdAddr,
 };
 
 use crate::lazy::Reader;
@@ -29,21 +29,25 @@ pub struct AccountSnapshot {
 /// An I/O or cell-integrity error poisons the view; open another to retry.
 pub struct StateView {
     id: BlockId,
-    root: Cell,
-    reader: Arc<Reader>,
+    pub(crate) root: Cell,
+    pub(crate) reader: Arc<Reader>,
 }
 
 impl StateView {
     pub(crate) fn open(db: Arc<DB>, record: StateRecord, limit: usize) -> Result<Self> {
         let reader = Reader::new(db, limit);
-        let root = reader.load(record.root_hash)?;
-        reader.run(|| validate_state(&root, &record.block_id))?;
+        Self::load(reader, record.block_id, record.root_hash)
+    }
 
-        Ok(Self {
-            id: record.block_id,
-            root,
-            reader,
-        })
+    pub(crate) fn load(
+        reader: Arc<Reader>,
+        id: BlockId,
+        hash: tycho_types::cell::HashBytes,
+    ) -> Result<Self> {
+        let root = reader.load(hash)?;
+        reader.run(|| validate_state(&root, &id))?;
+
+        Ok(Self { id, root, reader })
     }
 
     /// Identifies the state, including successfully applied in-memory updates.
@@ -123,6 +127,27 @@ impl StateView {
                 shard = if branch == 0 { left } else { right };
                 tree = slice.get_reference_cloned(branch)?;
             }
+        })
+    }
+
+    /// Returns the exact shard frontier whose states complete this masterchain
+    /// checkpoint. A downloader must also fetch intermediate shard blocks.
+    pub fn shard_blocks(&self) -> Result<Vec<BlockId>> {
+        self.reader.run(|| {
+            ensure!(
+                self.id.shard.is_masterchain(),
+                "shard frontier requires masterchain state"
+            );
+            let extra = self
+                .root
+                .parse::<ShardStateUnsplit>()?
+                .load_custom()?
+                .context("missing masterchain state extra")?;
+
+            Ok(extra
+                .shards
+                .latest_blocks()
+                .collect::<Result<Vec<_>, _>>()?)
         })
     }
 
@@ -207,46 +232,143 @@ impl StateView {
     /// does not verify validator signatures or execute transactions in the TVM.
     /// The database stays read-only; the caller owns persistence and trust.
     pub fn apply_masterchain_block(&mut self, id: &BlockId, bytes: &[u8]) -> Result<()> {
-        let root = self.reader.run(|| {
-            ensure!(
-                self.id.shard.is_masterchain() && id.shard == self.id.shard,
-                "state updates require masterchain blocks"
-            );
-            ensure!(
-                self.id.seqno.checked_add(1) == Some(id.seqno),
-                "block is not the next masterchain block"
-            );
-            ensure!(
-                Sha256::digest(bytes)[..] == id.file_hash.0,
-                "block file hash mismatch"
-            );
-            let cell = Boc::decode(bytes)?;
-            ensure!(
-                cell.repr_hash() == &id.root_hash,
-                "block root hash mismatch"
-            );
-            let block = cell.parse::<Block>()?;
-            let info = block.load_info()?;
-            ensure!(
-                info.shard == id.shard && info.seqno == id.seqno,
-                "block header mismatch"
-            );
-            let PrevBlockRef::Single(previous) = info.load_prev_ref()? else {
-                anyhow::bail!("masterchain block has multiple predecessors");
-            };
-            ensure!(
-                previous.as_block_id(id.shard) == self.id,
-                "block predecessor mismatch"
-            );
-            let root = block.load_state_update()?.apply(&self.root)?;
-            validate_state(&root, id)?;
+        ensure!(self.id.shard.is_masterchain(), "expected masterchain state");
+        self.apply_block(id, bytes)
+    }
 
-            Ok(root)
-        })?;
-
-        self.root = root;
-        self.id = *id;
+    /// Applies a block with one predecessor, including a child after a split.
+    /// Merge blocks require both predecessor states; use `StateStore::apply_batch`.
+    /// Changes remain in memory; block authenticity is the caller's responsibility.
+    pub fn apply_block(&mut self, id: &BlockId, bytes: &[u8]) -> Result<()> {
+        *self = StateUpdate::parse(*id, bytes)?.apply(&[self])?;
         Ok(())
+    }
+}
+
+/// A checked block and its exact state dependencies. Parsing precedes database
+/// lookup so split/merge ancestry can select the required retained states.
+pub(crate) struct StateUpdate {
+    id: BlockId,
+    block: Block,
+    info: BlockInfo,
+    pub(crate) predecessors: Vec<BlockId>,
+}
+
+impl StateUpdate {
+    pub(crate) fn parse(id: BlockId, bytes: &[u8]) -> Result<Self> {
+        ensure!(
+            Sha256::digest(bytes)[..] == id.file_hash.0,
+            "block file hash mismatch"
+        );
+        let cell = Boc::decode(bytes)?;
+        ensure!(
+            cell.repr_hash() == &id.root_hash,
+            "block root hash mismatch"
+        );
+        let block = cell.parse::<Block>()?;
+        let info = block.load_info()?;
+        ensure!(
+            info.shard == id.shard && info.seqno == id.seqno,
+            "block header mismatch"
+        );
+        ensure!(
+            !(info.after_split && info.after_merge),
+            "block is both after split and after merge"
+        );
+        ensure!(
+            !id.shard.is_masterchain()
+                || !(info.after_split || info.after_merge || info.before_split),
+            "masterchain cannot split or merge"
+        );
+
+        let predecessors = match info.load_prev_ref()? {
+            PrevBlockRef::Single(previous) => {
+                let shard = if info.after_split {
+                    id.shard
+                        .merge()
+                        .context("split block has no parent shard")?
+                } else {
+                    id.shard
+                };
+                vec![previous.as_block_id(shard)]
+            }
+            PrevBlockRef::AfterMerge { left, right } => {
+                let (left_shard, right_shard) = id
+                    .shard
+                    .split()
+                    .context("merge block has no child shards")?;
+                vec![left.as_block_id(left_shard), right.as_block_id(right_shard)]
+            }
+        };
+        ensure!(
+            predecessors
+                .iter()
+                .map(|id| id.seqno)
+                .max()
+                .and_then(|seqno| seqno.checked_add(1))
+                == Some(id.seqno),
+            "block sequence number does not follow its predecessors"
+        );
+
+        Ok(Self {
+            id,
+            block,
+            info,
+            predecessors,
+        })
+    }
+
+    /// All inputs share a reader so deferred errors in either merge branch are
+    /// reported by the resulting view. No previous state is mutated.
+    pub(crate) fn apply(&self, previous: &[&StateView]) -> Result<StateView> {
+        ensure!(
+            previous
+                .iter()
+                .map(|state| state.id)
+                .eq(self.predecessors.iter().copied()),
+            "block predecessor mismatch"
+        );
+        let reader = &previous[0].reader;
+        ensure!(
+            previous
+                .iter()
+                .all(|state| Arc::ptr_eq(reader, &state.reader)),
+            "predecessor states must share a database reader"
+        );
+
+        reader.run(|| {
+            for state in previous {
+                ensure!(
+                    state.root.parse::<ShardStateUnsplit>()?.before_split == self.info.after_split,
+                    "predecessor before_split flag does not match block transition"
+                );
+            }
+
+            let old = if self.info.after_merge {
+                // TON hashes the ordered pair of child states as the old state
+                // of a merge block. Their dictionaries stay separate and lazy.
+                CellBuilder::build_from(ShardStateSplit {
+                    left: Lazy::from_raw(previous[0].root.clone())?,
+                    right: Lazy::from_raw(previous[1].root.clone())?,
+                })?
+            } else {
+                // Both children after a split reference the original parent
+                // state; each block's Merkle update produces its own subtree.
+                previous[0].root.clone()
+            };
+            let root = self.block.load_state_update()?.apply(&old)?;
+            validate_state(&root, &self.id)?;
+            ensure!(
+                root.parse::<ShardStateUnsplit>()?.before_split == self.info.before_split,
+                "new state before_split flag does not match block header"
+            );
+
+            Ok(StateView {
+                id: self.id,
+                root,
+                reader: Arc::clone(reader),
+            })
+        })
     }
 }
 
