@@ -27,6 +27,11 @@ cargo run --release -p ton-state -- \
 ```
 
 The default HTTP endpoint is `http://127.0.0.1:8080`.
+Open [`/docs`](http://127.0.0.1:8080/docs) to browse all supported methods and send
+requests, including live SSE subscriptions. The page uses Scalar and loads its
+pinned JavaScript bundle from jsDelivr. API requests go directly to this service.
+The generated OpenAPI document is at [`/openapi.json`](http://127.0.0.1:8080/openapi.json).
+
 The service advertises `127.0.0.1:19005` for P2P UDP traffic.
 Use `--http` or `--address` to change these endpoints.
 The advertised UDP address must be reachable from peers.

@@ -73,13 +73,23 @@ impl Default for Transactions {
     }
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, utoipa::ToSchema)]
 #[serde(deny_unknown_fields)]
 struct Subscription {
+    /// Accounts whose transactions to receive, in raw or user-friendly form
+    #[schema(
+        min_items = 1,
+        max_items = 100,
+        example = json!(["-1:3333333333333333333333333333333333333333333333333333333333333333"]),
+    )]
     addresses: Vec<String>,
+    /// Only `["transactions"]` is supported; omitted or null uses this default
     #[serde(default)]
+    #[schema(example = json!(["transactions"]))]
     types: Option<Vec<String>>,
+    /// Only "finalized" is supported; omitted or null uses this default
     #[serde(default)]
+    #[schema(example = "finalized")]
     min_finality: Option<String>,
 }
 
@@ -215,6 +225,26 @@ impl Transactions {
     }
 }
 
+/// Finalized transactions
+///
+/// Subscribe to finalized transactions for 1–100 accounts. The first data event
+/// is `{"status":"subscribed"}`. Later events contain `type=transaction`,
+/// `finality=finalized` and one `transaction` object with TON Center v3 fields
+///
+/// Keepalive comments arrive after 15 seconds without an event. Delivery is live
+/// only: no replay or Last-Event-ID support. Slow consumers receive an error
+/// event and are disconnected. Cancel the request to close the subscription
+#[utoipa::path(
+    post,
+    path = "/api/streaming/v2/sse",
+    operation_id = "subscribeTransactions",
+    request_body = Subscription,
+    responses(
+        (status = 200, description = "Live SSE stream", body = String, content_type = "text/event-stream", example = "data: {\"status\":\"subscribed\"}\n\n"),
+        (status = 400, description = "Invalid subscription or unsupported replay", body = Object, example = json!({"error": "invalid_subscription"})),
+        (status = 503, description = "Connection limit reached or service shutting down", body = Object, example = json!({"error": "too_many_subscribers"})),
+    ),
+)]
 async fn subscribe(
     State(transactions): State<Transactions>,
     headers: HeaderMap,

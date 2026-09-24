@@ -37,6 +37,29 @@ pub(crate) fn router(sender: MessageSender) -> Router {
         })
 }
 
+/// Submit an external message
+///
+/// Broadcast a signed inbound external message through P2P. Accepts a base64 `BoC`
+/// up to 65,535 decoded bytes for a standard masterchain or basechain destination
+///
+/// Only the envelope is checked; the message is not emulated. Success means
+/// queued for broadcast, not accepted or included in a block
+#[utoipa::path(
+    post,
+    path = "/api/v2/sendBoc",
+    operation_id = "sendBoc",
+    request_body = SendBocRequest,
+    responses(
+        (status = 200, description = "P2P broadcast queued", body = TonlibResponse<ResultOk>),
+        (status = 400, description = "Invalid JSON, base64 or message", body = toncenter::v2::TonlibErrorResponse),
+        (status = 413, description = "BoC exceeds 65,535 bytes or JSON exceeds 96 KiB", body = toncenter::v2::TonlibErrorResponse),
+        (status = 415, description = "Expected application/json", body = toncenter::v2::TonlibErrorResponse),
+        (status = 422, description = "Invalid request fields", body = toncenter::v2::TonlibErrorResponse),
+        (status = 429, description = "Submission queue is full", body = toncenter::v2::TonlibErrorResponse),
+        (status = 500, description = "Message decoding failed", body = toncenter::v2::TonlibErrorResponse),
+        (status = 503, description = "P2P submission failed; retry later", body = toncenter::v2::TonlibErrorResponse),
+    ),
+)]
 async fn send_boc(
     State(submission): State<Submission>,
     request: Result<Json<SendBocRequest>, JsonRejection>,

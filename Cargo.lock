@@ -6386,6 +6386,7 @@ dependencies = [
  "tracing",
  "tracing-subscriber",
  "tycho-types",
+ "utoipa",
 ]
 
 [[package]]

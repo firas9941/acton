@@ -39,6 +39,8 @@ All notable changes to this project will be documented in this file.
   `sendBoc` accepts external-message BoCs and broadcasts them directly through
   P2P, including FEC transport for larger messages. Submission does not confirm
   execution or inclusion in a block.
+  `/docs` provides an interactive Scalar page for all supported HTTP methods,
+  with a generated utoipa specification at `/openapi.json`.
 
 ### Actonscan
 

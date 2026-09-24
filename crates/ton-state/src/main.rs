@@ -1,6 +1,7 @@
 //! Synchronize durable TON states and expose the applied checkpoint over HTTP.
 
 mod api;
+mod docs;
 mod streaming;
 mod submit;
 mod sync;
@@ -74,7 +75,8 @@ async fn main() -> Result<()> {
     let transactions = streaming::Transactions::default();
     let router = api::router(state.clone(), config.zero_state())
         .merge(transactions.clone().router())
-        .merge(submit::router(sender));
+        .merge(submit::router(sender))
+        .merge(docs::router());
     let listener = tokio::net::TcpListener::bind(args.http)
         .await
         .with_context(|| format!("cannot bind HTTP listener {}", args.http))?;
