@@ -1,12 +1,14 @@
 use std::collections::HashSet;
 use std::path::Path;
+use std::sync::mpsc;
+use std::time::Duration;
 
 use anyhow::{Context, Result};
 use base64::{Engine, engine::general_purpose::STANDARD};
 use expect_test::expect;
 use rocksdb::DB;
 use sha2::{Digest, Sha256};
-use ton_node_db::StateStore;
+use ton_node_db::{NodeDb, StateStore};
 use tycho_types::boc::Boc;
 use tycho_types::cell::{Cell, CellBuilder, HashBytes, Lazy, LazyExotic};
 use tycho_types::merkle::MerkleUpdate;
@@ -16,6 +18,56 @@ use tycho_types::models::{
     ShardAccount, ShardAccounts, ShardDescription, ShardHashes, ShardIdent, ShardStateSplit,
     ShardStateUnsplit, StdAddr, ValidatorInfo, ValueFlow,
 };
+
+#[test]
+fn account_snapshots_report_their_shard_time() -> Result<()> {
+    let directory = tempfile::tempdir()?;
+    let snapshot = directory.path().join("snapshot");
+    let address = StdAddr::new(0, HashBytes([7; 32]));
+    let mut shard = shard_state(&address, 0, 100)?.parse::<ShardStateUnsplit>()?;
+    shard.gen_utime = 1_700_000_000;
+    let shard = CellBuilder::build_from(shard)?;
+    let shard_id = state_id(&shard)?;
+    let mut master = master_state(0, &[shard_id])?.parse::<ShardStateUnsplit>()?;
+    master.gen_utime = 1_700_000_001;
+    let master = CellBuilder::build_from(master)?;
+    let master_id = state_id(&master)?;
+    write_snapshot(&snapshot, &[(master_id, master), (shard_id, shard)])?;
+
+    let store = StateStore::open(&snapshot, &directory.path().join("updates"), 1000)?;
+    let database = NodeDb::open(&snapshot)?;
+    let mut rows = Vec::new();
+    for address in [
+        address,
+        StdAddr::new(-1, HashBytes([7; 32])),
+        StdAddr::new(0, HashBytes([8; 32])),
+    ] {
+        let persisted = store.get_account(&address)?;
+        let original = database.get_account(&master_id, &address, 1000)?;
+        rows.push((
+            address.workchain,
+            persisted.account.is_some(),
+            persisted.gen_utime,
+            original.gen_utime,
+        ));
+    }
+
+    expect![[r"
+        [
+            (0, true, 1700000000, 1700000000),
+            (-1, false, 1700000001, 1700000001),
+            (0, false, 1700000000, 1700000000),
+        ]
+    "]]
+    .assert_eq(&format!(
+        "[\n{}]\n",
+        rows.iter()
+            .map(|row| format!("    {row:?},\n"))
+            .collect::<String>()
+    ));
+
+    Ok(())
+}
 
 #[test]
 fn commits_complete_batches_and_resumes_account_state() -> Result<()> {
@@ -106,6 +158,101 @@ fn commits_complete_batches_and_resumes_account_state() -> Result<()> {
             .context("accepted a different snapshot")?
             .to_string(),
     );
+
+    Ok(())
+}
+
+#[test]
+fn snapshots_read_a_fixed_frontier_while_the_writer_advances() -> Result<()> {
+    let directory = tempfile::tempdir()?;
+    let snapshot_path = directory.path().join("snapshot");
+    let updates = directory.path().join("updates");
+    let address = StdAddr::new(0, HashBytes([7; 32]));
+    let shard0 = shard_state(&address, 0, 100)?;
+    let shard_id0 = state_id(&shard0)?;
+    let master0 = master_state(0, &[shard_id0])?;
+    let master_id0 = state_id(&master0)?;
+    write_snapshot(
+        &snapshot_path,
+        &[(master_id0, master0.clone()), (shard_id0, shard0.clone())],
+    )?;
+
+    let shard1 = shard_state(&address, 1, 200)?;
+    let (shard_id1, shard_boc1) = block(&shard_id0, &shard0, &shard1)?;
+    let master1 = master_state(1, &[shard_id1])?;
+    let (master_id1, master_boc1) = block(&master_id0, &master0, &master1)?;
+    let mut store = StateStore::open(&snapshot_path, &updates, 1000)?;
+    let initial = store.snapshot();
+    store.apply_batch(
+        (master_id1, &master_boc1),
+        [(shard_id1, shard_boc1.as_slice())],
+    )?;
+    let committed = store.snapshot();
+
+    let shard2 = shard_state(&address, 2, 300)?;
+    let (shard_id2, shard_boc2) = block(&shard_id1, &shard1, &shard2)?;
+    let master2 = master_state(2, &[shard_id2])?;
+    let (master_id2, master_boc2) = block(&master_id1, &master1, &master2)?;
+    let (entered, applying) = mpsc::channel();
+    let (resume, paused) = mpsc::channel();
+
+    // Stop inside application, after changing the working masterchain root but
+    // before applying its shard. Readers must still see the complete old frontier.
+    let writer = std::thread::spawn(move || {
+        let shards = std::iter::once((shard_id2, shard_boc2.as_slice())).inspect(|_| {
+            entered.send(()).expect("reader disconnected");
+            paused
+                .recv_timeout(Duration::from_secs(10))
+                .expect("reader did not release the writer");
+        });
+        store.apply_batch((master_id2, &master_boc2), shards)?;
+        anyhow::Ok(store)
+    });
+    applying.recv_timeout(Duration::from_secs(10))?;
+    let during = committed.get_account(&address)?;
+    resume.send(())?;
+    let store = writer.join().expect("writer panicked")?;
+    let latest = store.snapshot();
+    drop(store);
+
+    let mut rows = Vec::new();
+    for state in [&initial, &committed, &latest] {
+        let account = state.get_account(&address)?;
+        let balance = account
+            .account
+            .context("missing account")?
+            .load_account()?
+            .context("empty account")?
+            .balance
+            .tokens
+            .into_inner();
+        rows.push((
+            state.head().seqno,
+            state.masterchain_state()?.block_id().seqno,
+            account.masterchain_block.seqno,
+            account.shard_block.seqno,
+            balance,
+        ));
+    }
+
+    expect![[r"
+        read during application: masterchain 1, shard 1
+        after writer closed (head, masterchain state, account masterchain, shard, balance):
+        [(0, 0, 0, 0, 100), (1, 1, 1, 1, 200), (2, 2, 2, 2, 300)]
+    "]]
+    .assert_eq(&format!(
+        "read during application: masterchain {}, shard {}\n\
+         after writer closed (head, masterchain state, account masterchain, shard, balance):\n\
+         {rows:?}\n",
+        during.masterchain_block.seqno, during.shard_block.seqno,
+    ));
+
+    drop((initial, committed, latest));
+    let reopened = StateStore::open(&snapshot_path, &updates, 1000)?;
+    expect![["(2, 300)"]].assert_eq(&format!(
+        "{:?}",
+        (reopened.head().seqno, balance(&reopened, &address)?)
+    ));
 
     Ok(())
 }
@@ -263,11 +410,19 @@ fn split_merge_and_restart_preserve_both_account_branches() -> Result<()> {
 
     let mut store = StateStore::open(&snapshot, &updates, 10_000)?;
     let merge_atomic = store.head() == master_id2;
+    let split_snapshot = store.snapshot();
     store.apply_batch(
         (master_id3, &master_boc3),
         [(merge_id, merge_boc.as_slice())],
     )?;
     drop(store);
+
+    let pinned_shards = (
+        split_snapshot.get_account(&left_address)?.shard_block == left_next_id,
+        split_snapshot.get_account(&right_address)?.shard_block == right_id,
+        split_snapshot.head() == master_id2,
+    );
+    drop(split_snapshot);
 
     let mut store = StateStore::open(&snapshot, &updates, 10_000)?;
     let merge_resumed = store.head() == master_id3;
@@ -312,6 +467,7 @@ fn split_merge_and_restart_preserve_both_account_branches() -> Result<()> {
         reversed merge rejected: true, checkpoint intact after restart: true
         missing merge child rejected: true
         merge resumed: true, balances: (140, 240), routed to parent: true
+        snapshot retained split frontier after merge: (true, true, true)
         continued after merge: (150, 250)
         split and merge in one batch: (140, 240)
     "]]
@@ -321,6 +477,7 @@ fn split_merge_and_restart_preserve_both_account_branches() -> Result<()> {
          reversed merge rejected: {reversed_rejected}, checkpoint intact after restart: {merge_atomic}\n\
          missing merge child rejected: {missing_child}\n\
          merge resumed: {merge_resumed}, balances: {merge_balances:?}, routed to parent: {merge_routed}\n\
+         snapshot retained split frontier after merge: {pinned_shards:?}\n\
          continued after merge: {:?}\n\
          split and merge in one batch: {:?}\n",
         (balance(&store, &left_address)?, balance(&store, &right_address)?),

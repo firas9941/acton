@@ -188,6 +188,13 @@ Unchanged cells stay in the original snapshot and are loaded lazily. Updated
 cells are read from the writable database. Each query or batch has its own cell
 read budget, and completed batches release their in-memory state graphs.
 
+Use `StateStore::snapshot()` to read one committed frontier while the writer
+applies further blocks. Cloning this `StateSnapshot` shares database handles and
+state roots without copying cells. All its queries use the same masterchain and
+shard checkpoint. Capture a new snapshot after a successful commit to read newer
+data. Old snapshots remain readable after the writer is dropped; drop them before
+reopening the update directory, because they keep its database handle open.
+
 The snapshot must remain available after restart. The writable database is an
 append-only update store; it is not a replacement validator-engine database.
 It has no cell garbage collection, validator signature verification, or TVM

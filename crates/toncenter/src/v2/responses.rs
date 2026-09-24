@@ -1194,9 +1194,11 @@ pub struct AddressInformation {
     pub sync_utime: i64,
     /// Account state: uninitialized, active, or frozen.
     pub state: AccountStateEnum,
-    /// Whether the account is suspended by the network. May be omitted by older server builds.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub suspended: Option<bool>,
+    /// Whether the account is suspended by the network. Always serialized as a boolean;
+    /// responses from older servers that omit this field default to `false`.
+    #[serde(default)]
+    #[cfg_attr(feature = "openapi", schema(required = true))]
+    pub suspended: bool,
 }
 
 /// Account balance, last transaction, and parsed state for recognized contract types.

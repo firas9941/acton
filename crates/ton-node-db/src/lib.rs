@@ -10,7 +10,7 @@ pub mod package;
 
 pub use lazy::ReadStats;
 pub use state::{AccountSnapshot, StateView};
-pub use store::StateStore;
+pub use store::{StateSnapshot, StateStore};
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::fs;
@@ -225,6 +225,7 @@ impl NodeDb {
             return Ok(AccountSnapshot {
                 masterchain_block: *masterchain,
                 shard_block: shard_id,
+                gen_utime: master.gen_utime()?,
                 account,
                 reads: master.read_stats(),
             });
@@ -233,11 +234,13 @@ impl NodeDb {
         let master_reads = master.read_stats();
         let shard = self.state(&shard_id, max_cells.saturating_sub(master_reads.records))?;
         let account = shard.get_account(address)?;
+        let gen_utime = shard.gen_utime()?;
         let shard_reads = shard.read_stats();
 
         Ok(AccountSnapshot {
             masterchain_block: *masterchain,
             shard_block: shard_id,
+            gen_utime,
             account,
             reads: ReadStats {
                 records: master_reads.records + shard_reads.records,

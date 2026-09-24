@@ -54,6 +54,7 @@ fn account_lifecycle_uses_the_v2_wire_contract() -> Result<()> {
             .transpose()?;
         let snapshot = AccountSnapshot {
             masterchain_block,
+            gen_utime: 1_700_000_000,
             shard_block: BlockId {
                 shard: ShardIdent::BASECHAIN,
                 ..masterchain_block
@@ -64,7 +65,7 @@ fn account_lifecycle_uses_the_v2_wire_contract() -> Result<()> {
                 bytes: 0,
             },
         };
-        rows.push(account_info(snapshot, 1_700_000_000)?);
+        rows.push(account_info(snapshot)?);
     }
 
     expect![[r#"
@@ -90,7 +91,8 @@ fn account_lifecycle_uses_the_v2_wire_contract() -> Result<()> {
             "data": "",
             "frozen_hash": "",
             "sync_utime": 1700000000,
-            "state": "uninitialized"
+            "state": "uninitialized",
+            "suspended": false
           },
           {
             "@type": "raw.fullAccountState",
@@ -119,7 +121,8 @@ fn account_lifecycle_uses_the_v2_wire_contract() -> Result<()> {
             "data": "",
             "frozen_hash": "",
             "sync_utime": 1700000000,
-            "state": "uninitialized"
+            "state": "uninitialized",
+            "suspended": false
           },
           {
             "@type": "raw.fullAccountState",
@@ -148,7 +151,8 @@ fn account_lifecycle_uses_the_v2_wire_contract() -> Result<()> {
             "data": "te6ccgEBAQEABgAACAAAAcg=",
             "frozen_hash": "",
             "sync_utime": 1700000000,
-            "state": "active"
+            "state": "active",
+            "suspended": false
           },
           {
             "@type": "raw.fullAccountState",
@@ -177,7 +181,8 @@ fn account_lifecycle_uses_the_v2_wire_contract() -> Result<()> {
             "data": "",
             "frozen_hash": "AwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwM=",
             "sync_utime": 1700000000,
-            "state": "frozen"
+            "state": "frozen",
+            "suspended": false
           }
         ]"#]]
     .assert_eq(&serde_json::to_string_pretty(&rows)?);

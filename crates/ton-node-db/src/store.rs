@@ -47,11 +47,23 @@ struct Checkpoint {
 /// and unchanged, including after restart. Stored cells are append-only: this
 /// store does not collect old cells or verify consensus signatures.
 pub struct StateStore {
-    snapshot: NodeDb,
-    updates: Arc<DB>,
-    checkpoint: Checkpoint,
-    max_cells: usize,
+    state: StateSnapshot,
     write_failed: bool,
+}
+
+/// Read access to one complete committed masterchain and shard frontier.
+///
+/// Clones share database handles and immutable roots, not loaded state graphs.
+/// Each query has its own cell read budget and can run alongside the writer.
+/// Append-only cells keep this checkpoint readable after later commits or after
+/// the writer is dropped. Drop all snapshots before reopening the update directory:
+/// their shared database handle retains its exclusive filesystem lock.
+#[derive(Clone)]
+pub struct StateSnapshot {
+    cells: Arc<DB>,
+    updates: Arc<DB>,
+    checkpoint: Arc<Checkpoint>,
+    max_cells: usize,
 }
 
 impl StateStore {
@@ -121,16 +133,21 @@ impl StateStore {
         };
 
         let store = Self {
-            snapshot,
-            updates,
-            checkpoint,
-            max_cells,
+            state: StateSnapshot {
+                cells: Arc::clone(&snapshot.cells),
+                updates,
+                checkpoint: Arc::new(checkpoint),
+                max_cells,
+            },
             write_failed: false,
         };
-        let reader = store.reader();
-        let master = store.view(&reader, &store.checkpoint.masterchain)?;
+        let reader = store.state.reader();
+        let master = store
+            .state
+            .view(&reader, &store.state.checkpoint.masterchain)?;
         let mut expected = master.shard_blocks()?;
         let mut actual = store
+            .state
             .checkpoint
             .shards
             .iter()
@@ -142,13 +159,16 @@ impl StateStore {
             expected == actual,
             "saved state checkpoint has an incomplete shard frontier"
         );
-        for root in &store.checkpoint.shards {
-            store.view(&reader, root)?;
+        for root in &store.state.checkpoint.shards {
+            store.state.view(&reader, root)?;
         }
 
         if saved.is_none() {
             let mut batch = WriteBatch::default();
-            batch.put(CHECKPOINT_KEY, serde_json::to_vec(&store.checkpoint)?);
+            batch.put(
+                CHECKPOINT_KEY,
+                serde_json::to_vec(store.state.checkpoint.as_ref())?,
+            );
             store.write(batch)?;
         }
 
@@ -158,40 +178,28 @@ impl StateStore {
     /// The masterchain block whose state and complete shard frontier are durable.
     /// This can lag behind the separate P2P download checkpoint.
     #[must_use]
-    pub const fn head(&self) -> BlockId {
-        self.checkpoint.masterchain.block
+    pub fn head(&self) -> BlockId {
+        self.state.head()
+    }
+
+    /// Pins the last successful commit for independent reads. Capturing a snapshot
+    /// clones shared handles without reading or copying cells. It does not follow
+    /// later commits; capture another snapshot to observe a newer frontier.
+    #[must_use]
+    pub fn snapshot(&self) -> StateSnapshot {
+        self.state.clone()
     }
 
     /// Opens the current masterchain state. The view stays pinned to this block
     /// even if later commits advance the store.
     pub fn masterchain_state(&self) -> Result<StateView> {
-        self.view(&self.reader(), &self.checkpoint.masterchain)
+        self.state.masterchain_state()
     }
 
     /// Queries the account at the last complete committed frontier. Returned
     /// cells are owned and do not depend on this store remaining open.
     pub fn get_account(&self, address: &StdAddr) -> Result<AccountSnapshot> {
-        let reader = self.reader();
-        let master = self.view(&reader, &self.checkpoint.masterchain)?;
-        let shard_id = master.account_shard(address)?;
-        let account = if shard_id == self.head() {
-            master.get_account(address)?
-        } else {
-            let root = self
-                .checkpoint
-                .shards
-                .iter()
-                .find(|root| root.block == shard_id)
-                .context("account shard is absent from committed state frontier")?;
-            self.view(&reader, root)?.get_account(address)?
-        };
-
-        Ok(AccountSnapshot {
-            masterchain_block: self.head(),
-            shard_block: shard_id,
-            account,
-            reads: reader.stats(),
-        })
+        self.state.get_account(address)
     }
 
     /// Applies a successor masterchain block and all new shard blocks, in
@@ -214,15 +222,18 @@ impl StateStore {
             return Ok(());
         }
 
-        let reader = self.reader();
-        let mut master = self.view(&reader, &self.checkpoint.masterchain)?;
+        let reader = self.state.reader();
+        let mut master = self
+            .state
+            .view(&reader, &self.state.checkpoint.masterchain)?;
         master.apply_masterchain_block(&masterchain.0, masterchain.1)?;
 
         let mut states = self
+            .state
             .checkpoint
             .shards
             .iter()
-            .map(|root| Ok((root.block, self.view(&reader, root)?)))
+            .map(|root| Ok((root.block, self.state.view(&reader, root)?)))
             .collect::<Result<BTreeMap<_, _>>>()?;
         let mut consumed = HashSet::new();
 
@@ -258,7 +269,7 @@ impl StateStore {
 
         let checkpoint = Checkpoint {
             version: 1,
-            anchor: self.checkpoint.anchor.clone(),
+            anchor: self.state.checkpoint.anchor.clone(),
             masterchain: StateRoot::from_view(&master),
             shards: states.values().map(StateRoot::from_view).collect(),
         };
@@ -273,27 +284,16 @@ impl StateStore {
             self.write_failed = true;
             return Err(error.context("state commit failed; reopen the store before continuing"));
         }
-        self.checkpoint = checkpoint;
+        self.state.checkpoint = Arc::new(checkpoint);
 
         Ok(())
-    }
-
-    fn reader(&self) -> Arc<Reader> {
-        Reader::with_updates(
-            Arc::clone(&self.snapshot.cells),
-            Some(Arc::clone(&self.updates)),
-            self.max_cells,
-        )
-    }
-
-    fn view(&self, reader: &Arc<Reader>, root: &StateRoot) -> Result<StateView> {
-        StateView::load(Arc::clone(reader), root.block, root.hash)
     }
 
     fn write(&self, batch: WriteBatch) -> Result<()> {
         let mut options = WriteOptions::default();
         options.set_sync(true);
-        self.updates
+        self.state
+            .updates
             .write_opt(batch, &options)
             .context("cannot persist state checkpoint")
     }
@@ -328,6 +328,59 @@ impl StateStore {
 
             Ok(())
         })
+    }
+}
+
+impl StateSnapshot {
+    /// Identifies the complete durable frontier used by every query on this handle.
+    #[must_use]
+    pub fn head(&self) -> BlockId {
+        self.checkpoint.masterchain.block
+    }
+
+    /// Opens this checkpoint's masterchain state with a fresh cell read budget.
+    pub fn masterchain_state(&self) -> Result<StateView> {
+        self.view(&self.reader(), &self.checkpoint.masterchain)
+    }
+
+    /// Resolves the account's shard from this checkpoint and returns owned cells.
+    /// Concurrent commits cannot change its block IDs, timestamp, or account data.
+    pub fn get_account(&self, address: &StdAddr) -> Result<AccountSnapshot> {
+        let reader = self.reader();
+        let master = self.view(&reader, &self.checkpoint.masterchain)?;
+        let shard_id = master.account_shard(address)?;
+        let shard = if shard_id == self.head() {
+            master
+        } else {
+            let root = self
+                .checkpoint
+                .shards
+                .iter()
+                .find(|root| root.block == shard_id)
+                .context("account shard is absent from committed state frontier")?;
+            self.view(&reader, root)?
+        };
+        let account = shard.get_account(address)?;
+
+        Ok(AccountSnapshot {
+            masterchain_block: self.head(),
+            shard_block: shard_id,
+            gen_utime: shard.gen_utime()?,
+            account,
+            reads: reader.stats(),
+        })
+    }
+
+    fn reader(&self) -> Arc<Reader> {
+        Reader::with_updates(
+            Arc::clone(&self.cells),
+            Some(Arc::clone(&self.updates)),
+            self.max_cells,
+        )
+    }
+
+    fn view(&self, reader: &Arc<Reader>, root: &StateRoot) -> Result<StateView> {
+        StateView::load(Arc::clone(reader), root.block, root.hash)
     }
 }
 

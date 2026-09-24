@@ -19,6 +19,9 @@ use crate::{ReadStats, StateRecord};
 pub struct AccountSnapshot {
     pub masterchain_block: BlockId,
     pub shard_block: BlockId,
+    /// Generation time of the account's shard state, in Unix seconds.
+    /// This can precede the masterchain checkpoint's time.
+    pub gen_utime: u32,
     pub account: Option<ShardAccount>,
     pub reads: ReadStats,
 }

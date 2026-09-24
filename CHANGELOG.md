@@ -16,16 +16,21 @@ All notable changes to this project will be documented in this file.
 - Add the MIT-licensed `toncenter` crate with typed TON Center v2 and v3 requests and
   responses, field documentation, generated OpenAPI, and opt-in live contract tests.
 - Use the shared `toncenter` v2 and v3 types across Rust clients and simulator endpoints.
+  Address information always includes the boolean `suspended` field.
 - Remove unused dependencies from `ton-emulator` and `tvm-ffi`.
 - Add `ton-node-db` for reading validator database snapshots, querying account
   states lazily, and persisting masterchain and shard state updates in a separate
   database, including shard splits and merges. P2P synchronization resumes from
   the last fully applied masterchain checkpoint without modifying the source snapshot.
   State commits reuse known persisted cells and a bounded record cache to avoid
-  redundant snapshot lookups.
+  redundant snapshot lookups. Immutable read snapshots retain a complete committed
+  frontier while the writer applies subsequent blocks.
 - Add `ton-state` to synchronize a validator snapshot through P2P and serve
   `getMasterchainInfo`, `getAddressInformation`, and `getAddressBalance` over
-  TON Center API v2 HTTP routes from the last applied state.
+  TON Center API v2 HTTP routes from the last applied state, plus finalized
+  transaction subscriptions over SSE with address filters and TON Center v3 fields.
+  Account responses report their shard-state time in `sync_utime`.
+  HTTP requests pin one committed checkpoint without waiting for block application.
 
 ### Actonscan
 

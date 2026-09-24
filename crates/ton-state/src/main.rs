@@ -1,16 +1,16 @@
 //! Synchronize durable TON states and expose the applied checkpoint over HTTP.
 
 mod api;
+mod streaming;
 mod sync;
 
 use std::net::{SocketAddr, SocketAddrV4};
 use std::path::PathBuf;
-use std::sync::Arc;
 use std::time::{Duration, Instant};
 
 use anyhow::{Context, Result};
 use clap::Parser;
-use tokio::sync::RwLock;
+use tokio::sync::watch;
 use ton_indexer_p2p::P2pBlockSource;
 use ton_node_db::StateStore;
 use ton_p2p::{Client, ClientOptions, NetworkConfig, NetworkOptions, load_identity};
@@ -68,8 +68,10 @@ async fn main() -> Result<()> {
     )?;
     client.validate_checkpoint(&head)?;
     let source = P2pBlockSource::new(client)?;
-    let store = Arc::new(RwLock::new(store));
-    let router = api::router(Arc::clone(&store), config.zero_state());
+    let (checkpoints, state) = watch::channel(store.snapshot());
+    let transactions = streaming::Transactions::default();
+    let router =
+        api::router(state.clone(), config.zero_state()).merge(transactions.clone().router());
     let listener = tokio::net::TcpListener::bind(args.http)
         .await
         .with_context(|| format!("cannot bind HTTP listener {}", args.http))?;
@@ -85,16 +87,22 @@ async fn main() -> Result<()> {
         "serving the applied state and synchronizing through P2P",
     );
 
+    let shutdown_transactions = transactions.clone();
+    let synchronization = sync::run(store, source, checkpoints, transactions.clone());
+    drop(transactions);
     let result = tokio::select! {
-        result = sync::run(Arc::clone(&store), source) => result,
-        result = axum::serve(listener, router).with_graceful_shutdown(shutdown()) => {
+        result = synchronization => result,
+        result = axum::serve(listener, router).with_graceful_shutdown(async move {
+            shutdown().await;
+            shutdown_transactions.close();
+        }) => {
             result.context("HTTP server failed")
         }
     };
 
     info!(
         operation = "state_service_stop",
-        target = %store.read().await.head(),
+        target = %state.borrow().head(),
         duration_ms = started.elapsed().as_millis(),
         outcome = if result.is_ok() { "stopped" } else { "failed" },
         "service stopped; the next start resumes the applied checkpoint",

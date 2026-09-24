@@ -1,7 +1,6 @@
 #[cfg(test)]
 mod tests;
 
-use std::sync::Arc;
 use std::time::Instant;
 
 use anyhow::Result;
@@ -13,8 +12,8 @@ use axum::routing::get;
 use axum::{Json, Router};
 use base64::{Engine, engine::general_purpose::STANDARD};
 use serde::Serialize;
-use tokio::sync::RwLock;
-use ton_node_db::{AccountSnapshot, StateStore};
+use tokio::sync::watch;
+use ton_node_db::{AccountSnapshot, StateSnapshot};
 use toncenter::v2::requests::AddressInformationRequest;
 use toncenter::v2::{self as v2, responses as wire};
 use tracing::{debug, error};
@@ -23,19 +22,19 @@ use tycho_types::models::{AccountState, BlockId, StdAddr, StdAddrFormat};
 
 #[derive(Clone)]
 struct Api {
-    store: Arc<RwLock<StateStore>>,
+    state: watch::Receiver<StateSnapshot>,
     zero_state: BlockId,
 }
 
-/// Routes read only committed states. A request holds the read lock through
-/// account lookup so its block ID, timestamp, and account share one checkpoint.
-pub(crate) fn router(store: Arc<RwLock<StateStore>>, zero_state: BlockId) -> Router {
+/// Each request pins a complete committed frontier before dispatching its read.
+/// State application runs independently of account lookup and serialization.
+pub(crate) fn router(state: watch::Receiver<StateSnapshot>, zero_state: BlockId) -> Router {
     Router::new()
         .route("/api/v2/getMasterchainInfo", get(masterchain_info))
         .route("/api/v2/getAddressInformation", get(address_information))
         .route("/api/v2/getAddressBalance", get(address_balance))
         .fallback(|| async { ApiError::new(StatusCode::NOT_FOUND, "unknown API method") })
-        .with_state(Api { store, zero_state })
+        .with_state(Api { state, zero_state })
 }
 
 async fn masterchain_info(State(api): State<Api>) -> Response {
@@ -97,16 +96,15 @@ async fn account_request<T: Serialize + Send + 'static>(
             }
         }
 
-        let utime = store.masterchain_state()?.gen_utime()?;
         let snapshot = store.get_account(&address)?;
-        Ok(map(account_info(snapshot, utime)?))
+        Ok(map(account_info(snapshot)?))
     })
     .await
 }
 
 /// Maps the raw account without interpreting its contract code. Missing
 /// dictionary entries have the same zero-balance representation as `account_none`.
-fn account_info(snapshot: AccountSnapshot, utime: u32) -> Result<wire::AddressInformation> {
+fn account_info(snapshot: AccountSnapshot) -> Result<wire::AddressInformation> {
     let mut info = wire::AddressInformation {
         type_tag: Default::default(),
         balance: "0".into(),
@@ -120,9 +118,10 @@ fn account_info(snapshot: AccountSnapshot, utime: u32) -> Result<wire::AddressIn
         code: String::new(),
         data: String::new(),
         frozen_hash: String::new(),
-        sync_utime: i64::from(utime),
+        sync_utime: i64::from(snapshot.gen_utime),
         state: wire::AccountStateEnum::Uninitialized,
-        suspended: None,
+        // TODO: Read account suspension from masterchain config parameter 44.
+        suspended: false,
     };
     let Some(shard_account) = snapshot.account else {
         return Ok(info);
@@ -173,14 +172,14 @@ fn block_id(id: BlockId) -> wire::TonBlockIdExt {
 async fn read<T: Serialize + Send + 'static>(
     api: Api,
     method: &'static str,
-    query: impl FnOnce(&StateStore, BlockId) -> Result<T> + Send + 'static,
+    query: impl FnOnce(&StateSnapshot, BlockId) -> Result<T> + Send + 'static,
 ) -> Response {
     let started = Instant::now();
-    let result =
-        tokio::task::spawn_blocking(move || query(&api.store.blocking_read(), api.zero_state))
-            .await
-            .map_err(anyhow::Error::from)
-            .and_then(std::convert::identity);
+    let snapshot = api.state.borrow().clone();
+    let result = tokio::task::spawn_blocking(move || query(&snapshot, api.zero_state))
+        .await
+        .map_err(anyhow::Error::from)
+        .and_then(std::convert::identity);
 
     match result {
         Ok(result) => {

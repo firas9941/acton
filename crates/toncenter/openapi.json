@@ -4042,7 +4042,8 @@
           "data",
           "frozen_hash",
           "sync_utime",
-          "state"
+          "state",
+          "suspended"
         ],
         "properties": {
           "@type": {
@@ -4085,11 +4086,8 @@
             "description": "Account state: uninitialized, active, or frozen."
           },
           "suspended": {
-            "type": [
-              "boolean",
-              "null"
-            ],
-            "description": "Whether the account is suspended by the network. May be omitted by older server builds."
+            "type": "boolean",
+            "description": "Whether the account is suspended by the network. Always serialized as a boolean;\nresponses from older servers that omit this field default to `false`."
           },
           "sync_utime": {
             "type": "integer",

@@ -230,6 +230,7 @@
         "lt": "sample"
       },
       "state": "uninitialized",
+      "suspended": false,
       "sync_utime": 123
     },
     {

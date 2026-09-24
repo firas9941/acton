@@ -3,6 +3,8 @@
 `ton-state` starts from a validator database snapshot, downloads successor blocks
 through P2P, and stores masterchain and shard states. Its HTTP API reads the last
 fully applied checkpoint.
+Each HTTP request keeps that checkpoint for its entire read. Synchronization can
+commit newer blocks without making the request wait for state application.
 
 ## Run with Localton
 
@@ -60,16 +62,66 @@ curl -sG http://127.0.0.1:8080/api/v2/getAddressBalance \
 Account methods accept raw and user-friendly addresses. An absent account has
 zero balance and `uninitialized` state. Account information includes code and
 data as base64 BoCs, the last transaction, and the masterchain checkpoint.
-`sync_utime` contains the checkpoint's chain time.
+`sync_utime` contains the account's shard-state time, as in TONLib.
+`suspended` is currently always `false`; account suspension is not evaluated.
 
 These GET routes use the [TON Center API v2](https://toncenter.com/api/v2/)
 response format. Success responses contain `ok: true` and `result`.
 Errors contain `ok: false`, `error`, and `code`.
 An optional `seqno` must equal the current applied checkpoint. Other heights
-return HTTP 409. Historical queries, POST requests, and JSON-RPC are not supported.
+return HTTP 409. These account routes do not support historical queries, POST,
+or JSON-RPC.
 
 The reported checkpoint can lag behind the network head. Network errors cause
 download retries. An invalid state update or a storage error stops the service.
+
+## Subscribe to finalized transactions
+
+Open a live SSE subscription on the same HTTP listener:
+
+```sh
+curl -N http://127.0.0.1:8080/api/streaming/v2/sse \
+  -H 'Content-Type: application/json' \
+  -d '{"types":["transactions"],"addresses":["-1:3333333333333333333333333333333333333333333333333333333333333333"],"min_finality":"finalized"}'
+```
+
+The first SSE data message is `{"status":"subscribed"}`. Subsequent messages
+contain `type: "transaction"`, `finality: "finalized"`, and one `transaction`
+object with TON Center v3 fields. The service sends `: keepalive` comments after
+15 seconds without an event. Ignore comment lines in the client.
+
+Subscriptions accept 1–100 raw or user-friendly addresses. An address matches
+the transaction's account, not its message destinations. Repeated forms of the
+same address produce one event. `types` defaults to `["transactions"]` and
+`min_finality` defaults to `"finalized"`. Other event types, finality levels,
+and subscription fields return HTTP 400.
+
+Events come from the existing P2P block download. They are published only after
+the masterchain block and all associated shard state updates commit. The
+transaction includes its shard `block_ref` and the committing `mc_block_seqno`.
+During catch-up, events follow the service's applied checkpoint and can be older
+than the network head. Keepalive confirms the connection, not sync progress.
+
+The transaction object includes messages, execution phases, fees in nanograms,
+and account state hashes. Account balances, code, data, normalized message hashes,
+and trace links are not resolved. Their optional fields remain null or absent;
+`child_transactions` is empty and does not imply that no child transactions exist.
+The envelope is specific to this service: each event contains one transaction,
+without TON Center's trace grouping. See the reference
+[SSE subscription](https://docs.ton.org/api/streaming/sse) and
+[notification schemas](https://docs.ton.org/api/streaming/reference).
+
+Delivery is live only. Events published before subscription, during disconnection,
+or across process restarts are not replayed. `Last-Event-ID` returns HTTP 400.
+Clients must treat a disconnect as a possible gap and reconcile separately if
+they need a complete history.
+
+At most 64 connections are accepted. Each has a queue limited to 32 events and
+2 MiB of serialized data. Queue overflow sends
+`{"type":"error","error":"slow_consumer"}` and ends that connection.
+An encoding failure or an event larger than 1 MiB ends current subscriptions
+with `{"type":"error","error":"stream_failed"}`. State synchronization
+continues. Reconnect creates a new live subscription and does not recover the gap.
 
 ## Verification and storage limits
 

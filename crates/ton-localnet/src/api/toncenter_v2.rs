@@ -208,7 +208,7 @@ pub fn map_account_state(s: &LocalnetAccountState) -> response::AddressInformati
             .unwrap_or_default(),
         sync_utime: s.sync_utime as i64,
         state: map_account_status(&s.state),
-        suspended: Some(false),
+        suspended: false,
     }
 }
 
