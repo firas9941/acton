@@ -2,6 +2,7 @@
 
 mod api;
 mod streaming;
+mod submit;
 mod sync;
 
 use std::net::{SocketAddr, SocketAddrV4};
@@ -67,11 +68,13 @@ async fn main() -> Result<()> {
         },
     )?;
     client.validate_checkpoint(&head)?;
+    let sender = client.message_sender();
     let source = P2pBlockSource::new(client)?;
     let (checkpoints, state) = watch::channel(store.snapshot());
     let transactions = streaming::Transactions::default();
-    let router =
-        api::router(state.clone(), config.zero_state()).merge(transactions.clone().router());
+    let router = api::router(state.clone(), config.zero_state())
+        .merge(transactions.clone().router())
+        .merge(submit::router(sender));
     let listener = tokio::net::TcpListener::bind(args.http)
         .await
         .with_context(|| format!("cannot bind HTTP listener {}", args.http))?;

@@ -1,4 +1,4 @@
-//! Native TON P2P discovery, block downloads, and a resumable disk cache.
+//! Native TON P2P discovery, block downloads, message broadcasts, and a resumable cache.
 //!
 //! The client checks block hashes, predecessor links, and proof roots. It does
 //! not validate consensus or execute state transitions. Consumers select shard
@@ -9,6 +9,7 @@ mod client;
 mod config;
 mod download;
 mod identity;
+mod message;
 mod network;
 mod peers;
 mod rldp;
@@ -18,4 +19,5 @@ pub use benchmark::{BenchmarkReport, benchmark_peers};
 pub use client::{Client, ClientOptions};
 pub use config::NetworkConfig;
 pub use identity::load_identity;
+pub use message::{ExternalMessage, MessageSender};
 pub use network::{BootstrapReport, NetworkOptions, bootstrap};

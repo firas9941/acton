@@ -1,6 +1,6 @@
 [package]
 name = "ton-state"
-description = "Persistent TON P2P state synchronization with a read-only HTTP API"
+description = "Persistent TON P2P state synchronization and HTTP API"
 version.workspace = true
 authors.workspace = true
 edition.workspace = true

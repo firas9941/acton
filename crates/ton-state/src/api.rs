@@ -222,13 +222,13 @@ async fn read<T: Serialize + Send + 'static>(
 }
 
 #[derive(Debug, Clone)]
-struct ApiError {
+pub(crate) struct ApiError {
     status: StatusCode,
     message: &'static str,
 }
 
 impl ApiError {
-    const fn new(status: StatusCode, message: &'static str) -> Self {
+    pub(crate) const fn new(status: StatusCode, message: &'static str) -> Self {
         Self { status, message }
     }
 }

@@ -10,7 +10,7 @@ use tracing::{debug, info};
 use tycho_types::models::{BlockId, ShardIdent};
 
 use crate::{
-    NetworkConfig, NetworkOptions,
+    MessageSender, NetworkConfig, NetworkOptions,
     download::{download_from_peer, download_shard_from_peer, validate_block},
     network::Network,
     peers::{self, PeerEndpoint},
@@ -106,6 +106,14 @@ impl Client {
     #[must_use]
     pub const fn anchor(&self) -> BlockId {
         self.storage.anchor()
+    }
+
+    /// Shares the UDP transport for external-message submission without locking
+    /// the block download stream. The handle keeps the transport alive after
+    /// this client is dropped, but does not retain the block cache or discovery task.
+    #[must_use]
+    pub fn message_sender(&self) -> MessageSender {
+        MessageSender::new(Arc::clone(&self.network), self.options.network.timeout)
     }
 
     /// Returns the persisted head, or `None` while the starting block is missing.

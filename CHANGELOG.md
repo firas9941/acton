@@ -36,6 +36,9 @@ All notable changes to this project will be documented in this file.
   reads across checkpoints. State updates reuse decoded blocks, and
   commit logs expose application, cell encoding, and durable write timings.
   Shard updates load independent Merkle branches in a bounded worker pool.
+  `sendBoc` accepts external-message BoCs and broadcasts them directly through
+  P2P, including FEC transport for larger messages. Submission does not confirm
+  execution or inclusion in a block.
 
 ### Actonscan
 

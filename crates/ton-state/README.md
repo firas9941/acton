@@ -75,6 +75,31 @@ or JSON-RPC.
 The reported checkpoint can lag behind the network head. Network errors cause
 download retries. An invalid state update or a storage error stops the service.
 
+## Send a signed message
+
+Submit a signed inbound external message saved as `message.boc`:
+
+```sh
+base64 < message.boc | tr -d '\n' | jq -Rs '{boc: .}' | \
+  curl -s http://127.0.0.1:8080/api/v2/sendBoc \
+    -H 'Content-Type: application/json' --data-binary @-
+```
+
+A successful response is `{"ok":true,"result":{"@type":"ok"},"@extra":""}`.
+It means the service queued a P2P broadcast, not that a validator accepted the
+message or included it in a block. Check the resulting transaction separately,
+for example through an SSE subscription opened before submission.
+
+The service checks the message envelope and accepts BoCs up to 65,535 bytes
+with a standard masterchain or basechain destination. It does not emulate the
+message or validate its signature, expiry, balance, or wallet sequence number.
+Receiving peers enforce network admission rules. Larger messages use FEC
+broadcasts. Peers can discard repeated messages.
+
+Invalid input returns an HTTP error in the v2 response format. HTTP 429 means
+the submission queue is full; HTTP 503 means P2P submission failed and the
+request can be retried. This route accepts POST JSON only.
+
 ## Subscribe to finalized transactions
 
 Open a live SSE subscription on the same HTTP listener:

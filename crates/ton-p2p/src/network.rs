@@ -1,4 +1,4 @@
-//! ADNL transport and DHT peer discovery for the masterchain overlay.
+//! ADNL transport and DHT peer discovery for public workchain overlays.
 
 use std::{net::SocketAddrV4, sync::Arc, time::Duration};
 
@@ -183,6 +183,7 @@ pub(crate) struct Network {
     pub(crate) dht: Arc<dht::Node>,
     pub(crate) rldp: Arc<rldp::Client>,
     pub(crate) overlay_id: overlay::IdShort,
+    pub(crate) zero_state_file_hash: [u8; 32],
     _shutdown: Shutdown,
 }
 
@@ -245,6 +246,7 @@ impl Network {
             dht,
             rldp,
             overlay_id: config.masterchain_overlay(),
+            zero_state_file_hash: config.zero_state().file_hash.0,
             _shutdown: shutdown,
         })
     }
@@ -259,10 +261,14 @@ impl Network {
     }
 
     pub(crate) async fn find_peers(&self) -> Result<Vec<Peer>> {
+        self.find_overlay_peers(&self.overlay_id).await
+    }
+
+    pub(crate) async fn find_overlay_peers(&self, overlay: &overlay::IdShort) -> Result<Vec<Peer>> {
         let mut peers = Vec::new();
 
-        for (address, node) in self.dht.find_overlay_nodes(&self.overlay_id).await? {
-            match self.add_peer(address, &node) {
+        for (address, node) in self.dht.find_overlay_nodes(overlay).await? {
+            match self.add_peer(overlay, address, &node) {
                 Ok(Some(peer)) => peers.push(peer),
                 Ok(None) => {}
                 Err(error) => warn!(
@@ -288,16 +294,16 @@ impl Network {
             version: descriptor.version,
             signature: STANDARD.decode(&descriptor.signature)?.into(),
         };
-        self.add_peer(descriptor.address, &node)
+        self.add_peer(&self.overlay_id, descriptor.address, &node)
     }
 
     fn add_peer(
         &self,
+        overlay: &overlay::IdShort,
         address: SocketAddrV4,
         node: &proto::overlay::NodeOwned,
     ) -> Result<Option<Peer>> {
-        self.overlay_id
-            .verify_overlay_node(&node.as_equivalent_ref())?;
+        overlay.verify_overlay_node(&node.as_equivalent_ref())?;
         let full_id = adnl::NodeIdFull::try_from(node.id.as_equivalent_ref())?;
         let id = full_id.compute_short_id();
         let crypto::tl::PublicKeyOwned::Ed25519 { key } = &node.id else {
