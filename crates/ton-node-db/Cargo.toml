@@ -17,12 +17,15 @@ doctest = false
 anyhow.workspace = true
 base64.workspace = true
 dunce.workspace = true
+quick_cache = { version = "0.7", default-features = false }
+rayon = "1.11"
 rocksdb = "0.25.0"
 serde.workspace = true
 serde_json.workspace = true
 sha2.workspace = true
 tl-proto.workspace = true
-tycho-types = { workspace = true, features = ["serde"] }
+tracing.workspace = true
+tycho-types = { workspace = true, features = ["serde", "rayon"] }
 
 [dev-dependencies]
 clap.workspace = true
@@ -32,7 +35,6 @@ tokio.workspace = true
 ton-indexer-core = { path = "../ton-indexer-core" }
 ton-indexer-p2p = { path = "../ton-indexer-p2p" }
 ton-p2p = { path = "../ton-p2p" }
-tracing.workspace = true
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 
 [lints]

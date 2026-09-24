@@ -6,6 +6,7 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex, OnceLock};
 
 use anyhow::{Context, Result, anyhow, ensure};
+use quick_cache::{Weighter, sync::Cache};
 use rocksdb::DB;
 use serde::Serialize;
 use tycho_types::cell::{
@@ -16,13 +17,31 @@ use tycho_types::util::ArrayVec;
 
 use crate::cells::{Reference, StoredCell};
 
-/// Database work performed by a state view, including its account queries.
+/// Logical cell-record reads performed by a state view, including its account queries.
 ///
-/// Embedded bags of cells count as one record; bytes exclude `RocksDB`'s physical I/O.
+/// Embedded bags of cells count as one record. Counts include cache hits; bytes
+/// describe serialized records, not `RocksDB`'s physical I/O.
 #[derive(Debug, Clone, Copy, Serialize)]
 pub struct ReadStats {
     pub records: usize,
     pub bytes: usize,
+    /// Records served from the shared serialized-record cache.
+    pub cache_hits: usize,
+}
+
+/// Serialized, committed records only. Sharing lazy cells here would retain
+/// their readers and state graphs. Content-addressed records remain valid across
+/// checkpoints because both the snapshot and committed cell contents are immutable.
+pub(crate) type RecordCache = Cache<HashBytes, Arc<[u8]>, RecordWeight>;
+
+#[derive(Clone)]
+pub(crate) struct RecordWeight;
+
+impl Weighter<HashBytes, Arc<[u8]>> for RecordWeight {
+    fn weight(&self, _: &HashBytes, value: &Arc<[u8]>) -> u64 {
+        // Account for the key, Arc, and allocation header alongside record bytes.
+        value.len() as u64 + 64
+    }
 }
 
 pub(crate) struct Reader {
@@ -31,22 +50,31 @@ pub(crate) struct Reader {
     limit: usize,
     records: AtomicUsize,
     bytes: AtomicUsize,
+    cache_hits: AtomicUsize,
+    cache: Option<Arc<RecordCache>>,
     error: OnceLock<String>,
     stored: Mutex<HashSet<HashBytes>>,
 }
 
 impl Reader {
     pub(crate) fn new(db: Arc<DB>, limit: usize) -> Arc<Self> {
-        Self::with_updates(db, None, limit)
+        Self::with_updates(db, None, None, limit)
     }
 
-    pub(crate) fn with_updates(db: Arc<DB>, updates: Option<Arc<DB>>, limit: usize) -> Arc<Self> {
+    pub(crate) fn with_updates(
+        db: Arc<DB>,
+        updates: Option<Arc<DB>>,
+        cache: Option<Arc<RecordCache>>,
+        limit: usize,
+    ) -> Arc<Self> {
         Arc::new(Self {
             db,
             updates,
             limit,
             records: AtomicUsize::new(0),
             bytes: AtomicUsize::new(0),
+            cache_hits: AtomicUsize::new(0),
+            cache,
             error: OnceLock::new(),
             stored: Mutex::new(HashSet::new()),
         })
@@ -65,6 +93,7 @@ impl Reader {
         ReadStats {
             records: self.records.load(Ordering::Relaxed),
             bytes: self.bytes.load(Ordering::Relaxed),
+            cache_hits: self.cache_hits.load(Ordering::Relaxed),
         }
     }
 
@@ -98,18 +127,26 @@ impl Reader {
             "lazy state read exceeds {} database records",
             self.limit
         );
-        let updated = self
-            .updates
-            .as_ref()
-            .map(|db| db.get_pinned(hash.as_slice()))
-            .transpose()?
-            .flatten();
-        let value = match updated {
-            Some(value) => value,
-            None => self
-                .db
-                .get_pinned(hash.as_slice())?
-                .with_context(|| format!("cell {hash} is absent from the state databases"))?,
+        let cached = self.cache.as_ref().and_then(|cache| cache.get(&hash));
+        let cache_hit = cached.is_some();
+        let value: Arc<[u8]> = if let Some(value) = cached {
+            self.cache_hits.fetch_add(1, Ordering::Relaxed);
+            value
+        } else {
+            let updated = self
+                .updates
+                .as_ref()
+                .map(|db| db.get_pinned(hash.as_slice()))
+                .transpose()?
+                .flatten();
+            let value = match updated {
+                Some(value) => value,
+                None => self
+                    .db
+                    .get_pinned(hash.as_slice())?
+                    .with_context(|| format!("cell {hash} is absent from the state databases"))?,
+            };
+            Arc::from(value.as_ref())
         };
         self.bytes.fetch_add(value.len(), Ordering::Relaxed);
 
@@ -160,6 +197,9 @@ impl Reader {
             cell.repr_hash() == &hash,
             "cell {hash} representation hash mismatch"
         );
+        if !cache_hit && let Some(cache) = &self.cache {
+            cache.insert(hash, value);
+        }
 
         // Only the record root is independently addressable. Children inside
         // an embedded BoC need not have their own database entries.

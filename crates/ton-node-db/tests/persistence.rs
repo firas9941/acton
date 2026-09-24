@@ -93,6 +93,13 @@ fn commits_complete_batches_and_resumes_account_state() -> Result<()> {
     let pinned = store.masterchain_state()?;
     let missing = store.apply_batch((master_id1, &master_boc1), []).is_err();
     let unchanged = store.head() == master_id0;
+    let master_root1 = Boc::decode(&master_boc1)?;
+    let shard_root1 = Boc::decode(&shard_boc1)?;
+    let wrong_root = store
+        .apply_roots((master_id1, &shard_root1), [(shard_id1, &shard_root1)])
+        .is_err();
+    let missing_root = store.apply_roots((master_id1, &master_root1), []).is_err();
+    let roots_atomic = store.head() == master_id0;
 
     store.apply_batch(
         (master_id1, &master_boc1),
@@ -120,10 +127,11 @@ fn commits_complete_batches_and_resumes_account_state() -> Result<()> {
 
     let mut store = StateStore::open(&snapshot, &updates, 1000)?;
     let failed_batch_not_committed = store.head() == master_id1;
-    store.apply_batch(
-        (master_id2, &master_boc2),
-        [(shard_id2, shard_boc2.as_slice())],
+    store.apply_roots(
+        (master_id2, &Boc::decode(&master_boc2)?),
+        [(shard_id2, &Boc::decode(&shard_boc2)?)],
     )?;
+    store.apply_roots((master_id2, &Boc::decode(&master_boc2)?), [])?;
     let final_balance = balance(&store, &address)?;
     drop(store);
     let store = StateStore::open(&snapshot, &updates, 1000)?;
@@ -133,6 +141,7 @@ fn commits_complete_batches_and_resumes_account_state() -> Result<()> {
     expect![[r"
         balances: 100 -> 200 -> 200 -> 300
         missing shard rejected: true, checkpoint unchanged: true
+        wrong root rejected: true, missing root rejected: true, checkpoint unchanged: true
         pinned view unchanged: true, resumed: true, replay: true
         invalid shard rejected: true, restart unchanged: true
         final resume: true, snapshot balance: 100
@@ -140,6 +149,7 @@ fn commits_complete_batches_and_resumes_account_state() -> Result<()> {
     .assert_eq(&format!(
         "balances: {before} -> {after} -> {resumed_balance} -> {final_balance}\n\
          missing shard rejected: {missing}, checkpoint unchanged: {unchanged}\n\
+         wrong root rejected: {wrong_root}, missing root rejected: {missing_root}, checkpoint unchanged: {roots_atomic}\n\
          pinned view unchanged: {pinned_unchanged}, resumed: {resumed}, replay: {replay_noop}\n\
          invalid shard rejected: {invalid}, restart unchanged: {failed_batch_not_committed}\n\
          final resume: {final_resume}, snapshot balance: {}\n",
@@ -214,6 +224,9 @@ fn snapshots_read_a_fixed_frontier_while_the_writer_advances() -> Result<()> {
     let store = writer.join().expect("writer panicked")?;
     let latest = store.snapshot();
     drop(store);
+    let _ = committed.get_account(&address)?;
+    let warm = committed.get_account(&address)?;
+    let cached = warm.reads.records > 0 && warm.reads.cache_hits == warm.reads.records;
 
     let mut rows = Vec::new();
     for state in [&initial, &committed, &latest] {
@@ -237,11 +250,13 @@ fn snapshots_read_a_fixed_frontier_while_the_writer_advances() -> Result<()> {
 
     expect![[r"
         read during application: masterchain 1, shard 1
+        repeated query uses committed record cache: true
         after writer closed (head, masterchain state, account masterchain, shard, balance):
         [(0, 0, 0, 0, 100), (1, 1, 1, 1, 200), (2, 2, 2, 2, 300)]
     "]]
     .assert_eq(&format!(
         "read during application: masterchain {}, shard {}\n\
+         repeated query uses committed record cache: {cached}\n\
          after writer closed (head, masterchain state, account masterchain, shard, balance):\n\
          {rows:?}\n",
         during.masterchain_block.seqno, during.shard_block.seqno,
@@ -450,14 +465,14 @@ fn split_merge_and_restart_preserve_both_account_branches() -> Result<()> {
     let mut combined = StateStore::open(&snapshot, &directory.path().join("combined"), 10_000)?;
     let combined_master = master_state(1, &[merge_id])?;
     let (combined_id, combined_boc) = block(&master_id0, &master0, &combined_master)?;
-    combined.apply_batch(
-        (combined_id, &combined_boc),
+    combined.apply_roots(
+        (combined_id, &Boc::decode(&combined_boc)?),
         [
-            (split_id, split_boc.as_slice()),
-            (left_id, left_boc.as_slice()),
-            (left_next_id, left_next_boc.as_slice()),
-            (right_id, right_boc.as_slice()),
-            (merge_id, merge_boc.as_slice()),
+            (split_id, &Boc::decode(&split_boc)?),
+            (left_id, &Boc::decode(&left_boc)?),
+            (left_next_id, &Boc::decode(&left_next_boc)?),
+            (right_id, &Boc::decode(&right_boc)?),
+            (merge_id, &Boc::decode(&merge_boc)?),
         ],
     )?;
 

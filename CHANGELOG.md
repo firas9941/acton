@@ -31,6 +31,11 @@ All notable changes to this project will be documented in this file.
   transaction subscriptions over SSE with address filters and TON Center v3 fields.
   Account responses report their shard-state time in `sync_utime`.
   HTTP requests pin one committed checkpoint without waiting for block application.
+  P2P responses do not wait for periodic peer-rating writes; statistics are
+  buffered and saved in the background. A bounded record cache accelerates state
+  reads across checkpoints. State updates reuse decoded blocks, and
+  commit logs expose application, cell encoding, and durable write timings.
+  Shard updates load independent Merkle branches in a bounded worker pool.
 
 ### Actonscan
 

@@ -245,6 +245,7 @@ impl NodeDb {
             reads: ReadStats {
                 records: master_reads.records + shard_reads.records,
                 bytes: master_reads.bytes + shard_reads.bytes,
+                cache_hits: master_reads.cache_hits + shard_reads.cache_hits,
             },
         })
     }

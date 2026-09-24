@@ -2,7 +2,7 @@ use std::time::{Duration, Instant};
 
 use anyhow::{Context, Result};
 use tokio::sync::watch;
-use ton_indexer_core::BlockSource;
+use ton_indexer_core::{BlockData, BlockSource};
 use ton_indexer_p2p::P2pBlockSource;
 use ton_node_db::{StateSnapshot, StateStore};
 use tracing::{info, warn};
@@ -24,7 +24,9 @@ pub(crate) async fn run(
         let batch = match source.next_batch(Some(&after.into())).await {
             Ok(Some(batch)) => batch,
             Ok(None) => {
-                tokio::time::sleep(Duration::from_millis(100)).await;
+                // A missing head is transient. The pool paces each peer; avoid
+                // adding another long polling delay after an unavailable reply.
+                tokio::time::sleep(Duration::from_millis(10)).await;
                 continue;
             }
             Err(error) => {
@@ -40,37 +42,29 @@ pub(crate) async fn run(
                 continue;
             }
         };
+        let downloaded = Instant::now();
         let master_id: BlockId = batch.masterchain().id().try_into()?;
-        let (_, master_boc) = source
-            .client_mut()
-            .masterchain_block(master_id.seqno)
-            .await?
-            .context("downloaded masterchain block is absent from cache")?;
         let shard_ids = batch
             .shards()
             .iter()
             .map(|block| block.id().try_into())
             .collect::<Result<Vec<BlockId>, _>>()?;
-        let shard_bocs = source
-            .client_mut()
-            .download_shards(&shard_ids)
-            .await?
-            .into_iter()
-            .map(|boc| boc.context("downloaded shard block is absent from cache"))
-            .collect::<Result<Vec<_>>>()?;
         let shard_blocks = shard_ids.len();
         let checkpoints = checkpoints.clone();
         let publisher = transactions.clone();
 
         // Cell traversal and synchronous RocksDB writes must not occupy an async worker.
-        store = tokio::task::spawn_blocking(move || {
-            store.apply_batch(
-                (master_id, &master_boc),
+        let (updated, apply_time, publish_time) = tokio::task::spawn_blocking(move || {
+            let applying = Instant::now();
+            // BlockSource has already verified file hashes and decoded these roots.
+            store.apply_roots(
+                (master_id, batch.masterchain().root()),
                 shard_ids
                     .into_iter()
-                    .zip(shard_bocs.iter().map(Vec::as_slice)),
+                    .zip(batch.shards().iter().map(BlockData::root)),
             )?;
             checkpoints.send_replace(store.snapshot());
+            let applied = Instant::now();
 
             // Finalized events become visible only after the entire batch commits.
             // A streaming failure closes subscriptions without stopping state sync.
@@ -85,15 +79,19 @@ pub(crate) async fn run(
                     "closed subscriptions after a transaction encoding failure",
                 );
             }
-            anyhow::Ok(store)
+            anyhow::Ok((store, applied.duration_since(applying), applied.elapsed()))
         })
         .await
         .context("state writer panicked")??;
+        store = updated;
 
         info!(
             operation = "state_sync",
             target = %master_id,
             shard_blocks,
+            download_ms = downloaded.duration_since(started).as_millis(),
+            apply_us = apply_time.as_micros(),
+            publish_us = publish_time.as_micros(),
             duration_ms = started.elapsed().as_millis(),
             outcome = "committed",
             "downloaded and persisted the complete block batch",

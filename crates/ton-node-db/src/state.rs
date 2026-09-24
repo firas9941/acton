@@ -256,7 +256,7 @@ impl StateView {
     /// Merge blocks require both predecessor states; use `StateStore::apply_batch`.
     /// Changes remain in memory; block authenticity is the caller's responsibility.
     pub fn apply_block(&mut self, id: &BlockId, bytes: &[u8]) -> Result<()> {
-        *self = StateUpdate::parse(*id, bytes)?.apply(&[self])?;
+        *self = StateUpdate::parse(*id, bytes)?.apply(&[self], None)?;
         Ok(())
     }
 }
@@ -264,7 +264,7 @@ impl StateView {
 /// A checked block and its exact state dependencies. Parsing precedes database
 /// lookup so split/merge ancestry can select the required retained states.
 pub(crate) struct StateUpdate {
-    id: BlockId,
+    pub(crate) id: BlockId,
     block: Block,
     info: BlockInfo,
     pub(crate) predecessors: Vec<BlockId>,
@@ -277,6 +277,10 @@ impl StateUpdate {
             "block file hash mismatch"
         );
         let cell = Boc::decode(bytes)?;
+        Self::from_root(id, &cell)
+    }
+
+    pub(crate) fn from_root(id: BlockId, cell: &Cell) -> Result<Self> {
         ensure!(
             cell.repr_hash() == &id.root_hash,
             "block root hash mismatch"
@@ -336,7 +340,11 @@ impl StateUpdate {
 
     /// All inputs share a reader so deferred errors in either merge branch are
     /// reported by the resulting view. No previous state is mutated.
-    pub(crate) fn apply(&self, previous: &[&StateView]) -> Result<StateView> {
+    pub(crate) fn apply(
+        &self,
+        previous: &[&StateView],
+        workers: Option<&rayon::ThreadPool>,
+    ) -> Result<StateView> {
         ensure!(
             previous
                 .iter()
@@ -372,7 +380,28 @@ impl StateUpdate {
                 // state; each block's Merkle update produces its own subtree.
                 previous[0].root.clone()
             };
-            let root = self.block.load_state_update()?.apply(&old)?;
+            let update = self.block.load_state_update()?;
+            let root = if let Some(workers) = workers {
+                // Partition the proof near its root, without reading the old
+                // database tree. Independent branches can then load cells in
+                // parallel while tycho-types checks the full Merkle update.
+                let mut frontier = vec![update.old.as_ref()];
+                for _ in 0..6 {
+                    let next = frontier
+                        .iter()
+                        .flat_map(|cell| cell.references())
+                        .filter(|cell| !cell.descriptor().is_pruned_branch())
+                        .collect::<Vec<_>>();
+                    if next.is_empty() || next.len() > 32 {
+                        break;
+                    }
+                    frontier = next;
+                }
+                let split_at = frontier.iter().map(|cell| *cell.hash(0)).collect();
+                workers.install(|| update.par_apply(&old, &split_at))?
+            } else {
+                update.apply(&old)?
+            };
             validate_state(&root, &self.id)?;
             ensure!(
                 root.parse::<ShardStateUnsplit>()?.before_split == self.info.before_split,

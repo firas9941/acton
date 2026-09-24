@@ -2,14 +2,16 @@ use std::collections::{BTreeMap, HashSet};
 use std::fs;
 use std::path::{Component, Path, PathBuf};
 use std::sync::Arc;
+use std::time::Instant;
 
 use anyhow::{Context, Result, ensure};
 use rocksdb::{DB, Options, WriteBatch, WriteOptions};
 use serde::{Deserialize, Serialize};
-use tycho_types::cell::HashBytes;
+use tracing::debug;
+use tycho_types::cell::{Cell, HashBytes};
 use tycho_types::models::{BlockId, StdAddr};
 
-use crate::lazy::Reader;
+use crate::lazy::{Reader, RecordCache, RecordWeight};
 use crate::state::StateUpdate;
 use crate::{AccountSnapshot, NodeDb, StateView, cells};
 
@@ -48,12 +50,14 @@ struct Checkpoint {
 /// store does not collect old cells or verify consensus signatures.
 pub struct StateStore {
     state: StateSnapshot,
+    workers: rayon::ThreadPool,
     write_failed: bool,
 }
 
 /// Read access to one complete committed masterchain and shard frontier.
 ///
-/// Clones share database handles and immutable roots, not loaded state graphs.
+/// Clones share database handles, immutable roots, and a bounded record cache,
+/// not loaded state graphs.
 /// Each query has its own cell read budget and can run alongside the writer.
 /// Append-only cells keep this checkpoint readable after later commits or after
 /// the writer is dropped. Drop all snapshots before reopening the update directory:
@@ -63,6 +67,7 @@ pub struct StateSnapshot {
     cells: Arc<DB>,
     updates: Arc<DB>,
     checkpoint: Arc<Checkpoint>,
+    records: Arc<RecordCache>,
     max_cells: usize,
 }
 
@@ -137,8 +142,20 @@ impl StateStore {
                 cells: Arc::clone(&snapshot.cells),
                 updates,
                 checkpoint: Arc::new(checkpoint),
+                records: Arc::new(RecordCache::with_weighter(
+                    200_000,
+                    32 * 1024 * 1024,
+                    RecordWeight,
+                )),
                 max_cells,
             },
+            workers: rayon::ThreadPoolBuilder::new()
+                .num_threads(
+                    std::thread::available_parallelism().map_or(1, |count| count.get().min(8)),
+                )
+                .thread_name(|index| format!("state-apply-{index}"))
+                .build()
+                .context("cannot start state application workers")?,
             write_failed: false,
         };
         let reader = store.state.reader();
@@ -222,11 +239,59 @@ impl StateStore {
             return Ok(());
         }
 
+        self.apply_updates(
+            StateUpdate::parse(masterchain.0, masterchain.1)?,
+            shards.into_iter().map(|(id, boc)| {
+                StateUpdate::parse(id, boc).with_context(|| format!("invalid shard block {id}"))
+            }),
+        )
+    }
+
+    /// Applies decoded blocks with the same atomicity and ancestry checks as
+    /// [`Self::apply_batch`], without reading or decoding their `BoCs` again.
+    /// Callers must verify each original `BoC` against its file hash before using
+    /// this method: a cell proves its root hash, not its serialized file hash.
+    /// Root hashes, headers, Merkle updates and the complete frontier are checked
+    /// here. Shards must be in predecessor-first order; consensus verification
+    /// remains the caller's responsibility.
+    pub fn apply_roots<'a>(
+        &mut self,
+        masterchain: (BlockId, &Cell),
+        shards: impl IntoIterator<Item = (BlockId, &'a Cell)>,
+    ) -> Result<()> {
+        ensure!(
+            !self.write_failed,
+            "reopen state store after a failed database write"
+        );
+        if masterchain.0 == self.head() {
+            return Ok(());
+        }
+
+        self.apply_updates(
+            StateUpdate::from_root(masterchain.0, masterchain.1)?,
+            shards.into_iter().map(|(id, root)| {
+                StateUpdate::from_root(id, root)
+                    .with_context(|| format!("invalid shard block {id}"))
+            }),
+        )
+    }
+
+    fn apply_updates(
+        &mut self,
+        masterchain: StateUpdate,
+        shards: impl IntoIterator<Item = Result<StateUpdate>>,
+    ) -> Result<()> {
+        let started = Instant::now();
         let reader = self.state.reader();
-        let mut master = self
+        let master = self
             .state
             .view(&reader, &self.state.checkpoint.masterchain)?;
-        master.apply_masterchain_block(&masterchain.0, masterchain.1)?;
+        ensure!(
+            master.block_id().shard.is_masterchain(),
+            "expected masterchain state"
+        );
+        let master = masterchain.apply(&[&master], None)?;
+        let master_applied = Instant::now();
 
         let mut states = self
             .state
@@ -237,10 +302,10 @@ impl StateStore {
             .collect::<Result<BTreeMap<_, _>>>()?;
         let mut consumed = HashSet::new();
 
-        for (id, boc) in shards {
+        for update in shards {
+            let update = update?;
+            let id = update.id;
             ensure!(!states.contains_key(&id), "duplicate shard block {id}");
-            let update =
-                StateUpdate::parse(id, boc).with_context(|| format!("invalid shard block {id}"))?;
             let previous = update
                 .predecessors
                 .iter()
@@ -251,7 +316,7 @@ impl StateStore {
                 })
                 .collect::<Result<Vec<_>>>()?;
             let state = update
-                .apply(&previous)
+                .apply(&previous, Some(&self.workers))
                 .with_context(|| format!("cannot apply shard block {id}"))?;
             consumed.extend(update.predecessors);
             states.insert(id, state);
@@ -273,18 +338,35 @@ impl StateStore {
             masterchain: StateRoot::from_view(&master),
             shards: states.values().map(StateRoot::from_view).collect(),
         };
+        let applied = Instant::now();
         let mut batch = WriteBatch::default();
         let mut visited = HashSet::new();
         for state in std::iter::once(&master).chain(states.values()) {
             Self::persist_cells(state, &mut batch, &mut visited)?;
         }
         batch.put(CHECKPOINT_KEY, serde_json::to_vec(&checkpoint)?);
+        let encoded = Instant::now();
 
         if let Err(error) = self.write(batch) {
             self.write_failed = true;
             return Err(error.context("state commit failed; reopen the store before continuing"));
         }
         self.state.checkpoint = Arc::new(checkpoint);
+
+        debug!(
+            operation = "state_commit",
+            target = %masterchain.id,
+            masterchain_us = master_applied.duration_since(started).as_micros(),
+            apply_us = applied.duration_since(started).as_micros(),
+            encode_us = encoded.duration_since(applied).as_micros(),
+            write_us = encoded.elapsed().as_micros(),
+            records = reader.stats().records,
+            bytes = reader.stats().bytes,
+            cache_hits = reader.stats().cache_hits,
+            duration_ms = started.elapsed().as_millis(),
+            outcome = "committed",
+            "applied and persisted state cells",
+        );
 
         Ok(())
     }
@@ -375,6 +457,7 @@ impl StateSnapshot {
         Reader::with_updates(
             Arc::clone(&self.cells),
             Some(Arc::clone(&self.updates)),
+            Some(Arc::clone(&self.records)),
             self.max_cells,
         )
     }

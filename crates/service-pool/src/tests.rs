@@ -807,6 +807,58 @@ async fn restart_restores_ranking_but_not_admission_or_other_namespaces() {
     ));
 }
 
+#[test]
+fn responses_do_not_wait_for_snapshot_io_and_flush_includes_later_measurements() {
+    let runtime = tokio::runtime::Builder::new_current_thread()
+        .enable_all()
+        .max_blocking_threads(1)
+        .build()
+        .unwrap();
+
+    runtime.block_on(async {
+        let directory = tempfile::tempdir().unwrap();
+        let path = directory.path().join("peers.json");
+        let mut pool = pool(Options::default());
+        pool.persist_to(&path).unwrap();
+
+        // Hold the only I/O worker: responses must remain available while the
+        // first snapshot waits, and flush must save subsequent measurements too.
+        let (entered, waiting) = tokio::sync::oneshot::channel();
+        let (resume, paused) = std::sync::mpsc::channel::<()>();
+        let blocker = tokio::task::spawn_blocking(move || {
+            entered.send(()).unwrap();
+            let _ = paused.recv();
+        });
+        waiting.await.unwrap();
+        let responses = tokio::time::timeout(Duration::from_secs(1), async {
+            for _ in 0..2 {
+                pool.execute_where("block", |server| server.id() == "a", |_| async { Ok(()) })
+                    .await?;
+            }
+            Ok::<_, Failure>(())
+        })
+        .await;
+        let flush_waited = tokio::time::timeout(Duration::from_millis(20), pool.flush())
+            .await
+            .is_err();
+
+        drop(resume);
+        blocker.await.unwrap();
+        pool.flush().await.unwrap();
+        let mut restored = self::pool(Options::default());
+        restored.persist_to(&path).unwrap();
+        expect![[r"
+            responses completed: true, flush waited: true
+            a block: success=2 failed=0 unavailable=0 cancelled=0 active=0
+        "]]
+        .assert_eq(&format!(
+            "responses completed: {}, flush waited: {flush_waited}\n{}",
+            matches!(responses, Ok(Ok(()))),
+            outcomes(&restored),
+        ));
+    });
+}
+
 #[tokio::test(start_paused = true)]
 async fn retries_are_bounded() {
     let pool = pool(Options {

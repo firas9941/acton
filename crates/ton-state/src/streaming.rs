@@ -18,7 +18,7 @@ use axum::response::{IntoResponse, Response};
 use axum::routing::post;
 use axum::{Json, Router};
 use futures::stream;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use serde_json::json;
 use tokio::sync::{OwnedSemaphorePermit, Semaphore, mpsc};
 use ton_indexer_core::Batch;
@@ -83,6 +83,14 @@ struct Subscription {
     min_finality: Option<String>,
 }
 
+#[derive(Serialize)]
+struct TransactionEvent<'a> {
+    #[serde(rename = "type")]
+    kind: &'static str,
+    finality: &'static str,
+    transaction: &'a toncenter::v3::responses::Transaction,
+}
+
 impl Transactions {
     /// Serves the minimal transaction-only contract. The event envelope is local;
     /// it does not claim TON Center's trace-grouped streaming semantics.
@@ -134,11 +142,11 @@ impl Transactions {
                             block.id()
                         )
                     })?;
-                let encoded = serde_json::to_string(&json!({
-                    "type": "transaction",
-                    "finality": "finalized",
-                    "transaction": tx,
-                }))?;
+                let encoded = serde_json::to_string(&TransactionEvent {
+                    kind: "transaction",
+                    finality: "finalized",
+                    transaction: &tx,
+                })?;
                 ensure!(
                     encoded.len() <= MAX_EVENT_BYTES,
                     "transaction event exceeds 1 MiB"

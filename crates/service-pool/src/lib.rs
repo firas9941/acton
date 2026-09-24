@@ -12,7 +12,7 @@ mod state;
 use std::{
     collections::{BTreeMap, HashSet},
     future::Future,
-    io,
+    io::{self, Write},
     path::{Path, PathBuf},
     sync::{Arc, Mutex},
     time::{Duration, SystemTime, UNIX_EPOCH},
@@ -148,7 +148,7 @@ struct Inner<E> {
     options: Options,
     state: Mutex<State<E>>,
     changed: Notify,
-    saved_at: tokio::sync::Mutex<Option<Instant>>,
+    saved_at: Arc<tokio::sync::Mutex<Option<Instant>>>,
 }
 
 /// Concurrent pool with one shared scheduler and per-class measurements.
@@ -193,7 +193,7 @@ impl<E: Endpoint> Pool<E> {
                 options,
                 state: Mutex::new(State::default()),
                 changed: Notify::new(),
-                saved_at: tokio::sync::Mutex::new(None),
+                saved_at: Arc::new(tokio::sync::Mutex::new(None)),
             }),
             snapshot_path: None,
             probes: Arc::new(Mutex::new(JoinSet::new())),
@@ -246,8 +246,9 @@ impl<E: Endpoint> Pool<E> {
             .endpoints()
     }
 
-    /// Enables periodic atomic snapshots after completed operations. At most ten
-    /// seconds of recent measurements may be lost on abrupt process termination.
+    /// Enables atomic snapshots in the background after completed operations,
+    /// at most once every ten seconds. Responses never wait for disk writes.
+    /// Call [`Self::flush`] before shutdown to persist the latest measurements.
     /// Call before cloning the pool. Incompatible snapshots are ignored; unreadable
     /// or malformed snapshots are reported to the caller.
     pub fn persist_to(&mut self, path: impl AsRef<Path>) -> io::Result<()> {
@@ -435,43 +436,15 @@ impl<E: Endpoint> Pool<E> {
         }
     }
 
-    /// Flushes a configured snapshot, including after an idle period or before shutdown.
+    /// Waits for any background save, then persists the latest measurements.
+    /// Use this after an idle period or before shutdown; periodic saves do not
+    /// delay responses and can still be running when an operation returns.
     pub async fn flush(&self) -> io::Result<()> {
-        let mut saved_at = self.inner.saved_at.lock().await;
-        self.write_snapshot().await?;
-        *saved_at = Some(Instant::now());
-        drop(saved_at);
-        Ok(())
-    }
-
-    async fn write_snapshot(&self) -> io::Result<()> {
         let Some(path) = self.snapshot_path.clone() else {
             return Ok(());
         };
-        let snapshot = self.snapshot();
-        let started = Instant::now();
-
-        tokio::task::spawn_blocking(move || {
-            let parent = path
-                .parent()
-                .filter(|parent| !parent.as_os_str().is_empty())
-                .unwrap_or_else(|| Path::new("."));
-            std::fs::create_dir_all(parent)?;
-            let mut file = tempfile::NamedTempFile::new_in(parent)?;
-            serde_json::to_writer_pretty(&mut file, &snapshot)?;
-            file.as_file().sync_all()?;
-            file.persist(path.as_ref()).map_err(|error| error.error)?;
-            debug!(
-                operation = "service_pool_snapshot",
-                target = %path.display(),
-                duration_ms = started.elapsed().as_millis(),
-                outcome = "stored",
-                "saved endpoint statistics",
-            );
-            Ok(())
-        })
-        .await
-        .map_err(io::Error::other)?
+        let saved_at = Arc::clone(&self.inner.saved_at).lock_owned().await;
+        write_snapshot(path, self.snapshot(), saved_at).await
     }
 
     /// Runs a replayable operation and returns its first accepted response.
@@ -556,20 +529,24 @@ impl<E: Endpoint> Pool<E> {
     {
         let result = self.run(class, eligible, call).await;
 
-        if self.snapshot_path.is_some()
-            && let Ok(mut saved_at) = self.inner.saved_at.try_lock()
+        if let Some(path) = self.snapshot_path.clone()
+            && let Ok(saved_at) = Arc::clone(&self.inner.saved_at).try_lock_owned()
             && saved_at.is_none_or(|at| at.elapsed() >= Duration::from_secs(10))
         {
-            match self.write_snapshot().await {
-                Ok(()) => *saved_at = Some(Instant::now()),
-                Err(error) => warn!(
-                    operation = "service_pool_snapshot",
-                    target = %self.inner.namespace,
-                    outcome = "failed",
-                    error = %error,
-                    "could not save endpoint statistics",
-                ),
-            }
+            let snapshot = self.snapshot();
+            // The owned guard serializes this save with flush without retaining
+            // endpoints or delaying the response on serialization and disk I/O.
+            tokio::spawn(async move {
+                if let Err(error) = write_snapshot(Arc::clone(&path), snapshot, saved_at).await {
+                    warn!(
+                        operation = "service_pool_snapshot",
+                        target = %path.display(),
+                        outcome = "failed",
+                        error = %error,
+                        "could not save endpoint statistics",
+                    );
+                }
+            });
         }
 
         result
@@ -671,6 +648,43 @@ impl<E: Endpoint> Pool<E> {
             }
         }
     }
+}
+
+async fn write_snapshot(
+    path: Arc<PathBuf>,
+    snapshot: Snapshot,
+    mut saved_at: tokio::sync::OwnedMutexGuard<Option<Instant>>,
+) -> io::Result<()> {
+    let started = Instant::now();
+
+    tokio::task::spawn_blocking(move || {
+        let parent = path
+            .parent()
+            .filter(|parent| !parent.as_os_str().is_empty())
+            .unwrap_or_else(|| Path::new("."));
+        std::fs::create_dir_all(parent)?;
+        let mut file = tempfile::NamedTempFile::new_in(parent)?;
+        {
+            let mut writer = io::BufWriter::new(&mut file);
+            serde_json::to_writer_pretty(&mut writer, &snapshot)?;
+            writer.flush()?;
+        }
+        file.as_file().sync_all()?;
+        file.persist(path.as_ref()).map_err(|error| error.error)?;
+        // Keep saves serialized even if the awaiting flush future is cancelled:
+        // blocking filesystem work continues until the atomic replacement ends.
+        *saved_at = Some(Instant::now());
+        debug!(
+            operation = "service_pool_snapshot",
+            target = %path.display(),
+            duration_ms = started.elapsed().as_millis(),
+            outcome = "stored",
+            "saved endpoint statistics",
+        );
+        Ok(())
+    })
+    .await
+    .map_err(io::Error::other)?
 }
 
 fn unix_seconds() -> u64 {

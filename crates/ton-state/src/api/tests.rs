@@ -63,6 +63,7 @@ fn account_lifecycle_uses_the_v2_wire_contract() -> Result<()> {
             reads: ReadStats {
                 records: 0,
                 bytes: 0,
+                cache_hits: 0,
             },
         };
         rows.push(account_info(snapshot)?);
