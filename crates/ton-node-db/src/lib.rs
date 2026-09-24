@@ -1,6 +1,7 @@
 //! Lazy access to TON validator snapshots and durable state updates.
 
 mod cells;
+mod history;
 mod lazy;
 mod state;
 mod store;
@@ -8,6 +9,7 @@ mod tl;
 
 pub mod package;
 
+pub use history::{BlockIndex, BlockTransaction, TransactionReader};
 pub use lazy::ReadStats;
 pub use state::{AccountSnapshot, StateView};
 pub use store::{StateSnapshot, StateStore};

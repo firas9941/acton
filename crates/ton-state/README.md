@@ -39,6 +39,8 @@ The advertised UDP address must be reachable from peers.
 Stop the service with `Ctrl-C`. Run the same command to resume from its saved
 checkpoint. `.ton-state/states` stores applied updates; `.ton-state/blocks` stores
 downloaded blocks. The original snapshot remains necessary after restart.
+`.ton-state/history` stores the block lookup index used for transaction history.
+On startup, the service indexes cached blocks that are missing from this index.
 
 ## Query the applied state
 
@@ -79,6 +81,33 @@ or JSON-RPC.
 
 The reported checkpoint can lag behind the network head. Network errors cause
 download retries. An invalid state update or a storage error stops the service.
+
+## Read account transactions
+
+Read the elector's ten latest retained transactions:
+
+```sh
+curl -sG http://127.0.0.1:8080/api/v2/getTransactions \
+  --data-urlencode 'address=-1:3333333333333333333333333333333333333333333333333333333333333333' \
+  --data-urlencode 'limit=10' | jq
+```
+
+The response uses the TON Center v2 transaction format, including the full
+transaction BoC, messages, and fees. Message bodies use `msg.dataRaw`; text
+comments are not decoded.
+
+Transactions are returned newest first. `limit` accepts 1–100 and defaults to 10.
+For pagination, pass both `lt` and `hash` from a returned `transaction_id`.
+The cursor is inclusive, so that transaction appears first on the next page.
+Hashes accept hex or base64; use `--data-urlencode` for base64 query values.
+Nonzero `to_lt`, `archival=true`, and unknown parameters return HTTP 400.
+
+History comes from downloaded block files. A state snapshot alone does not
+contain transaction history, and this method does not fetch missing blocks.
+An account with no transactions returns an empty list. If the starting
+transaction is unavailable, the method returns HTTP 404. A gap after some
+results produces a shorter page. An explicit cursor beyond the applied shard
+checkpoint returns HTTP 409.
 
 ## Send a signed message
 

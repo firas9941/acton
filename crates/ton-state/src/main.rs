@@ -8,13 +8,14 @@ mod sync;
 
 use std::net::{SocketAddr, SocketAddrV4};
 use std::path::PathBuf;
+use std::sync::Arc;
 use std::time::{Duration, Instant};
 
 use anyhow::{Context, Result};
 use clap::Parser;
 use tokio::sync::watch;
 use ton_indexer_p2p::P2pBlockSource;
-use ton_node_db::StateStore;
+use ton_node_db::{BlockIndex, StateStore};
 use ton_p2p::{Client, ClientOptions, NetworkConfig, NetworkOptions, load_identity};
 use tracing::info;
 
@@ -55,6 +56,8 @@ async fn main() -> Result<()> {
     let head = store.head();
     config.set_initial_block(head)?;
     let downloads = args.data_dir.join("blocks");
+    let history = Arc::new(BlockIndex::open(&args.data_dir.join("history"))?);
+    history.import_directory(&downloads)?;
     let client = Client::open(
         &config,
         ClientOptions {
@@ -73,7 +76,7 @@ async fn main() -> Result<()> {
     let source = P2pBlockSource::new(client)?;
     let (checkpoints, state) = watch::channel(store.snapshot());
     let transactions = streaming::Transactions::default();
-    let router = api::router(state.clone(), config.zero_state())
+    let router = api::router(state.clone(), config.zero_state(), Arc::clone(&history))
         .merge(transactions.clone().router())
         .merge(submit::router(sender))
         .merge(docs::router());
@@ -93,7 +96,7 @@ async fn main() -> Result<()> {
     );
 
     let shutdown_transactions = transactions.clone();
-    let synchronization = sync::run(store, source, checkpoints, transactions.clone());
+    let synchronization = sync::run(store, source, checkpoints, transactions.clone(), history);
     drop(transactions);
     let result = tokio::select! {
         result = synchronization => result,

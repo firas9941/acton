@@ -88,7 +88,7 @@ impl Storage {
     }
 
     pub(crate) fn block_path(&self, id: &BlockId) -> PathBuf {
-        self.blocks.join(format!("{}.boc", block_name(id)))
+        block_path(&self.directory, id)
     }
 
     pub(crate) fn open(directory: &Path, config: &NetworkConfig) -> Result<Self> {
@@ -244,6 +244,19 @@ impl Storage {
 
         Ok(())
     }
+}
+
+/// A full block's stable location in the download cache.
+pub(crate) fn block_path(directory: &Path, id: &BlockId) -> PathBuf {
+    let directory = if id.shard.is_masterchain() {
+        directory.join("masterchain")
+    } else {
+        directory
+            .join("shards")
+            .join(id.shard.workchain().to_string())
+            .join(format!("{:016x}", id.shard.prefix()))
+    };
+    directory.join(format!("{}.boc", block_name(id)))
 }
 
 fn block_name(id: &BlockId) -> String {

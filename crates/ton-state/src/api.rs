@@ -1,6 +1,9 @@
 #[cfg(test)]
 mod tests;
 
+pub(crate) mod transactions;
+
+use std::sync::Arc;
 use std::time::Instant;
 
 use anyhow::Result;
@@ -13,7 +16,7 @@ use axum::{Json, Router};
 use base64::{Engine, engine::general_purpose::STANDARD};
 use serde::Serialize;
 use tokio::sync::watch;
-use ton_node_db::{AccountSnapshot, StateSnapshot};
+use ton_node_db::{AccountSnapshot, BlockIndex, StateSnapshot};
 use toncenter::v2::requests::AddressInformationRequest;
 use toncenter::v2::{self as v2, responses as wire};
 use tracing::{debug, error};
@@ -24,17 +27,30 @@ use tycho_types::models::{AccountState, BlockId, StdAddr, StdAddrFormat};
 struct Api {
     state: watch::Receiver<StateSnapshot>,
     zero_state: BlockId,
+    history: Arc<BlockIndex>,
 }
 
 /// Each request pins a complete committed frontier before dispatching its read.
 /// State application runs independently of account lookup and serialization.
-pub(crate) fn router(state: watch::Receiver<StateSnapshot>, zero_state: BlockId) -> Router {
+pub(crate) fn router(
+    state: watch::Receiver<StateSnapshot>,
+    zero_state: BlockId,
+    history: Arc<BlockIndex>,
+) -> Router {
     Router::new()
         .route("/api/v2/getMasterchainInfo", get(masterchain_info))
         .route("/api/v2/getAddressInformation", get(address_information))
         .route("/api/v2/getAddressBalance", get(address_balance))
+        .route(
+            "/api/v2/getTransactions",
+            get(transactions::get_transactions),
+        )
         .fallback(|| async { ApiError::new(StatusCode::NOT_FOUND, "unknown API method") })
-        .with_state(Api { state, zero_state })
+        .with_state(Api {
+            state,
+            zero_state,
+            history,
+        })
 }
 
 /// Applied masterchain checkpoint

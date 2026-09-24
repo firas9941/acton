@@ -165,6 +165,13 @@ impl Client {
         Ok(Some((id, boc)))
     }
 
+    /// Location of a full block in this client's cache. Successful downloads are
+    /// durable before returning; computing this path does not download a block.
+    #[must_use]
+    pub fn cached_block_path(&self, id: &BlockId) -> PathBuf {
+        self.storage.block_path(id)
+    }
+
     /// Loads shard BOCs from cache or peers in input order. Each ID must come
     /// from a trusted block reference. Missing blocks produce `None` entries;
     /// cache failures stop the operation. Valid downloads remain cached for retries.
@@ -271,13 +278,7 @@ async fn download_shard(
     options: &ClientOptions,
     id: BlockId,
 ) -> Result<Option<Vec<u8>>> {
-    let directory = options
-        .data_dir
-        .join("shards")
-        .join(id.shard.workchain().to_string())
-        .join(format!("{:016x}", id.shard.prefix()));
-    let name = format!("{}-{}-{}.boc", id.seqno, id.root_hash, id.file_hash);
-    let path = directory.join(&name);
+    let path = crate::storage::block_path(&options.data_dir, &id);
 
     match tokio::fs::read(&path).await {
         Ok(boc) => {
@@ -317,8 +318,13 @@ async fn download_shard(
 
     // Preserve the downloaded serialization because file_hash covers original bytes.
     let boc = tokio::task::spawn_blocking(move || {
-        std::fs::create_dir_all(&directory)?;
-        atomic_write(&directory, &name, &boc)?;
+        let directory = path.parent().context("missing shard cache directory")?;
+        let name = path
+            .file_name()
+            .and_then(|name| name.to_str())
+            .context("invalid shard cache filename")?;
+        std::fs::create_dir_all(directory)?;
+        atomic_write(directory, name, &boc)?;
         Ok::<_, anyhow::Error>(boc)
     })
     .await

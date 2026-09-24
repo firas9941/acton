@@ -1,10 +1,11 @@
+use std::sync::Arc;
 use std::time::{Duration, Instant};
 
 use anyhow::{Context, Result};
 use tokio::sync::watch;
 use ton_indexer_core::{BlockData, BlockSource};
 use ton_indexer_p2p::P2pBlockSource;
-use ton_node_db::{StateSnapshot, StateStore};
+use ton_node_db::{BlockIndex, StateSnapshot, StateStore};
 use tracing::{info, warn};
 use tycho_types::models::BlockId;
 
@@ -17,6 +18,7 @@ pub(crate) async fn run(
     mut source: P2pBlockSource,
     checkpoints: watch::Sender<StateSnapshot>,
     transactions: Transactions,
+    history: Arc<BlockIndex>,
 ) -> Result<()> {
     loop {
         let after = store.head();
@@ -52,6 +54,11 @@ pub(crate) async fn run(
         let shard_blocks = shard_ids.len();
         let checkpoints = checkpoints.clone();
         let publisher = transactions.clone();
+        let history = Arc::clone(&history);
+        let block_paths = std::iter::once(&master_id)
+            .chain(&shard_ids)
+            .map(|id| source.client().cached_block_path(id))
+            .collect::<Vec<_>>();
 
         // Cell traversal and synchronous RocksDB writes must not occupy an async worker.
         let (updated, apply_time, publish_time) = tokio::task::spawn_blocking(move || {
@@ -63,6 +70,16 @@ pub(crate) async fn run(
                     .into_iter()
                     .zip(batch.shards().iter().map(BlockData::root)),
             )?;
+
+            // Files are durable before state application. Publish the checkpoint
+            // only when its transaction history is queryable too. Startup import
+            // repairs an interrupted index write from the retained block files.
+            for (block, path) in std::iter::once(batch.masterchain())
+                .chain(batch.shards())
+                .zip(block_paths)
+            {
+                history.insert(block.id().try_into()?, block.root(), &path)?;
+            }
             checkpoints.send_replace(store.snapshot());
             let applied = Instant::now();
 

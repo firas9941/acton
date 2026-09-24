@@ -41,6 +41,8 @@ All notable changes to this project will be documented in this file.
   execution or inclusion in a block.
   `/docs` provides an interactive Scalar page for all supported HTTP methods,
   with a generated utoipa specification at `/openapi.json`.
+  `getTransactions` reads account history from cached blocks through a persistent
+  block logical-time index, with `address`, `limit`, and `lt`/`hash` pagination.
 
 ### Actonscan
 

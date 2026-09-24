@@ -18,6 +18,7 @@ use crate::{api, streaming, submit};
         api::masterchain_info,
         api::address_information,
         api::address_balance,
+        api::transactions::get_transactions,
         submit::send_boc,
         streaming::subscribe,
     ),
