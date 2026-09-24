@@ -97,9 +97,13 @@ fn is_allowed_browser_client(value: &HeaderValue) -> bool {
 
 fn is_allowed_user_agent(value: &HeaderValue) -> bool {
     value.to_str().is_ok_and(|user_agent| {
-        user_agent
-            .strip_prefix(ALLOWED_USER_AGENT_PREFIX)
-            .is_some_and(|version| !version.trim().is_empty())
+        let Some(version) = user_agent.strip_prefix(ALLOWED_USER_AGENT_PREFIX) else {
+            return false;
+        };
+
+        semver::Version::parse(version).is_ok_and(|version| {
+            version.build.is_empty() && matches!(version.pre.as_str(), "" | "trunk")
+        })
     })
 }
 
@@ -150,20 +154,69 @@ mod tests {
 
     #[test]
     fn allows_acton_package_version_user_agent() {
-        assert!(is_allowed_user_agent(&"acton/0.1.0".parse().unwrap()));
-        assert!(is_allowed_user_agent(
-            &"acton/1.2.3-beta.1+build.5".parse().unwrap()
-        ));
-        assert!(is_allowed_user_agent(
-            &"acton/0.1.0 (debug)".parse().unwrap()
-        ));
+        for user_agent in [
+            "acton/0.1.0",
+            "acton/0.3.1",
+            "acton/0.3.2",
+            "acton/0.4.0",
+            "acton/0.4.1",
+            "acton/0.4.2",
+            "acton/0.5.0",
+            "acton/1.0.0",
+            "acton/1.1.0",
+            "acton/1.1.0-trunk",
+            "acton/1.2.0",
+            "acton/10.20.30",
+            "acton/10.20.30-trunk",
+        ] {
+            assert!(
+                is_allowed_user_agent(&user_agent.parse().unwrap()),
+                "{user_agent:?} should be allowed"
+            );
+        }
     }
 
     #[test]
-    fn rejects_missing_or_non_acton_version() {
-        assert!(!is_allowed_user_agent(&"acton/".parse().unwrap()));
-        assert!(!is_allowed_user_agent(&"acton/ ".parse().unwrap()));
-        assert!(!is_allowed_user_agent(&"faucet/0.1.0".parse().unwrap()));
+    fn rejects_non_release_or_trunk_user_agents() {
+        for user_agent in [
+            "",
+            "acton/",
+            "acton/ ",
+            "faucet/0.1.0",
+            "Acton/1.0.0",
+            "acton/stage2",
+            "acton/0.5.0 (allchains-faucet-ton)",
+            "acton/0.1.0 (debug)",
+            "acton/1.2.3-beta.1+build.5",
+            "acton/1.2.3-beta.1",
+            "acton/1.2.3+build.5",
+            "acton/1.1.0-trunk+build.5",
+            "acton/1.1.0-trunk.1",
+            "acton/1.1.0-trunk-trunk",
+            "acton/1.1.0-TRUNK",
+            "acton/v1.0.0",
+            "acton/1",
+            "acton/1.0",
+            "acton/1.0.0.0",
+            "acton/.1.0",
+            "acton/1..0",
+            "acton/1.0.",
+            "acton/01.0.0",
+            "acton/1.01.0",
+            "acton/1.0.01",
+            "acton/-1.0.0",
+            "acton/1.0.x",
+            "acton/1.0.0/extra",
+            " acton/1.0.0",
+            "acton/1.0.0 ",
+            "acton/1.0.0-trunk ",
+            "acton/1.0.0, acton/1.1.0",
+        ] {
+            assert!(
+                !is_allowed_user_agent(&user_agent.parse().unwrap()),
+                "{user_agent:?} should be rejected"
+            );
+        }
     }
 
     #[test]

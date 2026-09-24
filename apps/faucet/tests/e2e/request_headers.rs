@@ -65,6 +65,40 @@ async fn requires_airdrop_headers_on_protected_route() {
 }
 
 #[tokio::test]
+async fn rejects_unofficial_user_agent_formats_on_airdrop_routes() {
+    let app = airdrop_app();
+
+    for path in ["/challenge", "/claim"] {
+        for (user_agent, expected_status) in [
+            ("acton/0.5.0", StatusCode::OK),
+            ("acton/1.1.0-trunk", StatusCode::OK),
+            ("acton/stage2", StatusCode::BAD_REQUEST),
+            (
+                "acton/0.5.0 (allchains-faucet-ton)",
+                StatusCode::BAD_REQUEST,
+            ),
+            ("acton/1.1.0-beta.1", StatusCode::BAD_REQUEST),
+            ("acton/1.1.0+build.5", StatusCode::BAD_REQUEST),
+        ] {
+            let request = Request::post(path)
+                .header(USER_AGENT, user_agent)
+                .header("x-device-uid", "default")
+                .body(Body::empty())
+                .unwrap();
+            let response = app.clone().oneshot(request).await.unwrap();
+
+            assert_eq!(response.status(), expected_status, "{path}: {user_agent}");
+            let expected_body = if expected_status == StatusCode::OK {
+                "acton"
+            } else {
+                ""
+            };
+            assert_eq!(response_body(response).await, expected_body);
+        }
+    }
+}
+
+#[tokio::test]
 async fn allows_actonscan_browser_client_header() {
     let response = request_with_headers(None, Some("actonscan/1.0.0"), Some("default")).await;
     assert_eq!(response.status(), StatusCode::OK);
@@ -110,19 +144,22 @@ async fn normalizes_device_uid_before_inserting_client_context() {
     }
 }
 
+fn airdrop_app() -> Router {
+    let handler = post(|Extension(client): Extension<ClientContext>| async move {
+        client.client_kind.as_str()
+    });
+    Router::new()
+        .route("/challenge", handler.clone())
+        .route("/claim", handler)
+        .route_layer(middleware::from_fn(require_airdrop_headers))
+}
+
 async fn request_with_headers(
     user_agent: Option<&str>,
     acton_client: Option<&str>,
     device_uid: Option<&str>,
 ) -> axum::response::Response {
-    let app = Router::new()
-        .route(
-            "/challenge",
-            post(|Extension(client): Extension<ClientContext>| async move {
-                client.client_kind.as_str()
-            }),
-        )
-        .route_layer(middleware::from_fn(require_airdrop_headers));
+    let app = airdrop_app();
 
     let mut request = Request::builder().method(Method::POST).uri("/challenge");
 

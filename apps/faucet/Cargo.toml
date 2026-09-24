@@ -57,6 +57,7 @@ lazy-limit = "1"
 rand = { workspace = true }
 real = { version = "0.1", features = ["axum"] }
 reqwest = { workspace = true, features = ["json"] }
+semver = "1.0.28"
 serde = { workspace = true }
 serde_json = { workspace = true }
 sha2 = { workspace = true }

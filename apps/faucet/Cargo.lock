@@ -1125,6 +1125,7 @@ dependencies = [
  "rand 0.9.4",
  "real",
  "reqwest",
+ "semver",
  "serde",
  "serde_json",
  "sha2",
