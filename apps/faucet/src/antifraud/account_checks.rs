@@ -4,7 +4,7 @@ use faucet_valkey::AntifraudModule;
 use toncenter::AccountStateEnum;
 use tracing::warn;
 
-use crate::AppState;
+use crate::app::AppState;
 
 #[derive(Debug)]
 pub(crate) struct AccountRejection {

@@ -1,15 +1,15 @@
-use crate::AppState;
-use crate::address::{AddressValidationError, parse_testnet_address};
-use crate::antifraud_subject;
-use crate::github_auth::FaucetTier;
+use crate::antifraud::subject;
+use crate::app::AppState;
+use crate::auth::github::FaucetTier;
+use crate::blockchain::address::{AddressValidationError, parse_testnet_address};
 use crate::handlers::{auth, challenge};
+use crate::middlewares::ClientContext;
 use apalis::prelude::TaskSink;
 use axum::{
     Extension, Json,
     extract::State,
     http::{HeaderMap, StatusCode},
 };
-use faucet::middlewares::ClientContext;
 use faucet_valkey::{AmountWindowDecision, AntifraudModule, SuccessfulClaimWindowDecision};
 use real::RealIp;
 use serde::{Deserialize, Serialize};
@@ -162,13 +162,13 @@ pub(super) async fn create_claim(
     }
 
     check_successful_claim_window(&state, &address, &address, max_requests).await?;
-    let client_window_subject = antifraud_subject::client_ip(client_ip.ip());
-    let device_window_subject = antifraud_subject::device_uid(&client.device_uid);
+    let client_window_subject = subject::client_ip(client_ip.ip());
+    let device_window_subject = subject::device_uid(&client.device_uid);
     if let Some(github_user_id) = github_user_id {
         check_successful_claim_window(
             &state,
             &address,
-            &antifraud_subject::github(github_user_id),
+            &subject::github(github_user_id),
             max_requests,
         )
         .await?;
@@ -238,7 +238,7 @@ async fn check_subnet_amount_window(
         return Ok(None);
     };
     let amount = state.config.faucet.amount;
-    let subject = antifraud_subject::client_subnet(client_ip, window.ipv4_prefix_length);
+    let subject = subject::client_subnet(client_ip, window.ipv4_prefix_length);
 
     if let Err(err) = state.antifraud.check_subnet_amount_window_transfer(amount) {
         error!(

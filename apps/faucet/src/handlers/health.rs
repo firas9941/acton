@@ -1,7 +1,7 @@
 use axum::{extract::State, http::StatusCode};
 use tracing::error;
 
-use crate::AppState;
+use crate::app::AppState;
 
 pub(super) async fn health(State(state): State<AppState>) -> StatusCode {
     let (valkey_result, database_result, antifraud_database_result) = tokio::join!(

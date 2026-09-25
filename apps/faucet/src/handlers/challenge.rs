@@ -1,9 +1,9 @@
+use crate::middlewares::ClientContext;
 use axum::{
     Extension, Json,
     extract::State,
     http::{HeaderMap, StatusCode},
 };
-use faucet::middlewares::ClientContext;
 use faucet_valkey::CappedEphemeralStoreDecision;
 use real::RealIp;
 use serde::{Deserialize, Serialize};
@@ -11,10 +11,10 @@ use sha2::{Digest, Sha256};
 use tracing::{error, info, warn};
 use utoipa::ToSchema;
 
-use crate::AppState;
-use crate::address::{AddressValidationError, parse_testnet_address};
-use crate::antifraud_subject;
-use crate::github_auth::FaucetTier;
+use crate::antifraud::subject;
+use crate::app::AppState;
+use crate::auth::github::FaucetTier;
+use crate::blockchain::address::{AddressValidationError, parse_testnet_address};
 use crate::handlers::auth;
 
 // The shared hash tag keeps the index and challenge values in one Redis Cluster slot.
@@ -124,9 +124,9 @@ pub(super) async fn create_challenge(
         return Err(bad_request("Invalid challenge type"));
     }
 
-    let wallet_subject = antifraud_subject::wallet(&address);
-    let client_subject = antifraud_subject::client_ip(client_ip.ip());
-    let device_subject = antifraud_subject::device_uid(&client.device_uid);
+    let wallet_subject = subject::wallet(&address);
+    let client_subject = subject::client_ip(client_ip.ip());
+    let device_subject = subject::device_uid(&client.device_uid);
     check_blacklist(
         &state,
         &address,
@@ -254,7 +254,7 @@ fn response_error(status: StatusCode, error: &'static str) -> (StatusCode, Json<
 mod tests {
     use serde_json::json;
 
-    use crate::github_auth::FaucetTier;
+    use crate::auth::github::FaucetTier;
 
     use super::{ChallengeContext, ChallengeRequest, ChallengeResponse, challenge_key};
 

@@ -1,12 +1,12 @@
+use crate::middlewares::{require_airdrop_headers, require_faucet_writable, require_pow_enabled};
 use axum::{
     Json, Router,
     middleware::{self, from_fn_with_state},
     routing::{get, post},
 };
-use faucet::middlewares::{require_airdrop_headers, require_faucet_writable, require_pow_enabled};
 use utoipa::OpenApi;
 
-use crate::AppState;
+use crate::app::AppState;
 
 mod auth;
 mod challenge;
@@ -95,7 +95,7 @@ fn openapi() -> utoipa::openapi::OpenApi {
         claim::ClaimResponse,
         stats::StatsResponse,
         stats::AntifraudStatsResponse,
-        crate::github_auth::FaucetTier
+        crate::auth::github::FaucetTier
     )),
     tags(
         (name = "faucet", description = "Proof-of-work challenge and testnet GRAM claim endpoints"),

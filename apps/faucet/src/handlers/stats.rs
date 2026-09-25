@@ -4,7 +4,7 @@ use serde::Serialize;
 use tracing::error;
 use utoipa::ToSchema;
 
-use crate::AppState;
+use crate::app::AppState;
 
 #[derive(Debug, Eq, PartialEq, Serialize, ToSchema)]
 pub(super) struct StatsResponse {

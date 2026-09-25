@@ -1,17 +1,17 @@
+use crate::middlewares::{ClientContext, is_allowed_device_uid};
 use axum::{
     Extension, Json,
     extract::{Query, State},
     http::{HeaderMap, StatusCode, header::AUTHORIZATION},
     response::Redirect,
 };
-use faucet::middlewares::{ClientContext, is_allowed_device_uid};
 use serde::{Deserialize, Serialize};
 use tracing::{error, warn};
 use utoipa::ToSchema;
 
 use crate::{
-    AppState,
-    github_auth::{AuthError, FaucetTier, GitHubIdentity},
+    app::AppState,
+    auth::github::{AuthError, FaucetTier, GitHubIdentity},
 };
 
 #[derive(Deserialize)]
