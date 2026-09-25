@@ -65,6 +65,22 @@ example sets the minimum payment to `0.5 GRAM`.
 Set `VERIFIER_READ_ONLY=true` to reject tickets and submissions for new code
 hashes while keeping verified source and metadata lookups available.
 
+Set `VERIFIER_COMPILER_DISABLED` to a comma-separated list of compiler rules:
+
+```bash
+-e VERIFIER_COMPILER_DISABLED='tact,func@0.4.4,tolk@1.4.1'
+```
+
+Docker Compose also forwards this variable from the shell or `.env` file. The
+entrypoint writes the list to `[compiler].disabled` when generating the TOML
+config. An unset or empty value produces an empty list. Whitespace around entries
+is ignored; empty entries, unknown compiler names, and invalid versions fail
+application initialization. Rules are parsed only for now; HTTP verification
+does not enforce them yet.
+
+As with the other generated settings, an existing config file takes precedence.
+Use `VERIFIER_FORCE_GENERATE_CONFIG=1` to regenerate it from the environment.
+
 Or mount a full TOML config:
 
 ```bash

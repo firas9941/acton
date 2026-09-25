@@ -8,6 +8,7 @@ use tracing::instrument::WithSubscriber;
 use crate::{
     blockchain::{BlockchainClient, MultiNetworkToncenterClient},
     compilation_queue::{CompilationQueue, CompilationStatus},
+    compiler_policy::{CompilerPolicy, CompilerPolicyError},
     compilers::{
         CompileOutput, CompileRequest, CompilerError, CompilerService, NodeCompilerService,
     },
@@ -24,6 +25,7 @@ pub struct AppState {
     api_key: Option<String>,
     read_only: bool,
     compiler_service: Arc<dyn CompilerService>,
+    compiler_policy: CompilerPolicy,
     verification_registry: Arc<dyn VerificationRegistry>,
     verification_service: VerificationService,
     payment_verifier: Arc<dyn PaymentVerifier>,
@@ -37,8 +39,10 @@ impl AppState {
     ///
     /// # Errors
     ///
-    /// Returns an error when the registry index cannot be opened.
+    /// Returns an error when compiler rules or payment settings are invalid, or when the
+    /// registry index or payment ledger cannot be opened.
     pub fn from_config(config: &Config) -> Result<Self, StateError> {
+        let compiler_policy = CompilerPolicy::from_disabled(config.disabled_compilers())?;
         let source_storage = Arc::new(GitSourceStorage::from_config(config));
         let verification_index =
             Arc::new(SqliteVerificationIndex::open(config.registry_index_path())?);
@@ -56,6 +60,7 @@ impl AppState {
         )
         .with_api_key(config.api_key())
         .with_read_only(config.read_only())
+        .with_compiler_policy(compiler_policy)
         .with_max_concurrent_compilations(config.max_concurrent_compilations())
         .with_max_request_bytes(config.max_request_bytes()))
     }
@@ -71,6 +76,7 @@ impl AppState {
             api_key: None,
             read_only: false,
             compiler_service,
+            compiler_policy: CompilerPolicy::default(),
             verification_registry,
             verification_service: VerificationService::new(blockchain_client),
             payment_verifier,
@@ -89,6 +95,12 @@ impl AppState {
     #[must_use]
     pub const fn with_read_only(mut self, read_only: bool) -> Self {
         self.read_only = read_only;
+        self
+    }
+
+    #[must_use]
+    pub fn with_compiler_policy(mut self, compiler_policy: CompilerPolicy) -> Self {
+        self.compiler_policy = compiler_policy;
         self
     }
 
@@ -123,6 +135,11 @@ impl AppState {
     #[must_use]
     pub const fn read_only(&self) -> bool {
         self.read_only
+    }
+
+    #[must_use]
+    pub const fn compiler_policy(&self) -> &CompilerPolicy {
+        &self.compiler_policy
     }
 
     pub(crate) async fn compile(
@@ -236,6 +253,8 @@ impl AppState {
 
 #[derive(Debug, Error)]
 pub enum StateError {
+    #[error(transparent)]
+    CompilerPolicy(#[from] CompilerPolicyError),
     #[error(transparent)]
     Registry(#[from] crate::registry::RegistryError),
     #[error(transparent)]

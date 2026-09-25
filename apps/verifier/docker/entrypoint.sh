@@ -24,6 +24,27 @@ write_optional_int() {
     fi
 }
 
+write_string_list() {
+    list_key="$1"
+    list_remaining="$2"
+    printf '%s = [' "$list_key"
+    if [ -n "$list_remaining" ]; then
+        list_separator=""
+        while :; do
+            list_item="${list_remaining%%,*}"
+            printf '%s"%s"' "$list_separator" "$(toml_escape "$list_item")"
+            case "$list_remaining" in
+                *,*)
+                    list_remaining="${list_remaining#*,}"
+                    list_separator=", "
+                    ;;
+                *) break ;;
+            esac
+        done
+    fi
+    printf ']\n'
+}
+
 fail() {
     echo "verifier-entrypoint: $*" >&2
     exit 1
@@ -211,6 +232,7 @@ write_generated_config() {
         printf '\n'
 
         printf '[compiler]\n'
+        write_string_list disabled "${VERIFIER_COMPILER_DISABLED:-}"
         write_optional_string node_bin "${VERIFIER_COMPILER_NODE_BIN:-node}"
         write_optional_string worker_path "${VERIFIER_COMPILER_WORKER_PATH:-/app/compiler-worker/compile.mjs}"
         write_optional_int timeout_ms "${VERIFIER_COMPILER_TIMEOUT_MS:-10000}"

@@ -35,6 +35,12 @@ author_email = "ton-verifier@example.invalid"
 path = "verifier-index.sqlite3"
 
 [compiler]
+# Compiler names: func, tolk, tact (case-insensitive).
+# A name matches all versions; name@version matches one exact version, including suffixes.
+# For example: ["tact", "func@0.4.4", "tolk@1.4.1"]. Ranges and wildcards are unsupported.
+# Rules are parsed only for now; HTTP verification does not enforce them yet.
+# Docker env: VERIFIER_COMPILER_DISABLED=tact,func@0.4.4 (used when generating config).
+disabled = []
 node_bin = "node"
 worker_path = "compiler-worker/compile.mjs"
 timeout_ms = 10000

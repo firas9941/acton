@@ -54,6 +54,7 @@ pub struct Config {
     compiler_node_bin: String,
     compiler_worker_path: PathBuf,
     compiler_timeout: Duration,
+    disabled_compilers: Vec<String>,
     max_concurrent_compilations: Option<usize>,
     max_request_bytes: usize,
 }
@@ -218,6 +219,11 @@ impl Config {
     }
 
     #[must_use]
+    pub fn disabled_compilers(&self) -> &[String] {
+        &self.disabled_compilers
+    }
+
+    #[must_use]
     pub const fn max_concurrent_compilations(&self) -> Option<usize> {
         self.max_concurrent_compilations
     }
@@ -255,6 +261,7 @@ impl Default for Config {
             compiler_node_bin: DEFAULT_COMPILER_NODE_BIN.to_owned(),
             compiler_worker_path: PathBuf::from(DEFAULT_COMPILER_WORKER_PATH),
             compiler_timeout: Duration::from_millis(DEFAULT_COMPILER_TIMEOUT_MS),
+            disabled_compilers: Vec::new(),
             max_concurrent_compilations: Some(DEFAULT_MAX_CONCURRENT_COMPILATIONS),
             max_request_bytes: DEFAULT_MAX_REQUEST_BYTES,
         }
@@ -398,6 +405,7 @@ impl ConfigFile {
                     .unwrap_or(DEFAULT_COMPILER_TIMEOUT_MS),
             ),
             max_concurrent_compilations,
+            disabled_compilers: self.compiler.disabled.unwrap_or_default(),
             max_request_bytes: self
                 .upload_limits
                 .request
@@ -453,6 +461,7 @@ struct PaymentConfig {
 
 #[derive(Debug, Default, Deserialize)]
 struct CompilerConfig {
+    disabled: Option<Vec<String>>,
     node_bin: Option<String>,
     worker_path: Option<PathBuf>,
     timeout_ms: Option<u64>,

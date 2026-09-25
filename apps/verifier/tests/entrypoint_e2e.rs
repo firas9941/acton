@@ -8,6 +8,7 @@ use std::{
 };
 
 use tempfile::TempDir;
+use verifier::{compiler_policy::CompilerPolicy, config::Config};
 
 type TestEnvEntry = (&'static str, OsString);
 
@@ -67,6 +68,91 @@ fn assert_failure(name: &str, expected: &str, environment: &[TestEnvEntry]) {
 
 fn variable(name: &'static str, value: impl Into<OsString>) -> (&'static str, OsString) {
     (name, value.into())
+}
+
+#[test]
+fn generates_disabled_compilers_from_environment() {
+    for value in [
+        None,
+        Some(""),
+        Some(" TACT , func@0.4.4,tolk@99.0.0-rc.1+build.2 "),
+    ] {
+        let temp_dir = tempfile::tempdir().expect("config directory");
+        let environment = value
+            .map(|value| variable("VERIFIER_COMPILER_DISABLED", value))
+            .into_iter()
+            .collect::<Vec<_>>();
+        let output = run_entrypoint(&temp_dir, &environment);
+        assert!(output.status.success(), "{output:?}");
+
+        let config = Config::load_from_path(temp_dir.path().join("config.toml"))
+            .expect("generated compiler policy");
+        let policy =
+            CompilerPolicy::from_disabled(config.disabled_compilers()).expect("compiler policy");
+        let has_rules = value.is_some_and(|value| !value.is_empty());
+        assert_eq!(policy.is_disabled("tact", "1.6.13"), has_rules);
+        assert_eq!(policy.is_disabled("tact", "99.0.0"), has_rules);
+        assert_eq!(policy.is_disabled("func", "0.4.4"), has_rules);
+        assert_eq!(policy.is_disabled("tolk", "99.0.0-rc.1+build.2"), has_rules);
+        assert!(!policy.is_disabled("func", "0.4.5"));
+        assert!(!policy.is_disabled("tolk", "99.0.0"));
+    }
+}
+
+#[test]
+fn invalid_disabled_compiler_environment_fails_policy_initialization() {
+    for value in [
+        "unknown",
+        "func@",
+        "tolk@^1.4.1",
+        "tolk@*",
+        ",tact",
+        "tact,",
+        "tact,,func",
+        "tact, ,func",
+        r#"tact"suffix"#,
+        r"func\suffix",
+    ] {
+        let temp_dir = tempfile::tempdir().expect("config directory");
+        let output = run_entrypoint(&temp_dir, &[variable("VERIFIER_COMPILER_DISABLED", value)]);
+        assert!(output.status.success(), "{output:?}");
+        let config_path = temp_dir.path().join("config.toml");
+        let contents = fs::read_to_string(&config_path).expect("generated config");
+        let parsed: toml::Value = toml::from_str(&contents).expect("escaped TOML strings");
+        let expected: Vec<_> = value.split(',').map(toml::Value::from).collect();
+        assert_eq!(parsed["compiler"]["disabled"], toml::Value::Array(expected));
+        let config = Config::load_from_path(&config_path).expect("raw compiler rules");
+        let error = CompilerPolicy::from_disabled(config.disabled_compilers())
+            .expect_err("invalid compiler rule");
+        assert!(!error.reason.is_empty());
+    }
+}
+
+#[test]
+fn disabled_compiler_environment_respects_existing_config_unless_regenerated() {
+    let temp_dir = tempfile::tempdir().expect("config directory");
+    let config_path = temp_dir.path().join("config.toml");
+    let original = "[compiler]\ndisabled = [\"tolk\"]\n";
+    for force_regenerate in [false, true] {
+        fs::write(&config_path, original).expect("existing config");
+        let mut environment = vec![variable("VERIFIER_COMPILER_DISABLED", "tact")];
+        if force_regenerate {
+            environment.push(variable("VERIFIER_FORCE_GENERATE_CONFIG", "1"));
+        }
+        let output = run_entrypoint(&temp_dir, &environment);
+        assert!(output.status.success(), "{output:?}");
+        let config = Config::load_from_path(&config_path).expect("compiler policy");
+        let policy =
+            CompilerPolicy::from_disabled(config.disabled_compilers()).expect("compiler policy");
+        assert_eq!(policy.is_disabled("tact", "1.0.0"), force_regenerate);
+        assert_eq!(policy.is_disabled("tolk", "1.0.0"), !force_regenerate);
+        if !force_regenerate {
+            assert_eq!(
+                fs::read_to_string(&config_path).expect("existing config"),
+                original
+            );
+        }
+    }
 }
 
 #[test]

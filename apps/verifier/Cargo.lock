@@ -2065,6 +2065,7 @@ dependencies = [
  "ring",
  "rusqlite",
  "rustls-pki-types",
+ "semver",
  "serde",
  "serde_json",
  "sha2",
