@@ -10,6 +10,7 @@ use faucet_pow::Pow;
 use faucet_valkey::ValkeyStore;
 use lazy_limit::{Duration, RuleConfig, init_rate_limiter};
 use sqlx::sqlite::{SqliteConnectOptions, SqliteJournalMode, SqlitePoolOptions};
+use std::collections::BTreeMap;
 use std::net::SocketAddr;
 use std::path::PathBuf;
 use std::str::FromStr;
@@ -130,14 +131,16 @@ pub async fn run() -> anyhow::Result<()> {
         active_bans = active_bans.len(),
         "Initialized antifraud blacklist"
     );
-    for ban in active_bans {
-        info!(
-            source = ban.source.as_str(),
-            subject = %ban.subject,
-            reason = %ban.reason,
-            expires_at = ?ban.expires_at,
-            "Active antifraud ban"
-        );
+    let mut bans_by_subject = BTreeMap::<_, usize>::new();
+    for ban in &active_bans {
+        let subject = ban
+            .subject
+            .split_once(':')
+            .map_or(ban.subject.as_str(), |(kind, _)| kind);
+        *bans_by_subject.entry(subject).or_default() += 1;
+    }
+    for (subject, count) in bans_by_subject {
+        info!(subject, count, "Active antifraud bans");
     }
     let storage_config = SqliteConfig::new(std::any::type_name::<CreateClaim>());
     let storage = SqliteStorage::new_with_callback(&config.database.url, &storage_config);
