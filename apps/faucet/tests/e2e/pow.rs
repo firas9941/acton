@@ -127,6 +127,10 @@ pub(super) fn config(pow_enabled: bool) -> Config {
                 enabled: true,
                 max_wallet_balance: 25_000_000_000,
             },
+            uninit_wallet_balance: WalletBalanceCheckConfig {
+                enabled: true,
+                max_wallet_balance: 4_000_000_000,
+            },
             sent_amount_window: SentAmountWindowCheckConfig {
                 enabled: true,
                 max_amount: 10_000_000_000,

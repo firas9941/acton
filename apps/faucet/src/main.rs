@@ -37,6 +37,7 @@ use wallet::Wallet;
 use faucet::antifraud_audit::{AntifraudAuditStore, AuditSubject, PayoutAudit};
 use faucet::middlewares::{enter_request_span, insert_client_ip};
 
+mod account_checks;
 mod address;
 mod antifraud_subject;
 mod blacklist;

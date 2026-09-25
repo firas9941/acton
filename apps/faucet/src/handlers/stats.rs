@@ -15,6 +15,7 @@ pub(super) struct StatsResponse {
 #[derive(Debug, Eq, PartialEq, Serialize, ToSchema)]
 pub(super) struct AntifraudStatsResponse {
     wallet_balance: u64,
+    uninit_wallet_balance: u64,
     sent_amount_window: u64,
     subnet_amount_window: u64,
     successful_claim_window: u64,
@@ -56,6 +57,7 @@ impl From<FaucetStats> for StatsResponse {
             total_sent_nanocoins: stats.total_sent_nanocoins,
             antifraud: AntifraudStatsResponse {
                 wallet_balance: stats.antifraud.wallet_balance,
+                uninit_wallet_balance: stats.antifraud.uninit_wallet_balance,
                 sent_amount_window: stats.antifraud.sent_amount_window,
                 subnet_amount_window: stats.antifraud.subnet_amount_window,
                 successful_claim_window: stats.antifraud.successful_claim_window,
@@ -77,6 +79,7 @@ mod tests {
             total_sent_nanocoins: 1_500_000_000,
             antifraud: AntifraudStats {
                 wallet_balance: 2,
+                uninit_wallet_balance: 6,
                 sent_amount_window: 3,
                 subnet_amount_window: 4,
                 successful_claim_window: 5,
@@ -89,6 +92,7 @@ mod tests {
                 "total_sent_nanocoins": 1_500_000_000_u64,
                 "antifraud": {
                     "wallet_balance": 2,
+                    "uninit_wallet_balance": 6,
                     "sent_amount_window": 3,
                     "subnet_amount_window": 4,
                     "successful_claim_window": 5,

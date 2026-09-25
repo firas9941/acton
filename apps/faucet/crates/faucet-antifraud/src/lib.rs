@@ -7,6 +7,8 @@ pub struct Antifraud {
     enabled: bool,
     wallet_balance_enabled: bool,
     max_wallet_balance: u64,
+    uninit_wallet_balance_enabled: bool,
+    max_uninit_wallet_balance: u64,
     sent_amount_window_enabled: bool,
     sent_amount_window_max_amount: u64,
     sent_amount_window_seconds: u64,
@@ -41,6 +43,7 @@ pub struct SuccessfulClaimWindow {
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum CheckError {
     WalletBalanceTooHigh { balance: u64, max: u64 },
+    UninitWalletBalanceTooHigh { balance: u64, max: u64 },
     SentAmountWindowTransferTooLarge { amount: u64, max: u64 },
     SubnetAmountWindowTransferTooLarge { amount: u64, max: u64 },
 }
@@ -51,6 +54,8 @@ impl Antifraud {
             enabled: config.enabled,
             wallet_balance_enabled: config.wallet_balance.enabled,
             max_wallet_balance: config.wallet_balance.max_wallet_balance,
+            uninit_wallet_balance_enabled: config.uninit_wallet_balance.enabled,
+            max_uninit_wallet_balance: config.uninit_wallet_balance.max_wallet_balance,
             sent_amount_window_enabled: config.sent_amount_window.enabled,
             sent_amount_window_max_amount: config.sent_amount_window.max_amount,
             sent_amount_window_seconds: config.sent_amount_window.window_seconds,
@@ -70,6 +75,28 @@ impl Antifraud {
 
     pub fn wallet_balance_enabled(&self) -> bool {
         self.enabled && self.wallet_balance_enabled
+    }
+
+    pub fn uninit_wallet_balance_enabled(&self) -> bool {
+        self.enabled && self.uninit_wallet_balance_enabled
+    }
+
+    pub fn check_uninit_wallet_balance(
+        &self,
+        balance: u64,
+        is_uninitialized: bool,
+    ) -> Result<(), CheckError> {
+        if self.uninit_wallet_balance_enabled()
+            && is_uninitialized
+            && balance > self.max_uninit_wallet_balance
+        {
+            return Err(CheckError::UninitWalletBalanceTooHigh {
+                balance,
+                max: self.max_uninit_wallet_balance,
+            });
+        }
+
+        Ok(())
     }
 
     pub fn sent_amount_window(&self) -> Option<SentAmountWindow> {
@@ -167,6 +194,10 @@ mod tests {
                 enabled: true,
                 max_wallet_balance,
             },
+            uninit_wallet_balance: WalletBalanceCheckConfig {
+                enabled: true,
+                max_wallet_balance: 4_000_000_000,
+            },
             sent_amount_window: SentAmountWindowCheckConfig {
                 enabled: true,
                 max_amount: 10_000_000_000,
@@ -197,6 +228,10 @@ mod tests {
             wallet_balance: WalletBalanceCheckConfig {
                 enabled: wallet_balance_enabled,
                 max_wallet_balance,
+            },
+            uninit_wallet_balance: WalletBalanceCheckConfig {
+                enabled: true,
+                max_wallet_balance: 4_000_000_000,
             },
             sent_amount_window: SentAmountWindowCheckConfig {
                 enabled: sent_amount_window_enabled,
@@ -238,6 +273,62 @@ mod tests {
                 max: 25_000_000_000,
             })
         );
+    }
+
+    #[test]
+    fn rejects_only_uninitialized_balances_strictly_above_limit() {
+        let antifraud = Antifraud::new(&config(25_000_000_000));
+
+        for balance in [0, 3_999_999_999, 4_000_000_000] {
+            assert_eq!(antifraud.check_uninit_wallet_balance(balance, true), Ok(()));
+        }
+        assert_eq!(
+            antifraud.check_uninit_wallet_balance(4_000_000_001, true),
+            Err(CheckError::UninitWalletBalanceTooHigh {
+                balance: 4_000_000_001,
+                max: 4_000_000_000,
+            })
+        );
+        assert_eq!(
+            antifraud.check_uninit_wallet_balance(u64::MAX, false),
+            Ok(())
+        );
+    }
+
+    #[test]
+    fn uses_configured_uninitialized_balance_limit_independently() {
+        let mut config = config(25_000_000_000);
+        config.wallet_balance.enabled = false;
+        config.uninit_wallet_balance.max_wallet_balance = 6_000_000_000;
+        let antifraud = Antifraud::new(&config);
+
+        assert_eq!(
+            antifraud.check_uninit_wallet_balance(6_000_000_000, true),
+            Ok(())
+        );
+        assert_eq!(
+            antifraud.check_uninit_wallet_balance(6_000_000_001, true),
+            Err(CheckError::UninitWalletBalanceTooHigh {
+                balance: 6_000_000_001,
+                max: 6_000_000_000,
+            })
+        );
+    }
+
+    #[test]
+    fn allows_uninitialized_balances_when_check_or_all_antifraud_is_disabled() {
+        for (enabled, uninit_enabled) in [(false, true), (true, false)] {
+            let mut config = config(25_000_000_000);
+            config.enabled = enabled;
+            config.uninit_wallet_balance.enabled = uninit_enabled;
+            let antifraud = Antifraud::new(&config);
+
+            assert!(!antifraud.uninit_wallet_balance_enabled());
+            assert_eq!(
+                antifraud.check_uninit_wallet_balance(u64::MAX, true),
+                Ok(())
+            );
+        }
     }
 
     #[test]

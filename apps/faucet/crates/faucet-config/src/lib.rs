@@ -105,6 +105,7 @@ pub struct ValkeyConfig {
 pub struct AntifraudConfig {
     pub enabled: bool,
     pub wallet_balance: WalletBalanceCheckConfig,
+    pub uninit_wallet_balance: WalletBalanceCheckConfig,
     pub sent_amount_window: SentAmountWindowCheckConfig,
     pub subnet_amount_window: SubnetAmountWindowCheckConfig,
     pub successful_claim_window: SuccessfulClaimWindowCheckConfig,
@@ -244,6 +245,13 @@ impl Config {
                     max_wallet_balance: parse_env_grams(
                         "ANTIFRAUD_WALLET_BALANCE_MAX_NANOCOINS",
                         25_000_000_000,
+                    ),
+                },
+                uninit_wallet_balance: WalletBalanceCheckConfig {
+                    enabled: parse_env_bool("ANTIFRAUD_UNINIT_WALLET_BALANCE_ENABLED", true),
+                    max_wallet_balance: parse_env_grams(
+                        "ANTIFRAUD_UNINIT_WALLET_BALANCE_MAX_NANOCOINS",
+                        4_000_000_000,
                     ),
                 },
                 sent_amount_window: SentAmountWindowCheckConfig {
@@ -581,6 +589,10 @@ mod tests {
                 wallet_balance: WalletBalanceCheckConfig {
                     enabled: true,
                     max_wallet_balance: 25_000_000_000,
+                },
+                uninit_wallet_balance: WalletBalanceCheckConfig {
+                    enabled: true,
+                    max_wallet_balance: 4_000_000_000,
                 },
                 sent_amount_window: SentAmountWindowCheckConfig {
                     enabled: true,

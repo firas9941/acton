@@ -25,6 +25,7 @@ const ANTIFRAUD_TRIGGER_COUNT_KEY_PREFIX: &str = "faucet:stats:antifraud";
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum AntifraudModule {
     WalletBalance,
+    UninitWalletBalance,
     SentAmountWindow,
     SubnetAmountWindow,
     SuccessfulClaimWindow,
@@ -33,6 +34,7 @@ pub enum AntifraudModule {
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
 pub struct AntifraudStats {
     pub wallet_balance: u64,
+    pub uninit_wallet_balance: u64,
     pub sent_amount_window: u64,
     pub subnet_amount_window: u64,
     pub successful_claim_window: u64,
@@ -48,6 +50,7 @@ impl AntifraudModule {
     pub const fn name(self) -> &'static str {
         match self {
             Self::WalletBalance => "wallet-balance",
+            Self::UninitWalletBalance => "uninit-wallet-balance",
             Self::SentAmountWindow => "sent-amount-window",
             Self::SubnetAmountWindow => "subnet-amount-window",
             Self::SuccessfulClaimWindow => "successful-claim-window",
@@ -267,6 +270,9 @@ impl ValkeyStore {
             .arg(antifraud_trigger_count_key(
                 AntifraudModule::SuccessfulClaimWindow,
             ))
+            .arg(antifraud_trigger_count_key(
+                AntifraudModule::UninitWalletBalance,
+            ))
             .query_async(&mut connection)
             .await
             .context("Failed to get faucet stats")?;
@@ -279,6 +285,7 @@ impl ValkeyStore {
                 sent_amount_window: value(2),
                 subnet_amount_window: value(3),
                 successful_claim_window: value(4),
+                uninit_wallet_balance: value(5),
             },
         })
     }
@@ -524,6 +531,10 @@ mod tests {
 
     #[test]
     fn builds_antifraud_stat_key_for_each_module() {
+        assert_eq!(
+            antifraud_trigger_count_key(AntifraudModule::UninitWalletBalance),
+            "faucet:stats:antifraud:uninit-wallet-balance"
+        );
         assert_eq!(
             antifraud_trigger_count_key(AntifraudModule::WalletBalance),
             "faucet:stats:antifraud:wallet-balance"

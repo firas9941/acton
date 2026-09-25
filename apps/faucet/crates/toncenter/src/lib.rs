@@ -8,9 +8,11 @@ use serde::de::DeserializeOwned;
 use std::time::Duration;
 use tokio::time::sleep;
 use toncenter_api::v2::requests::{
-    AddressBalanceRequest, JsonRpcCall, JsonRpcRequest, RunGetMethodRequest, SendBocRequest,
+    AddressBalanceRequest, AddressInformationRequest, JsonRpcCall, JsonRpcRequest,
+    RunGetMethodRequest, SendBocRequest,
 };
-use toncenter_api::v2::responses::{ResultOk, RunGetMethodResult};
+pub use toncenter_api::v2::responses::AccountStateEnum;
+use toncenter_api::v2::responses::{AddressInformation, ResultOk, RunGetMethodResult};
 use toncenter_api::v2::stack::LegacyStackEntry;
 use toncenter_api::v2::{Int64Input, Response, TonlibErrorResponse};
 use tracing::warn;
@@ -106,6 +108,20 @@ impl ToncenterClient {
             )
             .await?;
         balance.parse().context("Invalid account balance")
+    }
+
+    pub async fn get_address_information(
+        &self,
+        address: &str,
+    ) -> anyhow::Result<AddressInformation> {
+        self.post_jsonrpc_with_retry(
+            JsonRpcCall::GetAddressInformation(AddressInformationRequest {
+                address: address.to_owned(),
+                seqno: None,
+            }),
+            "getAddressInformation",
+        )
+        .await
     }
 
     fn jsonrpc_url(&self) -> String {

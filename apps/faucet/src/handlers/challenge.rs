@@ -4,7 +4,7 @@ use axum::{
     http::{HeaderMap, StatusCode},
 };
 use faucet::middlewares::ClientContext;
-use faucet_valkey::{AntifraudModule, CappedEphemeralStoreDecision};
+use faucet_valkey::CappedEphemeralStoreDecision;
 use real::RealIp;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
@@ -139,36 +139,13 @@ pub(super) async fn create_challenge(
         .map_err(|(status, _)| response_error(status, "Invalid or expired GitHub session"))?;
     let max_requests = auth::effective_max_requests(&state, identity.as_ref());
 
-    if state.antifraud.wallet_balance_enabled() {
-        let balance = state
-            .client
-            .get_address_balance(&address)
-            .await
-            .map_err(|_| {
-                response_error(
-                    StatusCode::SERVICE_UNAVAILABLE,
-                    "Failed to check wallet balance",
-                )
-            })?;
-
-        if let Err(err) = state.antifraud.check_wallet_balance(balance) {
-            warn!(
-                module = AntifraudModule::WalletBalance.name(),
-                reason = "wallet-balance-exceeds-limit",
-                address = %address,
-                wallet_balance_nanocoins = balance,
-                max_wallet_balance_nanocoins = state.config.antifraud.wallet_balance.max_wallet_balance,
-                error = ?err,
-                "Antifraud module triggered"
-            );
-            state
-                .record_antifraud_trigger(AntifraudModule::WalletBalance, &address)
-                .await;
-            return Err(response_error(
-                StatusCode::FORBIDDEN,
-                "Wallet balance exceeds limit",
-            ));
-        }
+    if let Some(rejection) = state.check_account(&address).await.map_err(|_| {
+        response_error(
+            StatusCode::SERVICE_UNAVAILABLE,
+            "Failed to check wallet balance",
+        )
+    })? {
+        return Err(response_error(StatusCode::FORBIDDEN, rejection.message));
     }
 
     let challenge = state.pow.create();
