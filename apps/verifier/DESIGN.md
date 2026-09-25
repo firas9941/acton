@@ -121,6 +121,11 @@ payment claim.
 
 `POST /api/v1/take_ticket` accepts a code hash. If the code hash is verified,
 the endpoint returns the stored bundle metadata. No payment is necessary.
+The request also accepts optional `compiler` (name) and `compiler_version`
+strings. Both must be provided together or both omitted; `null` is treated as
+omitted. An incomplete pair returns HTTP 400, including for already verified
+code hashes. Compiler names and versions are not checked for support and do
+not affect the ticket or payment quote.
 
 When `server.read_only` is enabled, `/take_ticket` and `/verify` return `503`
 for code hashes that are not already registered. Existing bundles and all read

@@ -211,11 +211,18 @@ async fn post_take_ticket(
     state: verifier::state::AppState,
     code_hash: &str,
 ) -> axum::response::Response {
+    post_take_ticket_with_body(state, &json!({"code_hash": code_hash})).await
+}
+
+async fn post_take_ticket_with_body(
+    state: verifier::state::AppState,
+    body: &Value,
+) -> axum::response::Response {
     let request = Request::builder()
         .method(Method::POST)
         .uri("/api/v1/take_ticket")
         .header(header::CONTENT_TYPE, "application/json")
-        .body(Body::from(json!({"code_hash": code_hash}).to_string()))
+        .body(Body::from(body.to_string()))
         .expect("POST /api/v1/take_ticket request should be valid");
 
     app::router_with_state(state)
@@ -303,6 +310,75 @@ async fn take_ticket_returns_a_payment_bound_to_the_code_hash() {
             "comment": format!("acton-verify:v1:{CODE_HASH_ONE}")
         })
     );
+}
+
+#[tokio::test]
+async fn take_ticket_accepts_compiler_metadata_without_changing_the_payment_quote() {
+    let response = post_take_ticket(app_state(&[], CODE_HASH_ONE), CODE_HASH_ONE).await;
+    let expected = response_json::<Value>(response).await;
+
+    for (compiler, compiler_version) in [
+        ("tolk", "1.4.2"),
+        ("func", "0.4.6"),
+        ("tact", "1.6.13"),
+        ("unknown-compiler", "unknown-version"),
+    ] {
+        let response = post_take_ticket_with_body(
+            app_state(&[], CODE_HASH_ONE),
+            &json!({
+                "code_hash": CODE_HASH_ONE,
+                "compiler": compiler,
+                "compiler_version": compiler_version,
+            }),
+        )
+        .await;
+
+        assert_eq!(response.status(), StatusCode::OK);
+        assert_eq!(response_json::<Value>(response).await, expected);
+    }
+}
+
+#[tokio::test]
+async fn take_ticket_treats_null_compiler_metadata_as_absent() {
+    let response = post_take_ticket_with_body(
+        app_state(&[], CODE_HASH_ONE),
+        &json!({
+            "code_hash": CODE_HASH_ONE,
+            "compiler": null,
+            "compiler_version": null,
+        }),
+    )
+    .await;
+
+    assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(
+        response_json::<Value>(response).await["status"],
+        "payment_required"
+    );
+}
+
+#[tokio::test]
+async fn take_ticket_rejects_incomplete_compiler_metadata() {
+    let verified_state = app_state(&[], CODE_HASH_ONE);
+    let response = post_verify(verified_state.clone(), valid_verify_parts()).await;
+    assert_eq!(response.status(), StatusCode::OK);
+
+    for state in [app_state(&[], CODE_HASH_ONE), verified_state] {
+        for body in [
+            json!({"code_hash": CODE_HASH_ONE, "compiler": "tact"}),
+            json!({"code_hash": CODE_HASH_ONE, "compiler_version": "1.6.13"}),
+            json!({"code_hash": CODE_HASH_ONE, "compiler": "tact", "compiler_version": null}),
+            json!({"code_hash": CODE_HASH_ONE, "compiler": null, "compiler_version": "1.6.13"}),
+        ] {
+            let response = post_take_ticket_with_body(state.clone(), &body).await;
+
+            assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+            assert_eq!(
+                response_json::<Value>(response).await,
+                json!({"error": "compiler and compiler_version must be provided together"})
+            );
+        }
+    }
 }
 
 #[tokio::test]
@@ -632,6 +708,10 @@ async fn openapi_json_documents_verifier_api() {
     assert!(body["components"]["schemas"]["VerificationStatisticsResponse"].is_object());
     assert!(body["components"]["schemas"]["VerificationStatisticsHistoryResponse"].is_object());
     assert!(body["components"]["schemas"]["SourceFileResponse"].is_object());
+    let take_ticket_request = &body["components"]["schemas"]["TakeTicketRequest"];
+    assert_eq!(take_ticket_request["required"], json!(["code_hash"]));
+    assert!(take_ticket_request["properties"]["compiler"].is_object());
+    assert!(take_ticket_request["properties"]["compiler_version"].is_object());
     assert!(
         body["components"]["schemas"]["AbiContractsResponse"]["properties"]["total"].is_object()
     );

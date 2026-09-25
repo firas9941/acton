@@ -16,7 +16,7 @@ use super::validation;
     request_body = TakeTicketRequest,
     responses(
         (status = 200, description = "Verification status or payment quote", body = TakeTicketResponse),
-        (status = 400, description = "Invalid code hash", body = crate::error::ErrorResponse),
+        (status = 400, description = "Invalid code hash or incomplete compiler metadata", body = crate::error::ErrorResponse),
         (status = 502, description = "Verification registry failure", body = crate::error::ErrorResponse),
         (status = 503, description = "Verifier is read-only or payment history recovery is in progress", body = crate::error::ErrorResponse)
     ),
@@ -27,6 +27,11 @@ pub async fn handler(
     Json(request): Json<TakeTicketRequest>,
 ) -> Result<impl IntoResponse, ApiError> {
     let code_hash = validation::code_hash(&request.code_hash)?;
+    if request.compiler.is_some() != request.compiler_version.is_some() {
+        return Err(ApiError::bad_request(
+            "compiler and compiler_version must be provided together".to_owned(),
+        ));
+    }
 
     if let Some(bundle) = state
         .verification_registry()
@@ -65,6 +70,14 @@ pub async fn handler(
 pub(super) struct TakeTicketRequest {
     #[schema(example = "a873d8c2d163f7fa10bbe38769706f0554505e8ea2dcea3f115288db8becf2ab")]
     code_hash: String,
+    /// Optional compiler name. Must be provided together with `compiler_version`.
+    /// Accepted as metadata only; compiler support is not checked.
+    #[schema(example = "tolk")]
+    compiler: Option<String>,
+    /// Optional compiler version. Must be provided together with `compiler`.
+    /// Accepted as metadata only; version support is not checked.
+    #[schema(example = "1.4.2")]
+    compiler_version: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize, ToSchema)]
