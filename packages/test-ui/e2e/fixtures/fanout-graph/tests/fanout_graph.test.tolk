@@ -333,6 +333,35 @@ get fun `test asymmetric graph mixes shallow leaves and tall branch`() {
     println(result);
 }
 
+get fun `test three branches mix two chains and one leaf`() {
+    val sender = testing.treasury("two-chains-sender");
+    val first = testing.treasury("first-chain-leaf");
+    val second = testing.treasury("second-chain-leaf");
+    val third = testing.treasury("direct-leaf");
+    val fanout = deployFanout(sender);
+    val message = createMessage({
+        bounce: false,
+        value: ton("2"),
+        dest: fanout.address,
+        body: TwoChainsAndLeafRequest {
+            queryId: 11,
+            first: first.address,
+            second: second.address,
+            third: third.address,
+        },
+    });
+
+    val result = net.send(sender.address, message);
+    result.giveName("two chains and one leaf");
+
+    expect(result).toHaveSuccessfulTx({ from: sender.address, to: fanout.address });
+    expect(result).toHaveSuccessfulTx({ from: fanout.address, to: first.address });
+    expect(result).toHaveSuccessfulTx({ from: fanout.address, to: second.address });
+    expect(result).toHaveSuccessfulTx({ from: fanout.address, to: third.address });
+    expect(result).toHaveAllSuccessfulTxs();
+    println(result);
+}
+
 get fun `test dense branching graph has many internal nodes`() {
     val sender = testing.treasury("branching-sender");
     val left = testing.treasury("branching-left-leaf");

@@ -144,6 +144,7 @@ const profiledJettonFilter = "owner can send jettons"
 const fanoutGraphFilter = [
   ...fanoutGraphVisualScenarios.map(({testName}) => testName),
   "inspect external-out messages",
+  "three branches mix two chains and one leaf",
 ].join("|")
 
 const unionStorageContractSource = `contract UnionStorage {

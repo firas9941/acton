@@ -23,6 +23,7 @@ type GraphMessage =
     | FailRequest
     | MixedFailureRequest
     | FailStep
+    | TwoChainsAndLeafRequest
 
 fun sendNotice(dest: address, queryId: int, branch: int) {
     val notice = createMessage({
@@ -135,6 +136,12 @@ fun onInternalMessage(in: InMessage) {
 
         BinaryBranch => {
             sendNotice(msg.target, msg.queryId, msg.branch);
+        }
+
+        TwoChainsAndLeafRequest => {
+            sendBinaryBranch(msg.queryId, 1, msg.first);
+            sendBinaryBranch(msg.queryId, 2, msg.second);
+            sendNotice(msg.third, msg.queryId, 3);
         }
 
         AsymmetricRequest => {

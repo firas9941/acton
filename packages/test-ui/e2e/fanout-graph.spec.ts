@@ -140,7 +140,7 @@ const openFanoutGraphScenario = async (
   await transactionsTab.click()
   await expect(transactionsTab).toHaveAttribute("aria-selected", "true")
 
-  const traceTab = page.getByRole("button", {name: scenario.traceName})
+  const traceTab = page.getByRole("button", {name: scenario.traceName, exact: true})
   await expect(traceTab).toBeVisible()
   await traceTab.click()
   await expect(traceTab).toHaveAttribute("aria-current", "true")
@@ -201,6 +201,79 @@ test.describe("Fanout graph visual snapshots", () => {
       await expectStableGraphScreenshot(page, scenario.snapshotName)
     })
   }
+})
+
+test("rounds only the outer branches of a shared fanout spine", async ({fanoutGraphUi, page}) => {
+  await page.goto(fanoutGraphUi.baseUrl)
+  await openFanoutGraphScenario(page, {
+    testName: "wide fanout graph has six outgoing messages",
+    traceName: "wide fanout 6",
+  })
+
+  const links = page.locator(".rd3t-tree-container path.rd3t-link")
+  await expect(links).toHaveCount(7)
+  const branches = await links.evaluateAll(elements =>
+    elements
+      .map(element => {
+        const path = element as SVGPathElement
+        return {
+          path: path.getAttribute("d") ?? "",
+          startY: path.getPointAtLength(0).y,
+          endY: path.getPointAtLength(path.getTotalLength()).y,
+        }
+      })
+      .filter(link => link.startY !== link.endY)
+      .sort((left, right) => left.endY - right.endY),
+  )
+  expect(branches).toHaveLength(6)
+  expect(branches[0].path).toMatch(/[Aa]/)
+  expect(branches.at(-1)?.path).toMatch(/[Aa]/)
+  for (const branch of branches.slice(1, -1)) {
+    expect(branch.path).toMatch(/^M[^A-Za-z]+V[^A-Za-z]+H[^A-Za-z]+$/)
+  }
+})
+
+test("aligns the middle branch with its parent when two chains precede a leaf", async ({
+  fanoutGraphUi,
+  page,
+}) => {
+  await page.goto(fanoutGraphUi.baseUrl)
+  await openFanoutGraphScenario(page, {
+    testName: "three branches mix two chains and one leaf",
+    traceName: "two chains and one leaf",
+  })
+
+  const tree = page.locator(".rd3t-tree-container")
+  await expect(tree.locator('circle[aria-label^="Transaction "]')).toHaveCount(6)
+  const {nodes, links} = await tree.evaluate(element => ({
+    nodes: [...element.querySelectorAll('circle[aria-label^="Transaction "]')].map(circle => {
+      const bounds = circle.getBoundingClientRect()
+      return {x: bounds.x + bounds.width / 2, y: bounds.y + bounds.height / 2}
+    }),
+    links: [...element.querySelectorAll<SVGPathElement>("path.rd3t-link")].map(path => {
+      const matrix = path.getScreenCTM()
+      const start = path.getPointAtLength(0).matrixTransform(matrix ?? undefined)
+      const end = path.getPointAtLength(path.getTotalLength()).matrixTransform(matrix ?? undefined)
+      return {path: path.getAttribute("d") ?? "", startX: start.x, endY: end.y}
+    }),
+  }))
+  const columns = [...new Set(nodes.map(node => node.x))].sort((left, right) => left - right)
+  expect(columns).toHaveLength(3)
+  const parent = nodes.find(node => node.x === columns[0])
+  expect(parent).toBeDefined()
+  const children = nodes
+    .filter(node => node.x === columns[1])
+    .sort((left, right) => left.y - right.y)
+  expect(children).toHaveLength(3)
+  expect(children[1].y).toBeCloseTo(parent?.y ?? Number.NaN, 1)
+
+  const branches = links
+    .filter(link => Math.abs(link.startX - columns[0]) < 0.5)
+    .sort((left, right) => left.endY - right.endY)
+  expect(branches).toHaveLength(3)
+  expect(branches[0].path).toMatch(/[Aa]/)
+  expect(branches[1].path).not.toMatch(/[Aa]/)
+  expect(branches[2].path).toMatch(/[Aa]/)
 })
 
 test("external-out graph node opens its message details", async ({fanoutGraphUi, page}) => {

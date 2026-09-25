@@ -93,3 +93,10 @@ struct (0x0f0f0010) MixedFailureRequest {
 struct (0x0f0f0011) FailStep {
     queryId: uint64
 }
+
+struct (0x0f0f0012) TwoChainsAndLeafRequest {
+    queryId: uint64
+    first: address
+    second: address
+    third: address
+}

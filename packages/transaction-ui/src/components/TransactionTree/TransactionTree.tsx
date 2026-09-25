@@ -55,6 +55,7 @@ import {ExternalOutMessageDetails} from "../TransactionDetails/ExternalOutMessag
 import {SmartTooltip} from "./SmartTooltip"
 import styles from "./TransactionTree.module.css"
 import {useTooltip} from "./useTooltip"
+import {layoutTraceTree} from "./treeLayout"
 
 const EAGER_MESSAGE_BODY_DECODE_TRANSACTION_LIMIT = 50
 const MemoizedTransactionDetails = memo(TransactionDetails)
@@ -162,16 +163,20 @@ const TREE_EDGE_LABEL = {width: 150, height: 64, failedHeight: 84, x: -180, y: -
 const TREE_ACCOUNT_LABEL_MAX_LENGTH = 20
 const TREE_SCALE_EXTENT = {min: 1, max: 1} as const
 
+const TREE_LINK_RADIUS = 10
+
 const getTreeLinkPath = ({source, target}: TreeLinkDatum): string => {
   // Horizontal trees use D3's x coordinate for screen y and y for screen x.
-  const endX = target.y - 18
-  const verticalOffset = target.x - source.x
   const start = `M${source.y},${source.x}`
-  if (verticalOffset === 0) return `${start}H${endX}`
-
-  const direction = Math.sign(verticalOffset)
-  const radius = Math.min(10, Math.abs(verticalOffset), Math.max(0, endX - source.y))
-  return `${start}V${target.x - direction * radius}a${radius} ${radius} 0 0 ${direction < 0 ? 1 : 0} ${radius} ${direction * radius}H${endX}`
+  const end = `H${target.y - 18}`
+  // Only the outer branches turn a rounded corner; inner ones meet the trunk at a T-junction.
+  const siblings = source.children ?? []
+  if (target.x === source.x || (target !== siblings[0] && target !== siblings.at(-1))) {
+    return `${start}V${target.x}${end}`
+  }
+  const r = TREE_LINK_RADIUS
+  const dir = Math.sign(target.x - source.x)
+  return `${start}V${target.x - dir * r}a${r},${r} 0 0 ${dir < 0 ? 1 : 0} ${r},${dir * r}${end}`
 }
 
 const getTreeLinkClass = ({source, target}: TreeLinkDatum): string => {
@@ -204,13 +209,27 @@ interface TransactionTreeCanvasProps {
   readonly renderNode: (props: CustomNodeElementProps) => React.JSX.Element
 }
 
+class TraceTree extends Tree {
+  override generateTree(): ReturnType<Tree["generateTree"]> {
+    const layout = super.generateTree()
+    const [root] = layout.nodes
+    if (root) {
+      layoutTraceTree(root, {
+        siblings: TREE_NODE_SIZE.y * TREE_SEPARATION.siblings,
+        nonSiblings: TREE_NODE_SIZE.y * TREE_SEPARATION.nonSiblings,
+      })
+    }
+    return layout
+  }
+}
+
 const TransactionTreeCanvas = memo(function TransactionTreeCanvas({
   data,
   translate,
   renderNode,
 }: TransactionTreeCanvasProps): React.JSX.Element {
   return (
-    <Tree
+    <TraceTree
       data={data}
       orientation="horizontal"
       pathFunc={getTreeLinkPath}
