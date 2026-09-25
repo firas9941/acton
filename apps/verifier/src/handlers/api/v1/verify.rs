@@ -81,6 +81,11 @@ async fn handle_multipart(
     headers: &HeaderMap,
     mut multipart: Multipart,
 ) -> Result<Json<VerifyResponse>, ApiError> {
+    let started = Instant::now();
+    let user_agent = headers
+        .get(USER_AGENT)
+        .map_or("<missing>", |value| value.to_str().unwrap_or("<invalid>"))
+        .to_owned();
     let mut address = None;
     let mut code_hash = None;
     let mut language = None;
@@ -179,7 +184,9 @@ async fn handle_multipart(
             .is_some_and(|value| !value.trim().is_empty());
 
     if !has_submitted_payment && let Some(bundle) = &verified_bundle {
-        return Ok(already_verified_response(resolved_target.code_hash, bundle));
+        let result = Ok(already_verified_response(resolved_target.code_hash, bundle));
+        log_verification_result(&result, &request_code_hash, &user_agent, &language, started);
+        return result;
     }
 
     if verified_bundle.is_none() && state.read_only() {
@@ -206,21 +213,15 @@ async fn handle_multipart(
     let payment_tx_hash = payment_claim
         .as_ref()
         .map(|claim| claim.transaction_hash.clone());
-    let user_agent = headers
-        .get(USER_AGENT)
-        .map_or("<missing>", |value| value.to_str().unwrap_or("<invalid>"))
-        .to_owned();
-
     let task_state = state.clone();
     let task_code_hash = request_code_hash.clone();
     let task = state.spawn_background_task(async move {
-        let started = Instant::now();
         let target_hash = task_code_hash;
         let result = verify_target(
             &task_state,
             resolved_target,
             verified_bundle,
-            language,
+            &language,
             compile_params,
             sources,
             files,
@@ -245,14 +246,7 @@ async fn handle_multipart(
         };
         let result = result.map_err(|error| error.with_code_hash(&target_hash));
 
-        tracing::info!(
-            operation = "verify",
-            target = %target_hash,
-            user_agent = %user_agent,
-            duration_ms = started.elapsed().as_millis(),
-            outcome = if result.is_ok() { "completed" } else { "failed" },
-            "verification request finished"
-        );
+        log_verification_result(&result, &target_hash, &user_agent, &language, started);
 
         result
     });
@@ -263,12 +257,67 @@ async fn handle_multipart(
     })?
 }
 
+fn log_verification_result(
+    result: &Result<Json<VerifyResponse>, ApiError>,
+    code_hash: &str,
+    user_agent: &str,
+    language: &str,
+    started: Instant,
+) {
+    let duration_ms = started.elapsed().as_millis();
+    match result {
+        Ok(Json(response)) => match response.verification_result {
+            VerificationResult::Match => tracing::info!(
+                operation = "verify",
+                code_hash = %code_hash,
+                user_agent = %user_agent,
+                language = %language,
+                compiled_code_hash = response.compiled_code_hash.as_deref(),
+                source_bundle_hash = response.source_bundle_hash.as_deref(),
+                duration_ms,
+                outcome = "match",
+                "verification succeeded: code hashes match"
+            ),
+            VerificationResult::Mismatch => tracing::warn!(
+                operation = "verify",
+                code_hash = %code_hash,
+                user_agent = %user_agent,
+                language = %language,
+                compiled_code_hash = response.compiled_code_hash.as_deref(),
+                duration_ms,
+                outcome = "mismatch",
+                "verification failed: compiled code hash does not match expected code hash"
+            ),
+            VerificationResult::AlreadyVerified => tracing::info!(
+                operation = "verify",
+                code_hash = %code_hash,
+                user_agent = %user_agent,
+                language = %language,
+                source_bundle_hash = response.source_bundle_hash.as_deref(),
+                duration_ms,
+                outcome = "already_verified",
+                "code is already verified"
+            ),
+        },
+        Err(error) => tracing::error!(
+            operation = "verify",
+            code_hash = %code_hash,
+            user_agent = %user_agent,
+            language = %language,
+            duration_ms,
+            outcome = "error",
+            error = ?error,
+            "verification failed with an error"
+        ),
+    }
+}
+
 #[allow(clippy::too_many_arguments)]
 async fn verify_target(
     state: &AppState,
     resolved_target: ResolvedVerificationTarget,
     verified_bundle: Option<StoredSourceBundle>,
-    language: String,
+    language: &str,
     compile_params: Value,
     sources: Option<Vec<SourceMetadata>>,
     files: Vec<ReceivedFile>,
@@ -289,8 +338,9 @@ async fn verify_target(
 
     tracing::info!(
         operation = "verify",
-        target = %resolved_target.code_hash,
+        code_hash = %resolved_target.code_hash,
         user_agent = %user_agent,
+        language = %language,
         outcome = "started",
         "verification started"
     );
@@ -298,7 +348,7 @@ async fn verify_target(
     let CompileInput {
         configuration,
         sources: mut retained_sources,
-    } = prepare_compile_input(&language, &compile_params, sources, files)?;
+    } = prepare_compile_input(language, &compile_params, sources, files)?;
     let compiled = run_compiler(
         state,
         &resolved_target.code_hash,
@@ -357,7 +407,7 @@ async fn verify_target(
                 .await;
             tracing::debug!(
                 operation = "verify",
-                target = %resolved_target.code_hash,
+                code_hash = %resolved_target.code_hash,
                 phase = "source_storage",
                 duration_ms = storage_started.elapsed().as_millis(),
                 outcome = if stored.is_ok() { "completed" } else { "failed" },
@@ -377,17 +427,6 @@ async fn verify_target(
             unreachable!("hash comparison cannot produce an already-verified result")
         }
     };
-
-    tracing::info!(
-        operation = "verify",
-        target = %resolved_target.code_hash,
-        user_agent = %user_agent,
-        language = %configuration.language,
-        compiled_code_hash = %compiled_code_hash,
-        source_bundle_hash,
-        outcome = %verification_result,
-        "verification result"
-    );
 
     Ok(Json(VerifyResponse {
         code_hash: resolved_target.code_hash,
