@@ -26,7 +26,6 @@ Thumbs.db
 .env
 .env.*
 !.env.example
-!build/.env.production
 db.sqlite
 db.sqlite-*
 antifraud.db

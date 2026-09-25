@@ -20,8 +20,6 @@ apps/faucet/*
 !apps/faucet/Cargo.lock
 !apps/faucet/rust-toolchain.toml
 !apps/faucet/build.rs
-!apps/faucet/build/
-!apps/faucet/build/.env.production
 !apps/faucet/src/
 !apps/faucet/crates/
 

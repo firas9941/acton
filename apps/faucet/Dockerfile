@@ -52,7 +52,6 @@ RUN mkdir -p /data/faucet /data/antifraud && chown -R faucet:faucet /data
 WORKDIR /var/lib/faucet
 
 COPY --from=rust-builder /build/apps/faucet/target/release/faucet /usr/local/bin/faucet
-COPY --chown=faucet:faucet apps/faucet/build/.env.production ./.env
 
 USER faucet
 
