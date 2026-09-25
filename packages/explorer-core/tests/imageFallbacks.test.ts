@@ -79,6 +79,50 @@ test("uses small images for previews and larger images for NFT cards", () => {
   `)
 })
 
+test("prefers nested Toncenter previews to the original NFT image", () => {
+  const tokenInfo = {
+    type: "nft_collections",
+    image: "https://images.example/original.png",
+    is_nsfw: false,
+    is_scam: false,
+    extra: {
+      _image_small: "https://proxy.example/blurred-small.png",
+      _image_medium: "https://proxy.example/blurred-medium.png",
+      _image_big: "https://proxy.example/blurred-big.png",
+    },
+  }
+
+  expect(getImageSources(tokenInfo, NFT_CARD_IMAGE_SOURCE_KEYS)).toEqual([
+    tokenInfo.extra._image_medium,
+    tokenInfo.extra._image_big,
+    tokenInfo.image,
+    tokenInfo.extra._image_small,
+  ])
+  expect(getNftImageSources({...tokenInfo, type: "nft_items"})).toEqual([
+    tokenInfo.extra._image_small,
+    tokenInfo.extra._image_medium,
+    tokenInfo.extra._image_big,
+    tokenInfo.image,
+  ])
+})
+
+test("keeps direct image values and deduplicates nested fallbacks", () => {
+  expect(
+    getImageSources({
+      _image_small: "small.png",
+      _image_medium: "",
+      _image_big: null,
+      image: "original.png",
+      extra: {
+        _image_small: "unused-small.png",
+        _image_medium: "medium.png",
+        _image_big: "medium.png",
+        image: "unused-original.png",
+      },
+    }),
+  ).toEqual(["small.png", "medium.png", "original.png"])
+})
+
 test("uses larger collection artwork in collection cards", () => {
   expect(
     getImageSources(

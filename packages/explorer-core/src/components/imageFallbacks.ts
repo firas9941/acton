@@ -65,13 +65,21 @@ export function getImageSources(
   keys: readonly string[] = TOKEN_IMAGE_SOURCE_KEYS,
 ): string[] {
   const sources: string[] = []
+  const extra = isRecord(content?.extra) ? content.extra : undefined
   for (const key of keys) {
-    const value = content?.[key]
-    if (typeof value === "string" && value.length > 0 && !sources.includes(value)) {
+    const value = [content?.[key], extra?.[key]].find(
+      (candidate): candidate is string =>
+        typeof candidate === "string" && candidate.trim().length > 0,
+    )
+    if (value && !sources.includes(value)) {
       sources.push(value)
     }
   }
   return sources
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value)
 }
 
 /**
