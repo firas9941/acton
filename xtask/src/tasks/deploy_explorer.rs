@@ -66,7 +66,7 @@ pub(crate) fn run(args: DeployExplorerArgs) -> Result<()> {
     run_inherited(&mut build_command)?;
 
     ensure_dist_ready(&dist_dir)?;
-    ensure_checkout(&checkout_dir, &args.repository)?;
+    ensure_checkout(&checkout_dir, &args.repository, &args.branch)?;
     prepare_branch(&checkout_dir, &args.branch)?;
     sync_dist(&dist_dir, &checkout_dir, cname.as_deref())?;
     let deployed_commit = commit_and_push(&checkout_dir, &args.branch, &args.message)?;
@@ -136,7 +136,7 @@ fn ensure_dist_ready(dist_dir: &Path) -> Result<()> {
     Ok(())
 }
 
-fn ensure_checkout(checkout_dir: &Path, repository: &str) -> Result<()> {
+fn ensure_checkout(checkout_dir: &Path, repository: &str, branch: &str) -> Result<()> {
     if checkout_dir.join(".git").is_dir() {
         println!(
             "Using existing deploy checkout `{}`",
@@ -158,26 +158,40 @@ fn ensure_checkout(checkout_dir: &Path, repository: &str) -> Result<()> {
     }
 
     println!("Cloning `{repository}` into `{}`", checkout_dir.display());
-    run_inherited(
-        Command::new("git")
-            .arg("clone")
-            .arg(repository)
-            .arg(checkout_dir),
-    )
+    let mut command = Command::new("git");
+    command
+        .arg("clone")
+        .arg("--depth")
+        .arg("1")
+        .arg("--single-branch");
+
+    if remote_branch_exists(Command::new("git"), repository, branch)? {
+        command.arg("--branch").arg(branch);
+    }
+
+    run_inherited(command.arg(repository).arg(checkout_dir))
 }
 
 fn prepare_branch(checkout_dir: &Path, branch: &str) -> Result<()> {
-    run_inherited(git(checkout_dir).arg("fetch").arg("origin"))?;
-
-    if remote_branch_exists(checkout_dir, branch)? {
-        println!("Checking out existing deploy branch `{branch}`");
-        run_inherited(git(checkout_dir).arg("checkout").arg(branch))?;
+    if remote_branch_exists(git(checkout_dir), "origin", branch)? {
         run_inherited(
             git(checkout_dir)
-                .arg("reset")
-                .arg("--hard")
+                .arg("fetch")
+                .arg("--depth")
+                .arg("1")
+                .arg("origin")
+                .arg(format!("+refs/heads/{branch}:refs/remotes/origin/{branch}")),
+        )?;
+
+        println!("Checking out existing deploy branch `{branch}`");
+        run_inherited(
+            git(checkout_dir)
+                .arg("checkout")
+                .arg("-B")
+                .arg(branch)
                 .arg(format!("origin/{branch}")),
         )?;
+        run_inherited(git(checkout_dir).arg("reset").arg("--hard"))?;
     } else {
         println!("Creating orphan deploy branch `{branch}`");
         run_inherited(
@@ -191,12 +205,12 @@ fn prepare_branch(checkout_dir: &Path, branch: &str) -> Result<()> {
     clean_checkout_contents(checkout_dir)
 }
 
-fn remote_branch_exists(checkout_dir: &Path, branch: &str) -> Result<bool> {
-    let output = git(checkout_dir)
+fn remote_branch_exists(mut command: Command, repository: &str, branch: &str) -> Result<bool> {
+    let output = command
         .arg("ls-remote")
         .arg("--heads")
-        .arg("origin")
-        .arg(branch)
+        .arg(repository)
+        .arg(format!("refs/heads/{branch}"))
         .output()
         .with_context(|| format!("failed to check remote branch `{branch}`"))?;
 
@@ -520,10 +534,113 @@ fn run_inherited(command: &mut Command) -> Result<()> {
 
 #[cfg(test)]
 mod tests {
+    use std::{fs, path::Path};
+
     use super::{
-        CheckRun, CheckRunApp, find_cloudflare_deployment_check, github_commit_url,
-        github_repository_path, normalize_cname,
+        CheckRun, CheckRunApp, commit_and_push, ensure_checkout, find_cloudflare_deployment_check,
+        git, github_commit_url, github_repository_path, normalize_cname, prepare_branch,
     };
+
+    fn test_git(directory: &Path, args: &[&str]) -> String {
+        let output = git(directory)
+            .args([
+                "-c",
+                "user.name=Deploy test",
+                "-c",
+                "user.email=deploy@example.com",
+                "-c",
+                "commit.gpgsign=false",
+            ])
+            .args(args)
+            .output()
+            .unwrap();
+        assert!(
+            output.status.success(),
+            "git {args:?}: {}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+        String::from_utf8(output.stdout).unwrap().trim().to_owned()
+    }
+
+    fn push_test_deployment(checkout: &Path) {
+        test_git(checkout, &["config", "user.name", "Deploy test"]);
+        test_git(checkout, &["config", "user.email", "deploy@example.com"]);
+        test_git(checkout, &["config", "commit.gpgsign", "false"]);
+        fs::write(checkout.join("index.html"), "Deployed").unwrap();
+        assert!(
+            commit_and_push(checkout, "pages", "Deploy test")
+                .unwrap()
+                .is_some()
+        );
+    }
+
+    #[test]
+    fn deploy_checkout_is_shallow_and_fetches_only_selected_branch() {
+        let temp = tempfile::tempdir().unwrap();
+        let remote = temp.path().join("remote");
+        fs::create_dir(&remote).unwrap();
+        test_git(&remote, &["init", "--initial-branch=main"]);
+        test_git(&remote, &["commit", "--allow-empty", "-m", "Initial"]);
+        test_git(&remote, &["commit", "--allow-empty", "-m", "Latest"]);
+        test_git(&remote, &["branch", "pages"]);
+        let repository = url::Url::from_directory_path(&remote).unwrap().to_string();
+        let checkout = temp.path().join("checkout");
+
+        ensure_checkout(&checkout, &repository, "pages").unwrap();
+        prepare_branch(&checkout, "pages").unwrap();
+        assert_eq!(
+            test_git(&checkout, &["rev-parse", "--is-shallow-repository"]),
+            "true"
+        );
+        assert_eq!(test_git(&checkout, &["rev-list", "--count", "HEAD"]), "1");
+        assert_eq!(
+            test_git(&checkout, &["config", "--get", "remote.origin.fetch"]),
+            "+refs/heads/pages:refs/remotes/origin/pages"
+        );
+        assert!(test_git(&checkout, &["for-each-ref", "refs/remotes/origin/main"]).is_empty());
+        push_test_deployment(&checkout);
+
+        // Reusing a single-branch clone must also support another deployment branch.
+        test_git(&remote, &["branch", "preview", "pages"]);
+        ensure_checkout(&checkout, &repository, "preview").unwrap();
+        prepare_branch(&checkout, "preview").unwrap();
+        assert_eq!(
+            test_git(&checkout, &["branch", "--show-current"]),
+            "preview"
+        );
+        assert_eq!(test_git(&checkout, &["rev-list", "--count", "HEAD"]), "1");
+        assert_eq!(
+            test_git(&checkout, &["rev-parse", "HEAD"]),
+            test_git(&remote, &["rev-parse", "preview"])
+        );
+    }
+
+    #[test]
+    fn deploy_checkout_creates_missing_branch_in_populated_and_empty_repositories() {
+        for populated in [true, false] {
+            let temp = tempfile::tempdir().unwrap();
+            let remote = temp.path().join("remote");
+            fs::create_dir(&remote).unwrap();
+            test_git(&remote, &["init", "--initial-branch=main"]);
+            if populated {
+                test_git(&remote, &["commit", "--allow-empty", "-m", "Initial"]);
+            }
+            let repository = url::Url::from_directory_path(&remote).unwrap().to_string();
+            let checkout = temp.path().join("checkout");
+
+            ensure_checkout(&checkout, &repository, "pages").unwrap();
+            prepare_branch(&checkout, "pages").unwrap();
+            push_test_deployment(&checkout);
+            assert_eq!(test_git(&remote, &["rev-list", "--count", "pages"]), "1");
+
+            ensure_checkout(&checkout, &repository, "pages").unwrap();
+            prepare_branch(&checkout, "pages").unwrap();
+            assert_eq!(
+                test_git(&checkout, &["rev-parse", "HEAD"]),
+                test_git(&remote, &["rev-parse", "pages"])
+            );
+        }
+    }
 
     #[test]
     fn cname_keeps_bare_domain() {
