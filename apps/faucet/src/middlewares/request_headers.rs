@@ -1,8 +1,12 @@
 use std::fmt;
 
 use axum::{
+    Extension,
     extract::Request,
-    http::{HeaderName, HeaderValue, StatusCode, header::USER_AGENT},
+    http::{
+        HeaderName, HeaderValue, StatusCode,
+        header::{ORIGIN, USER_AGENT},
+    },
     middleware::Next,
     response::{IntoResponse, Response},
 };
@@ -85,6 +89,28 @@ pub async fn require_airdrop_headers(mut request: Request, next: Next) -> Respon
     }
 
     StatusCode::BAD_REQUEST.into_response()
+}
+
+pub async fn require_actonscan_origin(
+    Extension(client): Extension<ClientContext>,
+    request: Request,
+    next: Next,
+) -> Response {
+    if client.client_kind != AirdropClient::Actonscan {
+        return next.run(request).await;
+    }
+
+    let origin = request.headers().get(ORIGIN);
+    if !origin.is_some_and(|value| value.to_str().is_ok_and(|origin| !origin.trim().is_empty())) {
+        debug!(
+            header = %ORIGIN,
+            value = header_value(origin),
+            "Airdrop request header failed validation"
+        );
+        return StatusCode::BAD_REQUEST.into_response();
+    }
+
+    next.run(request).await
 }
 
 fn is_allowed_browser_client(value: &HeaderValue) -> bool {

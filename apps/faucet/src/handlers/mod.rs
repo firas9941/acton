@@ -1,4 +1,6 @@
-use crate::middlewares::{require_airdrop_headers, require_faucet_writable, require_pow_enabled};
+use crate::middlewares::{
+    require_actonscan_origin, require_airdrop_headers, require_faucet_writable, require_pow_enabled,
+};
 use axum::{
     Json, Router,
     middleware::{self, from_fn_with_state},
@@ -21,8 +23,15 @@ pub(crate) use claim::CreateClaim;
 
 pub(crate) fn router(state: AppState) -> Router {
     let airdrop_routes = Router::new()
-        .route("/challenge", post(challenge::create_challenge))
-        .route("/claim", post(claim::create_claim))
+        .route(
+            "/challenge",
+            post(challenge::create_challenge)
+                .route_layer(middleware::from_fn(require_actonscan_origin)),
+        )
+        .route(
+            "/claim",
+            post(claim::create_claim).route_layer(middleware::from_fn(require_actonscan_origin)),
+        )
         .route_layer(from_fn_with_state(
             state.config.clone(),
             require_faucet_writable,

@@ -1,11 +1,14 @@
 use axum::{
     Extension, Router,
     body::{Body, to_bytes},
-    http::{Method, Request, StatusCode, header::USER_AGENT},
+    http::{
+        Method, Request, StatusCode,
+        header::{ORIGIN, USER_AGENT},
+    },
     middleware,
-    routing::post,
+    routing::{get, post},
 };
-use faucet::middlewares::{ClientContext, require_airdrop_headers};
+use faucet::middlewares::{ClientContext, require_actonscan_origin, require_airdrop_headers};
 use tower::ServiceExt;
 
 #[tokio::test]
@@ -100,15 +103,114 @@ async fn rejects_unofficial_user_agent_formats_on_airdrop_routes() {
 
 #[tokio::test]
 async fn allows_actonscan_browser_client_header() {
-    let response = request_with_headers(None, Some("actonscan/1.0.0"), Some("default")).await;
-    assert_eq!(response.status(), StatusCode::OK);
-    assert_eq!(response_body(response).await, "actonscan");
+    for (client, expected_status) in [
+        ("actonscan/1.0.0", StatusCode::OK),
+        ("actonscan/", StatusCode::BAD_REQUEST),
+        ("explorer/1.0.0", StatusCode::BAD_REQUEST),
+    ] {
+        let request = Request::post("/challenge")
+            .header("x-acton-client", client)
+            .header("x-device-uid", "default")
+            .header(ORIGIN, "https://actonscan.com")
+            .body(Body::empty())
+            .unwrap();
+        let response = airdrop_app().oneshot(request).await.unwrap();
 
-    let response = request_with_headers(None, Some("actonscan/"), Some("default")).await;
-    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+        assert_eq!(response.status(), expected_status, "{client}");
+        if expected_status == StatusCode::OK {
+            assert_eq!(response_body(response).await, "actonscan");
+        }
+    }
+}
 
-    let response = request_with_headers(None, Some("explorer/1.0.0"), Some("default")).await;
-    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+#[tokio::test]
+async fn requires_nonempty_origin_for_actonscan_challenges_and_claims() {
+    let app = airdrop_app();
+
+    for path in ["/challenge", "/claim"] {
+        for (origin, expected_status) in [
+            (None, StatusCode::BAD_REQUEST),
+            (Some(""), StatusCode::BAD_REQUEST),
+            (Some(" \t "), StatusCode::BAD_REQUEST),
+            (Some("https://actonscan.com"), StatusCode::OK),
+            (Some("http://localhost:5173"), StatusCode::OK),
+            (Some("http://127.0.0.1:5173"), StatusCode::OK),
+            // Only require a nonempty header; do not maintain an origin allowlist here.
+            (Some("https://example.com"), StatusCode::OK),
+        ] {
+            for user_agent in [None, Some("acton/0.1.0")] {
+                let mut request = Request::post(path)
+                    .header("x-acton-client", "actonscan/1.0.0")
+                    .header("x-device-uid", "default");
+                if let Some(origin) = origin {
+                    request = request.header(ORIGIN, origin);
+                }
+                if let Some(user_agent) = user_agent {
+                    request = request.header(USER_AGENT, user_agent);
+                }
+                let response = app
+                    .clone()
+                    .oneshot(request.body(Body::empty()).unwrap())
+                    .await
+                    .unwrap();
+
+                assert_eq!(
+                    response.status(),
+                    expected_status,
+                    "{path}: origin={origin:?}, user_agent={user_agent:?}"
+                );
+                if expected_status == StatusCode::OK {
+                    assert_eq!(response_body(response).await, "actonscan");
+                }
+            }
+        }
+    }
+}
+
+#[tokio::test]
+async fn allows_actonscan_auth_requests_without_origin() {
+    for (method, path) in [
+        (Method::GET, "/auth/status"),
+        (Method::GET, "/auth/session"),
+        (Method::POST, "/auth/exchange"),
+        (Method::DELETE, "/auth/session"),
+    ] {
+        let request = Request::builder()
+            .method(method.clone())
+            .uri(path)
+            .header("x-acton-client", "actonscan/1.0.0")
+            .header("x-device-uid", "default")
+            .body(Body::empty())
+            .unwrap();
+        let response = airdrop_app().oneshot(request).await.unwrap();
+
+        assert_eq!(response.status(), StatusCode::OK, "{method} {path}");
+        assert_eq!(response_body(response).await, "actonscan");
+    }
+}
+
+#[tokio::test]
+async fn origin_requirement_only_applies_to_airdrop_post_handlers() {
+    let app = airdrop_app();
+
+    for path in ["/challenge", "/claim"] {
+        for method in [Method::GET, Method::DELETE, Method::PUT, Method::OPTIONS] {
+            let request = Request::builder()
+                .method(method.clone())
+                .uri(path)
+                .header("x-acton-client", "actonscan/1.0.0")
+                .header("x-device-uid", "default")
+                .body(Body::empty())
+                .unwrap();
+            let response = app.clone().oneshot(request).await.unwrap();
+
+            assert_eq!(
+                response.status(),
+                StatusCode::METHOD_NOT_ALLOWED,
+                "{method} {path}"
+            );
+        }
+    }
 }
 
 #[tokio::test]
@@ -145,12 +247,15 @@ async fn normalizes_device_uid_before_inserting_client_context() {
 }
 
 fn airdrop_app() -> Router {
-    let handler = post(|Extension(client): Extension<ClientContext>| async move {
-        client.client_kind.as_str()
-    });
+    let handler =
+        |Extension(client): Extension<ClientContext>| async move { client.client_kind.as_str() };
+    let airdrop_handler = post(handler).route_layer(middleware::from_fn(require_actonscan_origin));
     Router::new()
-        .route("/challenge", handler.clone())
-        .route("/claim", handler)
+        .route("/challenge", airdrop_handler.clone())
+        .route("/claim", airdrop_handler)
+        .route("/auth/status", get(handler))
+        .route("/auth/exchange", post(handler))
+        .route("/auth/session", get(handler).delete(handler))
         .route_layer(middleware::from_fn(require_airdrop_headers))
 }
 
